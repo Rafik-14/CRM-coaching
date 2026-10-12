@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
-import { Euro, Percent, Trophy, UserX } from "lucide-react";
+import { Euro, Lightbulb, Percent, Trophy, UserX } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/page-header";
 import { StatCard } from "@/components/stat-card";
@@ -9,7 +9,7 @@ import { DonutChart } from "@/components/charts";
 import { stageDot } from "@/components/stage-badge";
 import { getAnalytics } from "@/server/queries/analytics";
 import { Button } from "@/components/ui/button";
-import { Illustration3D } from "@/components/illustrations/illustration-3d";
+import { IconMark } from "@/components/empty-state";
 import { formatMoney } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -46,8 +46,8 @@ async function Analytics() {
 
   return (
     <div className="grid gap-6">
-      <section className="flex flex-col items-center gap-5 rounded-2xl border border-border bg-card px-6 py-4 sm:flex-row">
-        <Illustration3D name="idea" alt="" height={130} />
+      <section className="flex flex-col items-center gap-5 rounded-xl border border-border bg-card px-6 py-5 sm:flex-row">
+        <IconMark icon={Lightbulb} />
         <div className="flex-1 text-center sm:text-left">
           <p className="text-[11px] font-semibold tracking-wider text-primary uppercase">Astuce</p>
           {a.staleProspects > 0 ? (
@@ -114,7 +114,7 @@ async function Analytics() {
                   </div>
                   <div className="h-3 overflow-hidden rounded-full bg-muted">
                     <div
-                      className="h-full rounded-full bg-gradient-to-r from-primary to-primary/50"
+                      className="h-full rounded-full bg-primary"
                       style={{ width: `${(f.reached / maxReached) * 100}%` }}
                     />
                   </div>

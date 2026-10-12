@@ -91,7 +91,7 @@ function QuickViewBody({ c }: { c: ContactPreview }) {
           <InfoRow icon={Phone} label="Téléphone" value={c.phone} href={c.phone ? `tel:${c.phone}` : undefined} />
         </section>
 
-        <section className="grid gap-4 rounded-xl border border-border bg-gradient-to-br from-primary/10 to-transparent p-4">
+        <section className="grid gap-4 rounded-xl border border-border bg-muted/60 p-4">
           <h3 className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">Suivi</h3>
           <div className="flex items-end justify-between gap-4">
             <div>

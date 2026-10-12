@@ -14,6 +14,9 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // Public: login page, auth endpoints, the website contact form endpoint (it checks origin/secret itself), assets.
-  matcher: ["/((?!connexion|api/auth|api/formulaire-site|_next/static|_next/image|favicon.ico).*)"],
+  // Public: login page, auth endpoints, the website contact form endpoint (it checks origin/secret itself),
+  // assets, brand files (logo on the login page) and the app icons.
+  matcher: [
+    "/((?!connexion|api/auth|api/formulaire-site|_next/static|_next/image|brand/|favicon.ico|icon.svg|apple-icon.png).*)",
+  ],
 };

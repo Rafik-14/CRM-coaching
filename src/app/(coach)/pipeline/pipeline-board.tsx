@@ -142,7 +142,7 @@ export function PipelineBoard({
             );
           })}
         </div>
-        <DragOverlay>{active && <CardBody contact={active} className="rotate-2 shadow-2xl" />}</DragOverlay>
+        <DragOverlay>{active && <CardBody contact={active} className="rotate-1 shadow-lg" />}</DragOverlay>
       </DndContext>
 
       <ContactQuickView contactId={openId} onClose={() => setOpenId(null)} />

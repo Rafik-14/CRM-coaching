@@ -1,15 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
-import { ArrowUpRight, CalendarCheck, Euro, UserPlus, Users } from "lucide-react";
+import { ArrowUpRight, CalendarCheck, Euro, ListChecks, UserPlus, Users } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StageBadge } from "@/components/stage-badge";
 import { StatCard } from "@/components/stat-card";
 import { TaskCheckbox } from "@/components/task-checkbox";
 import { DonutChart, SessionsBarChart } from "@/components/charts";
 import { Button } from "@/components/ui/button";
-import { Illustration3D } from "@/components/illustrations/illustration-3d";
-import { EmptyState } from "@/components/illustrations/empty-state";
+import { EmptyState } from "@/components/empty-state";
 import { getDashboard } from "@/server/queries/dashboard";
 import { formatDate, formatDayTime, formatMoney, fullName, initials, isOverdue } from "@/lib/format";
 
@@ -60,8 +59,8 @@ async function Dashboard() {
     <div className="grid gap-6">
       <section className="flex items-center justify-between gap-6 overflow-hidden rounded-2xl border border-border bg-card px-6 py-5 sm:px-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
-            {hello}, <span className="text-primary">{d.firstName}</span>.
+          <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
+            {hello}, {d.firstName}.
           </h1>
           <p className="mt-2 text-muted-foreground">
             {d.sessionsToday > 0
@@ -77,13 +76,16 @@ async function Dashboard() {
             </Button>
           </div>
         </div>
-        <Illustration3D
-          name={d.sessionsToday > 0 ? "walking-happy" : "sitting-relaxed"}
-          alt=""
-          height={150}
-          priority
-          className="hidden sm:block"
-        />
+        {/* Méthode JG® reminder instead of an illustration (the brand bans 3D / generic artwork) */}
+        <div className="hidden shrink-0 border-l border-border pl-6 md:block" aria-hidden>
+          <p className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">Méthode JG®</p>
+          <p className="mt-2 grid gap-1 font-heading text-sm font-semibold tracking-[0.12em] text-heading">
+            <span>CLARIFIER</span>
+            <span>RÉVÉLER</span>
+            <span>INCARNER</span>
+          </p>
+          <span className="mt-3 block h-0.5 w-8 rounded-full bg-gold" />
+        </div>
       </section>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -157,8 +159,7 @@ async function Dashboard() {
         <Panel title="Tâches à faire" action={<SeeAll href="/taches" />}>
           {d.dueTasks.length === 0 ? (
             <EmptyState
-              illustration="sitting-happy"
-              size={110}
+              icon={ListChecks}
               layout="horizontal"
               title="Tout est fait"
               description="Aucune tâche en attente. Profitez-en !"

@@ -2,7 +2,7 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-/* Scan all app source explicitly for class names (everything under src/). */
+/* Scan all app source explicitly for class names (everything under src/, incl. brand classes). */
 @source "../";
 
 @custom-variant dark (&:is(.dark *));
@@ -10,9 +10,14 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --font-sans: var(--font-lato);
+  --font-mono: var(--font-lato);
+  --font-heading: var(--font-montserrat);
+  --color-heading: var(--heading);
+  --color-gold: var(--gold);
+  --color-navy: var(--jg-navy);
+  --color-ivory: var(--jg-ivory);
+  --color-primary-hover: var(--primary-hover);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -54,81 +59,99 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-/* "Graphite & bleu acier" palette — light mode (default when the computer is in light mode). */
+/* JG® brand palette (« Brief maître — design system JG® »).
+   Only the official colours are used; lighter/darker states are tints mixed from them.
+   Destructive red is functional (errors must stay readable), not a brand colour. */
 :root {
-  --background: #f4f5f7;
-  --foreground: #1a1d21;
-  --card: #ffffff;
-  --card-foreground: #1a1d21;
-  --popover: #ffffff;
-  --popover-foreground: #1a1d21;
-  --primary: #3a6ea5;
-  --primary-foreground: #ffffff;
-  --secondary: #eceff3;
-  --secondary-foreground: #1a1d21;
-  --muted: #eef0f3;
-  --muted-foreground: #5f6670;
-  --accent: #e8ecf1;
-  --accent-foreground: #1a1d21;
+  --jg-navy: #172536;
+  --jg-navy-hover: #243a52;
+  --jg-anthracite: #343a3f;
+  --jg-gold: #d4a866;
+  --jg-teal: #0f6b6b;
+  --jg-ivory: #f8f6f2;
+  --jg-light-gray: #e7e7e5;
+  --jg-white: #ffffff;
+
+  --background: var(--jg-ivory);
+  --foreground: var(--jg-anthracite);
+  --heading: var(--jg-navy);
+  --card: var(--jg-white);
+  --card-foreground: var(--jg-anthracite);
+  --popover: var(--jg-white);
+  --popover-foreground: var(--jg-anthracite);
+  --primary: var(--jg-navy);
+  --primary-hover: var(--jg-navy-hover);
+  --primary-foreground: var(--jg-white);
+  --secondary: color-mix(in oklab, var(--jg-light-gray) 60%, var(--jg-ivory));
+  --secondary-foreground: var(--jg-navy);
+  --muted: color-mix(in oklab, var(--jg-light-gray) 55%, var(--jg-ivory));
+  --muted-foreground: color-mix(in oklab, var(--jg-anthracite) 78%, var(--jg-white));
+  --accent: color-mix(in oklab, var(--jg-navy) 6%, var(--jg-white));
+  --accent-foreground: var(--jg-navy);
+  --gold: var(--jg-gold);
   --destructive: #b42318;
-  --success: #1e6b43;
-  --info: #2b6390;
+  --success: var(--jg-teal);
+  --info: var(--jg-navy-hover);
   --warning: #8a5a0b;
-  --border: #e1e4e8;
-  --input: #d5dae0;
-  --ring: #3a6ea5;
-  --chart-1: #3a6ea5;
-  --chart-2: #6b7a90;
-  --chart-3: #2f855a;
-  --chart-4: #b7791f;
-  --chart-5: #a0aec0;
-  --radius: 0.75rem;
-  --sidebar: #22272e;
-  --sidebar-foreground: #c9ced6;
-  --sidebar-primary: #3a6ea5;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #2e343c;
-  --sidebar-accent-foreground: #ffffff;
-  --sidebar-border: #2e343c;
-  --sidebar-ring: #3a6ea5;
+  --border: var(--jg-light-gray);
+  --input: color-mix(in oklab, var(--jg-light-gray) 75%, var(--jg-anthracite));
+  --ring: var(--jg-navy);
+  --chart-1: var(--jg-navy);
+  --chart-2: var(--jg-gold);
+  --chart-3: var(--jg-teal);
+  --chart-4: color-mix(in oklab, var(--jg-navy) 50%, var(--jg-white));
+  --chart-5: color-mix(in oklab, var(--jg-anthracite) 30%, var(--jg-white));
+  /* 7 px: buttons, inputs (rounded-lg); cards and dialogs use rounded-xl ≈ 10 px. */
+  --radius: 0.4375rem;
+  --sidebar: var(--jg-navy);
+  --sidebar-foreground: color-mix(in oklab, var(--jg-white) 82%, var(--jg-navy));
+  --sidebar-primary: var(--jg-gold);
+  --sidebar-primary-foreground: var(--jg-navy);
+  --sidebar-accent: var(--jg-navy-hover);
+  --sidebar-accent-foreground: var(--jg-white);
+  --sidebar-border: var(--jg-navy-hover);
+  --sidebar-ring: var(--jg-gold);
 }
 
-/* "Graphite & bleu acier" palette — dark mode. */
+/* Dark mode: not defined by the brief — built from the same colours (navy surfaces, ivory text, gold accents). */
 .dark {
-  --background: #121417;
-  --foreground: #e6e8eb;
-  --card: #1b1f24;
-  --card-foreground: #e6e8eb;
-  --popover: #1f242a;
-  --popover-foreground: #e6e8eb;
-  --primary: #5b8dc9;
-  --primary-foreground: #0a1420;
-  --secondary: #23282f;
-  --secondary-foreground: #e6e8eb;
-  --muted: #20252b;
-  --muted-foreground: #8b929c;
-  --accent: #262b32;
-  --accent-foreground: #e6e8eb;
+  --background: color-mix(in oklab, var(--jg-navy) 82%, black);
+  --foreground: color-mix(in oklab, var(--jg-ivory) 90%, var(--jg-navy));
+  --heading: var(--jg-ivory);
+  --card: var(--jg-navy);
+  --card-foreground: color-mix(in oklab, var(--jg-ivory) 90%, var(--jg-navy));
+  --popover: color-mix(in oklab, var(--jg-navy) 92%, var(--jg-white));
+  --popover-foreground: var(--jg-ivory);
+  --primary: var(--jg-ivory);
+  --primary-hover: var(--jg-white);
+  --primary-foreground: var(--jg-navy);
+  --secondary: var(--jg-navy-hover);
+  --secondary-foreground: var(--jg-ivory);
+  --muted: color-mix(in oklab, var(--jg-navy) 88%, var(--jg-white));
+  --muted-foreground: color-mix(in oklab, var(--jg-ivory) 62%, var(--jg-navy));
+  --accent: var(--jg-navy-hover);
+  --accent-foreground: var(--jg-ivory);
+  --gold: var(--jg-gold);
   --destructive: #e39a9a;
-  --success: #7cc4a0;
-  --info: #7fb3d5;
-  --warning: #d9b26a;
-  --border: #2a2f36;
-  --input: #2f353d;
-  --ring: #5b8dc9;
-  --chart-1: #5b8dc9;
-  --chart-2: #8a9bb0;
-  --chart-3: #7cc4a0;
-  --chart-4: #d9b26a;
-  --chart-5: #4a5563;
-  --sidebar: #0d0f12;
-  --sidebar-foreground: #b4bac3;
-  --sidebar-primary: #5b8dc9;
-  --sidebar-primary-foreground: #0a1420;
-  --sidebar-accent: #1b1f24;
-  --sidebar-accent-foreground: #e6e8eb;
-  --sidebar-border: #1b1f24;
-  --sidebar-ring: #5b8dc9;
+  --success: color-mix(in oklab, var(--jg-teal) 45%, var(--jg-white));
+  --info: color-mix(in oklab, var(--jg-navy-hover) 35%, var(--jg-white));
+  --warning: var(--jg-gold);
+  --border: color-mix(in oklab, var(--jg-navy) 82%, var(--jg-white));
+  --input: color-mix(in oklab, var(--jg-navy) 74%, var(--jg-white));
+  --ring: var(--jg-gold);
+  --chart-1: var(--jg-ivory);
+  --chart-2: var(--jg-gold);
+  --chart-3: color-mix(in oklab, var(--jg-teal) 55%, var(--jg-white));
+  --chart-4: color-mix(in oklab, var(--jg-navy) 45%, var(--jg-white));
+  --chart-5: color-mix(in oklab, var(--jg-navy) 75%, var(--jg-white));
+  --sidebar: color-mix(in oklab, var(--jg-navy) 70%, black);
+  --sidebar-foreground: color-mix(in oklab, var(--jg-white) 78%, var(--jg-navy));
+  --sidebar-primary: var(--jg-gold);
+  --sidebar-primary-foreground: var(--jg-navy);
+  --sidebar-accent: var(--jg-navy);
+  --sidebar-accent-foreground: var(--jg-white);
+  --sidebar-border: var(--jg-navy);
+  --sidebar-ring: var(--jg-gold);
 }
 
 @layer base {
@@ -148,62 +171,10 @@
   html.dark {
     color-scheme: dark;
   }
-}
-
-/* 3D illustrations (components/illustrations/illustration-3d.tsx).
-   --rx/--ry (tilt) and --px/--py (parallax) are set from the mouse position. */
-@layer components {
-  .illu-scene {
-    transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
-    transform-style: preserve-3d;
-    transition: transform 0.3s ease-out;
-  }
-  .illu-disc {
-    transform: translateX(-50%) translate3d(calc(var(--px, 0px) * -1), calc(var(--py, 0px) * -1), -30px);
-    transition: transform 0.3s ease-out;
-  }
-  .illu-figure {
-    transform: translate3d(var(--px, 0px), var(--py, 0px), 30px);
-    transition: transform 0.3s ease-out;
-  }
-  .illu-float {
-    animation: illu-float 6s ease-in-out infinite;
-  }
-  .illu-shadow {
-    transform: translateX(-50%);
-    animation: illu-shadow 6s ease-in-out infinite;
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .illu-float,
-    .illu-shadow {
-      animation: none;
-    }
-    .illu-scene,
-    .illu-disc,
-    .illu-figure {
-      transition: none;
-    }
-  }
-}
-
-@keyframes illu-float {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
-}
-
-@keyframes illu-shadow {
-  0%,
-  100% {
-    transform: translateX(-50%) scale(1);
-    opacity: 0.55;
-  }
-  50% {
-    transform: translateX(-50%) scale(0.82);
-    opacity: 0.3;
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-heading text-heading;
   }
 }

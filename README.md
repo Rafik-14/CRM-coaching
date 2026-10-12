@@ -80,18 +80,20 @@ They're only served by `GET /api/fichiers/[id]` after a coach session check. Upl
 PDF / images / Word / text, and the file content must match its extension.
 On the server, put `FILES_DIR` on a persistent volume and include it in backups.
 
-## Illustrations
+## Brand (JG®)
 
-3D characters from the Figma Community file "Free 3D Man Illustrations", converted from
-~5 MB SVGs to ~25 KB WebP in `src/assets/illustrations/` and listed in
-`src/components/illustrations/registry.ts`.
+The UI follows Jérémy Galéa's visual brief (« Brief maître — design system JG® »). Plan and rules:
+`docs/JG-TAILORING-PLAN.md`.
 
-- `<Illustration3D name="waving" alt="" height={180} />`: tilt toward the mouse, parallax between
-  the figure and its backdrop disc, gentle float. No motion on touch or with "reduce motion".
-- `<EmptyState illustration="confused" title="…" description="…" action={…} />` for empty screens.
-- To add one: export it from Figma (or rasterize the SVG with `sharp`) to a transparent WebP about
-  640 px tall, put it in `src/assets/illustrations/`, and register it.
-- Check the Figma file's license before commercial use.
+- Colours: `--jg-*` variables in `src/app/globals.css` (navy `#172536`, gold `#D4A866`, teal, ivory,
+  anthracite, light grey). Other states are tints mixed from these; gold and teal are never body text.
+- Fonts: Montserrat (headings, buttons) and Lato (text) via `next/font`. No third typeface.
+- Logo: `public/brand/` (full logo, white version, monogram), favicon `src/app/icon.svg`,
+  `apple-icon.png`, `favicon.ico`. Source trace kept in `docs/brand/logobleu-source.svg`; the clean
+  files were re-traced from the client's PNG (one navy + one gold shape, exact brand colours).
+- No 3D, gradients or generic illustrations (forbidden by the brief): empty states use
+  `<EmptyState icon={…} />` / `<IconMark icon={…} />` from `src/components/empty-state.tsx`
+  (thin lucide icon + short gold line).
 
 ## Notes on Next.js 16
 

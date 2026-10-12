@@ -25,12 +25,12 @@ export default function CoachLayout({ children }: LayoutProps<"/">) {
         <div className="mt-auto grid gap-1 px-3">
           <div className="px-1 pb-3">
             <Suspense fallback={<Skeleton className="h-9 w-full" />}>
-              <NewContactButton className="w-full" />
+              <NewContactButton className="w-full bg-ivory text-navy hover:bg-white" />
             </Suspense>
           </div>
           <Link
             href="/parametres"
-            className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+            className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-sidebar-foreground/80 transition-colors duration-200 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
           >
             <UserRound className="size-4" /> Mon compte
           </Link>

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { ArrowLeft, Mail, Phone } from "lucide-react";
+import { ArrowLeft, CalendarPlus, LockKeyhole, Mail, Phone } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -9,8 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StageBadge } from "@/components/stage-badge";
 import { TaskCheckbox } from "@/components/task-checkbox";
 import { Timeline } from "@/components/timeline";
-import { EmptyState } from "@/components/illustrations/empty-state";
-import { Illustration3D } from "@/components/illustrations/illustration-3d";
+import { EmptyState, IconMark } from "@/components/empty-state";
 import { ScheduleSessionDialog } from "@/components/coaching/schedule-session-dialog";
 import { CloseCoachingDialog } from "@/components/coaching/close-coaching-dialog";
 import { ReopenCoachingButton } from "@/components/coaching/reopen-coaching-button";
@@ -205,9 +204,8 @@ async function ContactDetail({
             <Card>
               <CardContent>
                 <EmptyState
-                  illustration="sitting-normal"
+                  icon={CalendarPlus}
                   layout="horizontal"
-                  size={120}
                   title={client ? "Aucune séance prévue" : "Aucun appel prévu"}
                   description={
                     client
@@ -222,7 +220,7 @@ async function ContactDetail({
           )}
           {contact.sessions.length > 0 && (
             <div className="flex items-center gap-4 rounded-2xl border border-border bg-muted/40 px-4 py-3">
-              <Illustration3D name="shhh" alt="" height={96} disc={false} />
+              <IconMark icon={LockKeyhole} size="sm" />
               <p className="text-sm">
                 <span className="font-medium">Vos notes de séance sont privées.</span>{" "}
                 <span className="text-muted-foreground">Elles ne sont visibles que par vous, jamais par le client.</span>

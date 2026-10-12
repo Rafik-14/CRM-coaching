@@ -98,8 +98,8 @@ async function Settings() {
             <span
               className={
                 origins.length
-                  ? "rounded-full bg-success/15 px-2.5 py-1 text-xs font-medium text-success"
-                  : "rounded-full bg-warning/15 px-2.5 py-1 text-xs font-medium text-warning"
+                  ? "rounded-md bg-success/15 px-2.5 py-1 text-xs font-medium text-success"
+                  : "rounded-md bg-warning/15 px-2.5 py-1 text-xs font-medium text-warning"
               }
             >
               {origins.length ? `Actif pour ${origins.join(", ")}` : "À configurer (SITE_FORM_ORIGINS)"}

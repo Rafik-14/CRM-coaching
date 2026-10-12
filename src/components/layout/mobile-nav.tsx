@@ -17,7 +17,7 @@ export function MobileNav() {
           <Menu />
         </Button>
       </SheetTrigger>
-      {/* Same graphite surface as the desktop sidebar, in both themes */}
+      {/* Same navy surface as the desktop sidebar, in both themes */}
       <SheetContent side="left" className="w-64 border-sidebar-border bg-sidebar p-0 text-sidebar-foreground">
         <SheetHeader className="border-b border-sidebar-border p-5">
           <SheetTitle className="sr-only">Menu</SheetTitle>

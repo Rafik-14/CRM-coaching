@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
-import { ChevronLeft, ChevronRight, Download, Percent, Wallet, WalletCards } from "lucide-react";
+import { ChevronLeft, ChevronRight, Download, Percent, SearchX, UserPlus, Wallet, WalletCards } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/page-header";
 import { StatCard } from "@/components/stat-card";
 import { NewContactButton } from "@/components/new-contact-button";
-import { EmptyState } from "@/components/illustrations/empty-state";
+import { EmptyState } from "@/components/empty-state";
 import { CONTACTS_PAGE_SIZE, getContactStats, getStages, listContacts } from "@/server/queries/contacts";
 import { formatMoney, formatRelative } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -86,7 +86,7 @@ async function ContactsList({ searchParams }: { searchParams: SP }) {
           empty={
             q || stage ? (
               <EmptyState
-                illustration="confused"
+                icon={SearchX}
                 title="Aucun résultat"
                 description="Essayez un autre nom, un e-mail ou retirez le filtre d'étape."
                 action={
@@ -97,7 +97,7 @@ async function ContactsList({ searchParams }: { searchParams: SP }) {
               />
             ) : (
               <EmptyState
-                illustration="pointing-side"
+                icon={UserPlus}
                 title="Ajoutez votre premier contact"
                 description="Prospects, clients, recommandations : tout commence ici."
                 action={<NewContactButton />}

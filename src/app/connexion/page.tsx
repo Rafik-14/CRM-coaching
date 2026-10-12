@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import { HeartHandshake } from "lucide-react";
+import Image from "next/image";
 import { LoginForm } from "./login-form";
-import { Illustration3D } from "@/components/illustrations/illustration-3d";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
+import portrait from "@/assets/brand/jg-portrait.webp";
 
 export const metadata: Metadata = { title: "Connexion" };
 
@@ -11,21 +11,18 @@ export default function LoginPage() {
     <main className="grid min-h-screen lg:grid-cols-2">
       {/* Left: login panel */}
       <section className="flex flex-col px-6 py-8 sm:px-10">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2 font-semibold">
-            <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <HeartHandshake className="size-4" />
-            </span>
-            CRM Coaching
-          </div>
+        <div className="flex justify-end">
           <ThemeToggle />
         </div>
 
-        <div className="flex flex-1 items-center justify-center py-12">
+        <div className="flex flex-1 items-center justify-center py-10">
           <div className="w-full max-w-sm">
-            <h1 className="text-2xl font-semibold tracking-tight">Bon retour</h1>
-            <p className="mt-1 mb-8 text-sm text-muted-foreground">
-              Connectez-vous pour retrouver vos clients et vos séances.
+            <Image src="/brand/jg-logo.svg" alt="Jérémy Galéa — Révéler votre potentiel" width={190} height={136} unoptimized priority className="dark:hidden" />
+            <Image src="/brand/jg-logo-white.svg" alt="Jérémy Galéa — Révéler votre potentiel" width={190} height={136} unoptimized priority className="hidden dark:block" />
+            <h1 className="mt-10 text-2xl font-semibold tracking-tight">Bon retour</h1>
+            <span aria-hidden className="mt-2 block h-0.5 w-10 rounded-full bg-gold" />
+            <p className="mt-3 mb-8 text-sm text-muted-foreground">
+              Connectez-vous pour retrouver vos contacts, vos accompagnements et vos séances.
             </p>
             <LoginForm />
           </div>
@@ -36,14 +33,23 @@ export default function LoginPage() {
         </p>
       </section>
 
-      {/* Right: artwork (hidden on small screens) */}
-      <aside className="relative hidden flex-col items-center justify-center gap-10 overflow-hidden bg-secondary px-10 lg:flex dark:bg-card">
-        <Illustration3D name="waving" alt="" height={360} priority />
-        <div className="max-w-md text-center">
-          <p className="text-2xl leading-snug font-semibold text-balance">
-            Chaque pas compte. Accompagnez vos clients, étape par étape.
+      {/* Right: portrait (hidden on small screens) */}
+      <aside className="relative hidden overflow-hidden bg-navy lg:block">
+        <Image
+          src={portrait}
+          alt="Jérémy Galéa"
+          fill
+          priority
+          placeholder="blur"
+          sizes="50vw"
+          className="object-cover object-[50%_20%]"
+        />
+        <div className="absolute right-10 bottom-10 left-10 max-w-md rounded-xl bg-navy px-7 py-6 text-white">
+          <p className="font-heading text-xl leading-snug font-semibold text-balance">Révéler votre potentiel</p>
+          <span aria-hidden className="mt-3 block h-0.5 w-10 rounded-full bg-gold" />
+          <p className="mt-3 text-sm text-white/80">
+            Contacts, accompagnements, séances et Méthode JG® : tout au même endroit.
           </p>
-          <p className="mt-3 text-sm text-muted-foreground">Contacts, séances, objectifs : tout au même endroit.</p>
         </div>
       </aside>
     </main>

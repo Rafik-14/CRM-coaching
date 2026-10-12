@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
+import { ListChecks } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/page-header";
 import { TaskCheckbox } from "@/components/task-checkbox";
-import { EmptyState } from "@/components/illustrations/empty-state";
+import { EmptyState } from "@/components/empty-state";
 import { listContactOptions, listTasks } from "@/server/queries/settings";
 import { DeleteTaskButton, TaskDialog } from "@/components/coaching/task-dialog";
 import { formatDate, fullName, isOverdue } from "@/lib/format";
@@ -43,9 +44,8 @@ async function TaskList() {
         <Card>
           <CardContent>
             <EmptyState
-              illustration="sitting-happy"
+              icon={ListChecks}
               layout="horizontal"
-              size={130}
               title="Tout est fait"
               description={
                 tasks.length

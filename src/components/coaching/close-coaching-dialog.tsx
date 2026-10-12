@@ -6,6 +6,7 @@ import {
   CircleStop,
   Flag,
   Loader2,
+  Mountain,
   TriangleAlert,
   Trophy,
 } from "lucide-react";
@@ -31,7 +32,7 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { closeCoaching, type ActionState } from "@/server/actions/coaching";
-import { Illustration3D } from "@/components/illustrations/illustration-3d";
+import { IconMark } from "@/components/empty-state";
 import { CLOSE_OUTCOMES, CLOSE_REASONS } from "@/lib/validations/coaching";
 
 type Outcome = keyof typeof CLOSE_OUTCOMES;
@@ -103,7 +104,7 @@ export function CloseCoachingDialog({
       <DialogContent className="sm:max-w-xl">
         {celebrate ? (
           <div className="grid justify-items-center gap-4 py-2 text-center">
-            <Illustration3D name="jump" alt="" height={200} />
+            <IconMark icon={Mountain} size="lg" />
             <DialogHeader className="items-center">
               <DialogTitle className="text-2xl">Félicitations !</DialogTitle>
               <DialogDescription className="max-w-sm">

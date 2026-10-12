@@ -3,7 +3,7 @@ import { APP_TIME_ZONE } from "@/lib/format";
 
 const weekFmt = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "short", timeZone: APP_TIME_ZONE });
 
-/** Sessions per week: done (solid) stacked with planned (lighter). */
+/** Sessions per week: done (navy) stacked with planned (gold). */
 export function SessionsBarChart({
   weeks,
 }: {
@@ -25,10 +25,10 @@ export function SessionsBarChart({
                 style={{ height: `${(total / max) * 100}%`, minHeight: total ? 6 : 2 }}
                 title={`${w.done} effectuée(s), ${w.planned} prévue(s)`}
               >
-                {w.planned > 0 && <div className="w-full bg-primary/30" style={{ flexGrow: w.planned }} />}
+                {w.planned > 0 && <div className="w-full bg-gold/70" style={{ flexGrow: w.planned }} />}
                 {w.done > 0 && (
                   <div
-                    className={cn("w-full", w.current ? "bg-primary" : "bg-primary/60")}
+                    className={cn("w-full", w.current ? "bg-primary" : "bg-primary/80")}
                     style={{ flexGrow: w.done }}
                   />
                 )}
@@ -50,10 +50,10 @@ export function SessionsBarChart({
       </div>
       <figcaption className="flex gap-4 text-xs text-muted-foreground">
         <span className="flex items-center gap-1.5">
-          <span className="size-2 rounded-full bg-primary/70" /> Effectuées
+          <span className="size-2 rounded-full bg-primary" /> Effectuées
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="size-2 rounded-full bg-primary/30" /> Prévues
+          <span className="size-2 rounded-full bg-gold/70" /> Prévues
         </span>
       </figcaption>
     </figure>

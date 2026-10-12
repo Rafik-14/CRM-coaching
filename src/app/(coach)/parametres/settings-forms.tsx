@@ -35,11 +35,11 @@ import type { ActionState } from "@/server/actions/coaching";
 
 const colorLabel: Record<(typeof STAGE_COLORS)[number], string> = {
   slate: "Gris",
-  blue: "Bleu",
-  amber: "Ambre",
-  emerald: "Vert",
-  violet: "Violet",
-  rose: "Rose",
+  blue: "Bleu clair",
+  amber: "Or",
+  emerald: "Teal",
+  violet: "Bleu nuit",
+  rose: "Rouge",
 };
 
 /** useActionState wrapper: toast + close on success. */

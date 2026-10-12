@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { EmptyState } from "@/components/illustrations/empty-state";
+import { Compass } from "lucide-react";
+import { EmptyState } from "@/components/empty-state";
 
 export default function NotFound() {
   return (
     <main className="flex min-h-screen items-center justify-center px-4">
       <EmptyState
-        illustration="confused"
-        size={220}
+        icon={Compass}
         title="Page introuvable"
         description="Cette page n'existe pas ou a été supprimée."
         action={
