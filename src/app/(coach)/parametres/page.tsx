@@ -113,7 +113,10 @@ async function Settings() {
       </TabsContent>
 
       <TabsContent value="pipeline" className="mt-6">
-        <Panel title="Étapes du pipeline" description="Du premier contact jusqu'au client. L'ordre définit les colonnes du pipeline.">
+        <Panel
+          title="Étapes du pipeline"
+          description="Du premier contact jusqu'au client. L'ordre définit les colonnes. Planifier un échange stratégique fait passer un prospect de la 1re à la 2e étape ; le marquer effectué, de la 2e à la 3e."
+        >
           <StagesEditor stages={stages} />
         </Panel>
       </TabsContent>

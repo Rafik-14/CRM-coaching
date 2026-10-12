@@ -90,7 +90,7 @@ export const verification = pgTable(
 // CRM
 // ---------------------------------------------------------------------------
 
-/** Configurable pipeline stages (Nouveau → Appel découverte → ... ). */
+/** Configurable pipeline stages (Nouveau contact → Échange stratégique planifié → ... ). */
 export const pipelineStages = pgTable("pipeline_stages", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("name").notNull(),

@@ -6,7 +6,8 @@ import { z } from "zod";
 import { db } from "@/server/db";
 import { activityLog, clients, coachingSessions, contacts, pipelineStages } from "@/server/db/schema";
 import { requireCoach } from "@/server/dal";
-import { closeCoachingSchema, scheduleSessionSchema } from "@/lib/validations/coaching";
+import { advanceProspectAfterEchange } from "@/server/pipeline-automation";
+import { DISCOVERY_TYPE, closeCoachingSchema, scheduleSessionSchema } from "@/lib/validations/coaching";
 
 export type ActionState = { ok?: boolean; error?: string; fieldErrors?: Record<string, string[] | undefined> };
 
@@ -34,8 +35,8 @@ export async function scheduleSession(_prev: ActionState, formData: FormData): P
   if (!contact) return { error: "Contact introuvable." };
   const client = await getClientForContact(v.contactId);
   if (client && client.status !== "active") return { error: "Cet accompagnement est clôturé ou en pause." };
-  if (!client && v.type !== "Appel découverte") {
-    return { error: "Pour un prospect, seul un « Appel découverte » peut être planifié." };
+  if (!client && v.type !== DISCOVERY_TYPE) {
+    return { error: "Pour un prospect, seul un « Échange stratégique » peut être planifié." };
   }
 
   const startsAt = toInstant(v.date, v.time, v.tzOffset);
@@ -57,6 +58,7 @@ export async function scheduleSession(_prev: ActionState, formData: FormData): P
     entityId: v.contactId,
     action: "session_scheduled",
   });
+  if (!client) await advanceProspectAfterEchange(v.contactId, user.id, "scheduled");
   refresh();
   return { ok: true };
 }

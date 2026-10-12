@@ -6,6 +6,8 @@ import { z } from "zod";
 import { db } from "@/server/db";
 import { activityLog, clientPackages, coachingSessions, packages, sessionNotes } from "@/server/db/schema";
 import { requireCoach } from "@/server/dal";
+import { advanceProspectAfterEchange } from "@/server/pipeline-automation";
+import { DISCOVERY_TYPE } from "@/lib/validations/coaching";
 import { parseNoteForm, rescheduleSchema, SESSION_STATUSES } from "@/lib/validations/phase1";
 import type { ActionState } from "./coaching";
 
@@ -67,6 +69,9 @@ export async function setSessionStatus(
     entityId: session.contactId,
     action: next === "done" ? "session_done" : next === "planned" ? "session_reopened" : `session_${next}`,
   });
+  if (next === "done" && !session.clientId && session.type === DISCOVERY_TYPE) {
+    await advanceProspectAfterEchange(session.contactId, user.id, "done");
+  }
   refresh();
   return { ok: true, counted: next === "done" ? !!clientPackageId : undefined };
 }

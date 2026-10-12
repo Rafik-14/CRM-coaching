@@ -1,8 +1,18 @@
 import { z } from "zod";
 
-export const SESSION_TYPES = ["Séance individuelle", "Appel découverte", "Bilan"] as const;
+/** Méthode JG®: every relationship starts with a free 20-minute « Échange stratégique ». */
+export const DISCOVERY_TYPE = "Échange stratégique";
+export const SESSION_TYPES = ["Séance individuelle", DISCOVERY_TYPE, "Bilan", "Intervention"] as const;
+export type SessionType = (typeof SESSION_TYPES)[number];
 export const SESSION_LOCATIONS = ["Visio", "Cabinet", "Téléphone"] as const;
-export const SESSION_DURATIONS = [30, 45, 60, 90] as const;
+export const SESSION_DURATIONS = [20, 30, 45, 60, 90, 120] as const;
+/** Default duration (minutes) when a type is picked; « Intervention » = B2B workshop / talk. */
+export const DEFAULT_DURATION: Record<SessionType, (typeof SESSION_DURATIONS)[number]> = {
+  "Séance individuelle": 60,
+  [DISCOVERY_TYPE]: 20,
+  Bilan: 60,
+  Intervention: 120,
+};
 
 export const scheduleSessionSchema = z.object({
   contactId: z.uuid(),

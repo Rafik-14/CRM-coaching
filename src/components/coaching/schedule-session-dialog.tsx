@@ -10,7 +10,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { scheduleSession, type ActionState } from "@/server/actions/coaching";
-import { SESSION_DURATIONS, SESSION_LOCATIONS, SESSION_TYPES } from "@/lib/validations/coaching";
+import {
+  DEFAULT_DURATION,
+  DISCOVERY_TYPE,
+  SESSION_DURATIONS,
+  SESSION_LOCATIONS,
+  SESSION_TYPES,
+  type SessionType,
+} from "@/lib/validations/coaching";
 
 const WEEKDAYS = ["LU", "MA", "ME", "JE", "VE", "SA", "DI"];
 const monthFmt = new Intl.DateTimeFormat("fr-FR", { month: "long", year: "numeric" });
@@ -36,12 +43,15 @@ export function ScheduleSessionDialog({
   /** When set, the trigger is disabled and shows this hint. */
   disabledReason?: string;
   triggerClassName?: string;
-  /** Prospects (not yet clients) can only book a discovery call. */
+  /** Prospects (not yet clients) can only book an « Échange stratégique ». */
   prospect?: boolean;
 }) {
-  const types = prospect ? (["Appel découverte"] as const) : SESSION_TYPES;
-  const label = prospect ? "Planifier un appel découverte" : "Planifier une séance";
+  const types: readonly SessionType[] = prospect ? [DISCOVERY_TYPE] : SESSION_TYPES;
+  const label = prospect ? "Planifier un échange stratégique" : "Planifier une séance";
   const [open, setOpen] = useState(false);
+  const [type, setType] = useState<SessionType>(types[0]);
+  // Picking a type proposes its usual duration (20 min for an échange stratégique); still editable.
+  const [duration, setDuration] = useState<string>(String(DEFAULT_DURATION[types[0]]));
   const today = useMemo(() => {
     const d = new Date();
     d.setHours(0, 0, 0, 0);
@@ -58,7 +68,7 @@ export function ScheduleSessionDialog({
       setOpen(false);
       setDate(null);
       setTime(null);
-      toast.success(`${prospect ? "Appel découverte planifié" : "Séance planifiée"} avec ${contactName}`);
+      toast.success(`${prospect ? "Échange stratégique planifié" : "Séance planifiée"} avec ${contactName}`);
     } else if (result.error) {
       toast.error(result.error);
     }
@@ -203,7 +213,7 @@ export function ScheduleSessionDialog({
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="grid gap-2">
                 <Label htmlFor="durationMin">Durée</Label>
-                <Select name="durationMin" defaultValue="60">
+                <Select name="durationMin" value={duration} onValueChange={setDuration}>
                   <SelectTrigger id="durationMin" className="w-full">
                     <SelectValue />
                   </SelectTrigger>
@@ -218,7 +228,14 @@ export function ScheduleSessionDialog({
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="type">Type</Label>
-                <Select name="type" defaultValue={types[0]}>
+                <Select
+                  name="type"
+                  value={type}
+                  onValueChange={(v) => {
+                    setType(v as SessionType);
+                    setDuration(String(DEFAULT_DURATION[v as SessionType]));
+                  }}
+                >
                   <SelectTrigger id="type" className="w-full">
                     <SelectValue />
                   </SelectTrigger>

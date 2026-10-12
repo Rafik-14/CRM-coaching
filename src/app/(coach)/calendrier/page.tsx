@@ -29,7 +29,7 @@ const chip: Record<CalendarSession["status"], string> = {
 export default function CalendarPage({ searchParams }: PageProps<"/calendrier">) {
   return (
     <>
-      <PageHeader title="Calendrier" description="Toutes vos séances et appels découverte" />
+      <PageHeader title="Calendrier" description="Toutes vos séances et échanges stratégiques" />
       <Suspense fallback={<Skeleton className="h-[36rem] rounded-2xl" />}>
         <Calendar searchParams={searchParams} />
       </Suspense>
@@ -125,7 +125,7 @@ async function Calendar({ searchParams }: { searchParams: PageProps<"/calendrier
                       title={`${timeFmt.format(s.startsAt)} · ${s.contact.firstName} ${s.contact.lastName} · ${s.type}`}
                     >
                       <span className="font-medium tabular-nums">{timeFmt.format(s.startsAt)}</span> {s.contact.firstName}
-                      {s.type === "Appel découverte" && " · découverte"}
+                      {s.type === "Échange stratégique" && " · échange"}
                     </Link>
                   ))}
                   {list.length > 3 && <span className="px-1.5 text-[11px] text-muted-foreground">+{list.length - 3} autres</span>}

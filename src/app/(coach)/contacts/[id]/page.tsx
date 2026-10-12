@@ -211,11 +211,11 @@ async function ContactDetail({
                 <EmptyState
                   icon={CalendarPlus}
                   layout="horizontal"
-                  title={client ? "Aucune séance prévue" : "Aucun appel prévu"}
+                  title={client ? "Aucune séance prévue" : "Aucun échange prévu"}
                   description={
                     client
                       ? `Planifiez la prochaine séance avec ${contact.firstName} pour garder le rythme.`
-                      : `Proposez un appel découverte à ${contact.firstName} pour faire connaissance.`
+                      : `Proposez un échange stratégique (20 min, sans engagement) à ${contact.firstName}.`
                   }
                   action={<ScheduleSessionDialog contactId={contact.id} contactName={name} prospect={!client} />}
                   className="py-2"
