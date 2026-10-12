@@ -40,13 +40,47 @@ export const CLOSE_OUTCOMES = {
 } as const;
 
 export const CLOSE_REASONS = {
-  finished: ["Objectifs atteints", "Forfait terminé", "Autonomie acquise"],
+  finished: ["Objectifs atteints", "Moment décisif réussi", "Accompagnement terminé", "Autonomie acquise"],
   paused: ["Raisons personnelles", "Raisons financières", "Manque de disponibilité"],
   stopped: ["Raisons financières", "Ne correspond pas aux attentes", "Changement de situation", "Sans nouvelles"],
 } as const;
 
+const caseText = (max: number) =>
+  z
+    .string()
+    .trim()
+    .max(max, `${max} caractères maximum.`)
+    .optional()
+    .transform((v) => v || null);
+
+/** « Transformations » case study: Avant → Le déclic → Après → Ce qui a changé (+ positioning statement). */
+const caseStudyShape = {
+  before: caseText(1500),
+  trigger: caseText(1500),
+  after: caseText(1500),
+  changes: z
+    .string()
+    .optional()
+    .transform((v) =>
+      (v ?? "")
+        .split("\n")
+        .map((l) => l.trim())
+        .filter(Boolean)
+        .slice(0, 8),
+    )
+    .refine((a) => a.every((l) => l.length <= 200), "200 caractères maximum par ligne."),
+  positioningStatement: caseText(400),
+  testimonialConsent: z
+    .union([z.literal("on"), z.literal("true"), z.literal("")])
+    .optional()
+    .transform((v) => v === "on" || v === "true"),
+};
+
+export const caseStudySchema = z.object({ contactId: z.uuid(), ...caseStudyShape });
+
 export const closeCoachingSchema = z
   .object({
+    ...caseStudyShape,
     contactId: z.uuid(),
     outcome: z.enum(["finished", "paused", "stopped"], "Choisissez un résultat."),
     reason: z.string().trim().min(1, "Choisissez une raison.").max(200),

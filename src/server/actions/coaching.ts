@@ -7,7 +7,7 @@ import { db } from "@/server/db";
 import { activityLog, clients, coachingSessions, contacts, pipelineStages } from "@/server/db/schema";
 import { requireCoach } from "@/server/dal";
 import { advanceProspectAfterEchange } from "@/server/pipeline-automation";
-import { DISCOVERY_TYPE, closeCoachingSchema, scheduleSessionSchema } from "@/lib/validations/coaching";
+import { DISCOVERY_TYPE, caseStudySchema, closeCoachingSchema, scheduleSessionSchema } from "@/lib/validations/coaching";
 
 export type ActionState = { ok?: boolean; error?: string; fieldErrors?: Record<string, string[] | undefined> };
 
@@ -74,7 +74,14 @@ export async function closeCoaching(_prev: ActionState, formData: FormData): Pro
 
   await db
     .update(clients)
-    .set({ status: v.outcome, closedAt: new Date(), closeReason: v.reason, closeNote: v.note })
+    .set({
+      status: v.outcome,
+      closedAt: new Date(),
+      closeReason: v.reason,
+      closeNote: v.note,
+      // A successful coaching can be written up as a case study right away.
+      ...(v.outcome === "finished" && caseStudyValues(v)),
+    })
     .where(eq(clients.id, client.id));
 
   if (v.outcome !== "paused") {
@@ -106,6 +113,41 @@ export async function closeCoaching(_prev: ActionState, formData: FormData): Pro
     entity: "contact",
     entityId: v.contactId,
     action: `coaching_${v.outcome}`,
+  });
+  refresh();
+  return { ok: true };
+}
+
+/** Columns for the case study; an empty case study is stored as null. Skips fields the form did not send. */
+function caseStudyValues(v: {
+  before: string | null;
+  trigger: string | null;
+  after: string | null;
+  changes: string[];
+  positioningStatement: string | null;
+  testimonialConsent: boolean;
+}) {
+  const filled = !!(v.before || v.trigger || v.after || v.changes.length);
+  return {
+    caseStudy: filled ? { before: v.before ?? undefined, trigger: v.trigger ?? undefined, after: v.after ?? undefined, changes: v.changes } : null,
+    positioningStatement: v.positioningStatement,
+    testimonialConsent: v.testimonialConsent,
+  };
+}
+
+/** Edit the case study / positioning statement at any time from the client file. */
+export async function saveCaseStudy(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const user = await requireCoach();
+  const parsed = caseStudySchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return { fieldErrors: z.flattenError(parsed.error).fieldErrors };
+  const client = await getClientForContact(parsed.data.contactId);
+  if (!client) return { error: "Ce contact n'est pas client." };
+  await db.update(clients).set(caseStudyValues(parsed.data)).where(eq(clients.id, client.id));
+  await db.insert(activityLog).values({
+    actorId: user.id,
+    entity: "contact",
+    entityId: parsed.data.contactId,
+    action: "case_study_saved",
   });
   refresh();
   return { ok: true };

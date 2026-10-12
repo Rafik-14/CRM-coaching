@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { ArrowLeft, CalendarPlus, LockKeyhole, Mail, Phone } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StageBadge } from "@/components/stage-badge";
@@ -12,6 +12,7 @@ import { Timeline } from "@/components/timeline";
 import { EmptyState, IconMark } from "@/components/empty-state";
 import { ScheduleSessionDialog } from "@/components/coaching/schedule-session-dialog";
 import { CloseCoachingDialog } from "@/components/coaching/close-coaching-dialog";
+import { CaseStudyDialog } from "@/components/coaching/case-study";
 import { ReopenCoachingButton } from "@/components/coaching/reopen-coaching-button";
 import { SessionCard } from "@/components/coaching/session-card";
 import { GoalsPanel } from "@/components/coaching/goals-panel";
@@ -102,7 +103,18 @@ async function ContactDetail({
         </div>
         <div className="flex flex-wrap gap-2">
           <ContactFormDialog stages={stages} partners={partners} defaultCurrency={business.currency} contact={contact} />
-          {client && <CloseCoachingDialog contactId={contact.id} contactName={name} active={active} />}
+          {client && (
+            <CloseCoachingDialog
+              contactId={contact.id}
+              contactName={name}
+              active={active}
+              caseValues={{
+                positioningStatement: client.positioningStatement,
+                caseStudy: client.caseStudy,
+                testimonialConsent: client.testimonialConsent,
+              }}
+            />
+          )}
           {client && !active && <ReopenCoachingButton contactId={contact.id} />}
           <ScheduleSessionDialog
             contactId={contact.id}
@@ -122,6 +134,18 @@ async function ContactDetail({
           {client.closeReason && <span className="text-muted-foreground">· {client.closeReason}</span>}
           {client.closeNote && <span className="w-full text-muted-foreground">{client.closeNote}</span>}
         </div>
+      )}
+
+      {/* The positioning statement is the key output of the Méthode JG®: always visible at the top. */}
+      {client?.positioningStatement && (
+        <figure className="rounded-xl border border-border bg-card px-5 py-4">
+          <figcaption className="text-[11px] tracking-[0.14em] text-muted-foreground uppercase">
+            Formulation de positionnement
+          </figcaption>
+          <blockquote className="mt-2 border-l-2 border-gold pl-4 font-heading text-base font-semibold text-heading">
+            « {client.positioningStatement} »
+          </blockquote>
+        </figure>
       )}
 
       <Tabs defaultValue={tab}>
@@ -186,7 +210,55 @@ async function ContactDetail({
             </CardContent>
           </Card>
 
-          <div className="grid content-start gap-6">
+          {client && (
+            <Card className="lg:col-span-2">
+              <CardHeader>
+                <CardTitle>Transformation</CardTitle>
+                <CardDescription>
+                  Avant · Le déclic · Après · Ce qui a changé
+                  {client.testimonialConsent && " · accord pour une étude de cas"}
+                </CardDescription>
+                <CardAction>
+                  <CaseStudyDialog
+                    contactId={contact.id}
+                    values={{
+                      positioningStatement: client.positioningStatement,
+                      caseStudy: client.caseStudy,
+                      testimonialConsent: client.testimonialConsent,
+                    }}
+                  />
+                </CardAction>
+              </CardHeader>
+              <CardContent>
+                {client.caseStudy ? (
+                  <dl className="grid gap-4 text-sm sm:grid-cols-3">
+                    <CaseStep label="Avant" value={client.caseStudy.before} />
+                    <CaseStep label="Le déclic" value={client.caseStudy.trigger} />
+                    <CaseStep label="Après" value={client.caseStudy.after} />
+                    {!!client.caseStudy.changes?.length && (
+                      <div className="sm:col-span-3">
+                        <dt className="text-muted-foreground">Ce qui a changé</dt>
+                        <dd className="mt-1 grid gap-1">
+                          {client.caseStudy.changes.map((c) => (
+                            <span key={c} className="flex gap-2">
+                              <span aria-hidden className="mt-2 h-0.5 w-3 shrink-0 rounded-full bg-gold" />
+                              {c}
+                            </span>
+                          ))}
+                        </dd>
+                      </div>
+                    )}
+                  </dl>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    À rédiger en fin d&apos;accompagnement : ce que le client disait avant, le déclic, ce qu&apos;il dit après.
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          <div className="grid content-start gap-6 lg:col-start-3 lg:row-start-1 lg:row-span-2">
             {contact.referrals.length > 0 && (
               <Card>
                 <CardHeader>
@@ -420,5 +492,14 @@ function ProfileLine({
         </span>
       ))}
     </p>
+  );
+}
+
+function CaseStep({ label, value }: { label: string; value?: string }) {
+  return (
+    <div>
+      <dt className="text-muted-foreground">{label}</dt>
+      <dd className="mt-1 whitespace-pre-wrap">{value || "—"}</dd>
+    </div>
   );
 }

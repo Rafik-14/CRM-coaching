@@ -1,5 +1,5 @@
 import "server-only";
-import { asc, count, eq, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, isNotNull, sql } from "drizzle-orm";
 import { db } from "@/server/db";
 import { clientPackages, clients, coachingSessions, contacts, packages, pipelineStages } from "@/server/db/schema";
 import { requireCoach } from "@/server/dal";
@@ -45,6 +45,15 @@ export async function getAnalytics() {
         sql`coalesce(${pipelineStages.isClient}, false) = false and ${contacts.stageChangedAt} < now() - interval '14 days'`,
       ),
   ]);
+
+  // « Transformations »: finished coachings written up as case studies, with the client's consent.
+  const transformations = await db.query.clients.findMany({
+    where: and(eq(clients.status, "finished"), eq(clients.testimonialConsent, true), isNotNull(clients.caseStudy)),
+    orderBy: desc(clients.closedAt),
+    limit: 6,
+    columns: { id: true, positioningStatement: true, caseStudy: true, closedAt: true },
+    with: { contact: { columns: { id: true, firstName: true, organization: true, stake: true, segment: true } } },
+  });
 
   const byStage = new Map(perStage.map((r) => [r.stageId, r]));
   // Funnel: contacts that reached each stage = contacts currently at that stage or any later one.
@@ -97,6 +106,7 @@ export async function getAnalytics() {
       { label: "Absences", value: sessionCount("no_show") },
     ].filter((s) => s.value > 0),
     mainCurrency,
+    transformations,
     revenueByPackage: [...byOffer.values()].sort(
       (a, b) => (b.value[mainCurrency] ?? 0) - (a.value[mainCurrency] ?? 0) || b.count - a.count,
     ),

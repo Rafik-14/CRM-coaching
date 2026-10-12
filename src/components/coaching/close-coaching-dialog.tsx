@@ -34,6 +34,7 @@ import { cn } from "@/lib/utils";
 import { closeCoaching, type ActionState } from "@/server/actions/coaching";
 import { IconMark } from "@/components/empty-state";
 import { CLOSE_OUTCOMES, CLOSE_REASONS } from "@/lib/validations/coaching";
+import { CaseStudyFields, type CaseStudyValues } from "@/components/coaching/case-study";
 
 type Outcome = keyof typeof CLOSE_OUTCOMES;
 const icons = {
@@ -55,10 +56,13 @@ export function CloseCoachingDialog({
   contactId,
   contactName,
   active = true,
+  caseValues,
 }: {
   contactId: string;
   contactName: string;
   active?: boolean;
+  /** Current case study / positioning statement, pre-filled when closing with success. */
+  caseValues?: CaseStudyValues;
 }) {
   const [open, setOpen] = useState(false);
   const [outcome, setOutcome] = useState<Outcome | null>(null);
@@ -101,7 +105,7 @@ export function CloseCoachingDialog({
           </Button>
         </DialogTrigger>
       )}
-      <DialogContent className="sm:max-w-xl">
+      <DialogContent className={cn("max-h-[92vh] overflow-y-auto", outcome === "finished" && !celebrate ? "sm:max-w-3xl" : "sm:max-w-xl")}>
         {celebrate ? (
           <div className="grid justify-items-center gap-4 py-2 text-center">
             <IconMark icon={Mountain} size="lg" />
@@ -205,6 +209,18 @@ export function CloseCoachingDialog({
                   placeholder="Bilan, contexte, suite éventuelle…"
                 />
               </div>
+
+              {outcome === "finished" && (
+                <section className="grid gap-3 border-t border-border pt-5">
+                  <div>
+                    <p className="font-heading text-sm font-semibold text-heading">Transformation (facultatif)</p>
+                    <p className="text-xs text-muted-foreground">
+                      Au format des études de cas de votre site. Modifiable plus tard depuis la fiche.
+                    </p>
+                  </div>
+                  <CaseStudyFields values={caseValues} errors={state.fieldErrors} />
+                </section>
+              )}
 
               {outcome && outcome !== "paused" && (
                 <div className="flex gap-3 rounded-xl border border-warning/40 bg-warning/10 p-3 text-sm">

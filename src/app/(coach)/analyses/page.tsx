@@ -182,6 +182,52 @@ async function Analytics() {
           )}
         </section>
       </div>
+
+      <section className="rounded-xl border border-border bg-card p-5">
+        <h2 className="font-semibold">Transformations</h2>
+        <p className="mb-5 text-sm text-muted-foreground">
+          Accompagnements terminés rédigés en étude de cas, avec l&apos;accord du client : prêts pour votre site.
+        </p>
+        {a.transformations.length ? (
+          <div className="grid gap-4 md:grid-cols-2">
+            {a.transformations.map((t) => (
+              <article key={t.id} className="grid content-start gap-3 rounded-xl border border-border p-4">
+                <div className="flex items-baseline justify-between gap-2">
+                  <Link href={`/contacts/${t.contact.id}`} className="font-heading font-semibold text-heading hover:underline">
+                    {t.contact.firstName}
+                  </Link>
+                  <span className="text-xs text-muted-foreground">
+                    {[t.contact.stake, t.contact.organization].filter(Boolean).join(" · ")}
+                  </span>
+                </div>
+                {t.positioningStatement && (
+                  <blockquote className="border-l-2 border-gold pl-3 text-sm font-semibold text-heading">
+                    « {t.positioningStatement} »
+                  </blockquote>
+                )}
+                <dl className="grid gap-2 text-sm">
+                  {t.caseStudy?.before && (
+                    <div>
+                      <dt className="text-[11px] tracking-wider text-muted-foreground uppercase">Avant</dt>
+                      <dd>{t.caseStudy.before}</dd>
+                    </div>
+                  )}
+                  {t.caseStudy?.after && (
+                    <div>
+                      <dt className="text-[11px] tracking-wider text-muted-foreground uppercase">Après</dt>
+                      <dd>{t.caseStudy.after}</dd>
+                    </div>
+                  )}
+                </dl>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            Aucune pour le moment. Elles se remplissent en clôturant un accompagnement « Terminé avec succès ».
+          </p>
+        )}
+      </section>
     </div>
   );
 }
