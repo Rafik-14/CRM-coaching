@@ -15,6 +15,7 @@ import { StageBadge } from "@/components/stage-badge";
 import { FollowUpBadge } from "@/components/follow-up-badge";
 import { ContactQuickView } from "@/components/contact-quick-view";
 import { formatMoney, fullName, initials } from "@/lib/format";
+import { segmentLabel } from "@/lib/jg";
 import type { ContactRow } from "@/server/queries/contacts";
 
 const avatarTones = ["bg-primary/20 text-primary", "bg-info/20 text-info", "bg-success/20 text-success", "bg-warning/20 text-warning"];
@@ -36,6 +37,7 @@ export function ContactsTable({
         <TableHeader>
           <TableRow className="hover:bg-transparent">
             <TableHead className="pl-5 text-[11px] tracking-wider uppercase">Contact</TableHead>
+            <TableHead className="hidden text-[11px] tracking-wider uppercase lg:table-cell">Profil</TableHead>
             <TableHead className="text-[11px] tracking-wider uppercase">Étape</TableHead>
             <TableHead className="hidden text-[11px] tracking-wider uppercase md:table-cell">Valeur</TableHead>
             <TableHead className="hidden text-[11px] tracking-wider uppercase xl:table-cell">Dernière activité</TableHead>
@@ -48,7 +50,7 @@ export function ContactsTable({
         <TableBody>
           {rows.length === 0 && (
             <TableRow>
-              <TableCell colSpan={6} className="whitespace-normal">
+              <TableCell colSpan={7} className="whitespace-normal">
                 {empty ?? <p className="py-12 text-center text-muted-foreground">Aucun contact trouvé.</p>}
               </TableCell>
             </TableRow>
@@ -73,6 +75,12 @@ export function ContactsTable({
                     <span className="block truncate text-xs text-muted-foreground">{c.email ?? c.phone ?? "—"}</span>
                   </div>
                 </div>
+              </TableCell>
+              <TableCell className="hidden max-w-48 lg:table-cell">
+                <span className="block truncate text-sm">{segmentLabel(c.segment) ?? "—"}</span>
+                {(c.stake || c.organization) && (
+                  <span className="block truncate text-xs text-muted-foreground">{c.stake ?? c.organization}</span>
+                )}
               </TableCell>
               <TableCell>
                 <StageBadge name={c.stageName} color={c.stageColor} />

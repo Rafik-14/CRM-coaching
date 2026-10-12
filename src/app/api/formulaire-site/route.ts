@@ -2,6 +2,7 @@ import { asc, eq } from "drizzle-orm";
 import { db } from "@/server/db";
 import { activityLog, contacts, pipelineStages, tasks } from "@/server/db/schema";
 import { siteFormSchema } from "@/lib/validations/phase1";
+import { currencyFor } from "@/server/business";
 
 /**
  * Contact form of the coach's existing website → new lead in the CRM.
@@ -77,7 +78,9 @@ export async function POST(request: Request) {
         lastName: v.lastName,
         email: v.email,
         phone: v.phone || null,
-        source: "Site web",
+        source: v.cta ? `Site web · ${v.cta}` : "Site web",
+        segment: v.segment ?? null,
+        currency: await currencyFor(null),
         stageId: firstStage?.id ?? null,
         notes: v.message ? `Message du site : ${v.message}` : null,
       })

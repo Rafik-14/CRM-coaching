@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { SEGMENT_VALUES } from "@/lib/jg";
 
 const optionalText = (max: number) =>
   z
@@ -158,6 +159,10 @@ export const siteFormSchema = z.object({
   email: z.email().trim().toLowerCase().max(200),
   phone: z.string().trim().max(40).optional(),
   message: z.string().trim().max(4000).optional(),
+  /** Optional JG® audience sent by the site's button (e.g. « Construire un partenariat » → cabinet_rh). */
+  segment: z.enum(SEGMENT_VALUES).optional().catch(undefined),
+  /** Optional label of the button / page the visitor came from. */
+  cta: z.string().trim().max(80).optional().catch(undefined),
   /** Honeypot: real visitors leave it empty (checked by the route, which then fakes success). */
   website: z.string().max(500).optional(),
 });

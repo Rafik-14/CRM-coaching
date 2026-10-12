@@ -42,8 +42,9 @@ async function readFilters(searchParams: SP) {
   const p = await searchParams;
   const q = typeof p.q === "string" ? p.q : undefined;
   const stage = typeof p.etape === "string" ? p.etape : undefined;
+  const segment = typeof p.profil === "string" ? p.profil : undefined;
   const page = Math.max(1, Number(typeof p.page === "string" ? p.page : 1) || 1);
-  return { q, stage, page };
+  return { q, stage, segment, page };
 }
 
 function buildQuery(params: Record<string, string | number | undefined>) {
@@ -54,12 +55,12 @@ function buildQuery(params: Record<string, string | number | undefined>) {
 }
 
 async function HeaderActions({ searchParams }: { searchParams: SP }) {
-  const { q, stage } = await readFilters(searchParams);
+  const { q, stage, segment } = await readFilters(searchParams);
   return (
     <>
       <Button variant="secondary" asChild>
         {/* Plain link: the browser downloads the CSV file */}
-        <a href={`/contacts/export${buildQuery({ q, etape: stage })}`}>
+        <a href={`/contacts/export${buildQuery({ q, etape: stage, profil: segment })}`}>
           <Download /> Exporter
         </a>
       </Button>
@@ -69,26 +70,26 @@ async function HeaderActions({ searchParams }: { searchParams: SP }) {
 }
 
 async function ContactsList({ searchParams }: { searchParams: SP }) {
-  const { q, stage, page } = await readFilters(searchParams);
+  const { q, stage, segment, page } = await readFilters(searchParams);
   const [stages, { rows, total, pageCount, page: current }] = await Promise.all([
     getStages(),
-    listContacts({ q, stage, page }),
+    listContacts({ q, stage, segment, page }),
   ]);
   const from = total === 0 ? 0 : (current - 1) * CONTACTS_PAGE_SIZE + 1;
   const to = Math.min(current * CONTACTS_PAGE_SIZE, total);
 
   return (
     <div className="grid gap-4">
-      <ContactFilters stages={stages} q={q ?? ""} stage={stage ?? ""} />
+      <ContactFilters stages={stages} q={q ?? ""} stage={stage ?? ""} segment={segment ?? ""} />
       <div className="overflow-hidden rounded-2xl border border-border bg-card">
         <ContactsTable
           rows={rows.map((r) => ({ ...r, lastActivityLabel: r.lastActivity ? formatRelative(r.lastActivity) : null }))}
           empty={
-            q || stage ? (
+            q || stage || segment ? (
               <EmptyState
                 icon={SearchX}
                 title="Aucun résultat"
-                description="Essayez un autre nom, un e-mail ou retirez le filtre d'étape."
+                description="Essayez un autre nom, un e-mail ou retirez les filtres."
                 action={
                   <Button variant="outline" size="sm" asChild>
                     <Link href="/contacts">Effacer la recherche</Link>
@@ -111,15 +112,15 @@ async function ContactsList({ searchParams }: { searchParams: SP }) {
           </p>
           {pageCount > 1 && (
             <nav className="flex items-center gap-1" aria-label="Pagination">
-              <PageLink page={current - 1} disabled={current <= 1} q={q} stage={stage} label="Page précédente">
+              <PageLink page={current - 1} disabled={current <= 1} q={q} stage={stage} segment={segment} label="Page précédente">
                 <ChevronLeft className="size-4" />
               </PageLink>
               {Array.from({ length: pageCount }, (_, i) => i + 1).map((p) => (
-                <PageLink key={p} page={p} active={p === current} q={q} stage={stage} label={`Page ${p}`}>
+                <PageLink key={p} page={p} active={p === current} q={q} stage={stage} segment={segment} label={`Page ${p}`}>
                   {p}
                 </PageLink>
               ))}
-              <PageLink page={current + 1} disabled={current >= pageCount} q={q} stage={stage} label="Page suivante">
+              <PageLink page={current + 1} disabled={current >= pageCount} q={q} stage={stage} segment={segment} label="Page suivante">
                 <ChevronRight className="size-4" />
               </PageLink>
             </nav>
@@ -134,6 +135,7 @@ function PageLink({
   page,
   q,
   stage,
+  segment,
   active,
   disabled,
   label,
@@ -142,6 +144,7 @@ function PageLink({
   page: number;
   q?: string;
   stage?: string;
+  segment?: string;
   active?: boolean;
   disabled?: boolean;
   label: string;
@@ -154,7 +157,7 @@ function PageLink({
   );
   if (disabled) return <span className={cls} aria-hidden>{children}</span>;
   return (
-    <Link href={`/contacts${buildQuery({ q, etape: stage, page })}`} className={cls} aria-label={label} aria-current={active ? "page" : undefined}>
+    <Link href={`/contacts${buildQuery({ q, etape: stage, profil: segment, page })}`} className={cls} aria-label={label} aria-current={active ? "page" : undefined}>
       {children}
     </Link>
   );

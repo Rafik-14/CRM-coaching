@@ -8,6 +8,7 @@ import { db } from "@/server/db";
 import { activityLog, clients, contacts, pipelineStages, tasks } from "@/server/db/schema";
 import { requireCoach } from "@/server/dal";
 import { contactSchema } from "@/lib/validations/contact";
+import { currencyFor } from "@/server/business";
 
 export type FormState = { ok?: boolean; error?: string; fieldErrors?: Record<string, string[]> };
 
@@ -24,7 +25,12 @@ export async function createContact(_prev: FormState, formData: FormData): Promi
   const parsed = contactSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { fieldErrors: z.flattenError(parsed.error).fieldErrors };
 
-  const [contact] = await db.insert(contacts).values(parsed.data).returning({ id: contacts.id });
+  const data = {
+    ...parsed.data,
+    subSegment: parsed.data.segment === "particulier" ? parsed.data.subSegment : null,
+    currency: await currencyFor(parsed.data.country, parsed.data.currency),
+  };
+  const [contact] = await db.insert(contacts).values(data).returning({ id: contacts.id });
   await syncClientForStage(contact.id, parsed.data.stageId);
   await db
     .insert(activityLog)
@@ -49,11 +55,19 @@ export async function updateContact(
     columns: { stageId: true },
   });
   if (!current) return { error: "Contact introuvable." };
+  if (parsed.data.referredByContactId === contactId) {
+    return { fieldErrors: { referredByContactId: ["Un contact ne peut pas se recommander lui-même."] } };
+  }
   const stageChanged = (parsed.data.stageId ?? null) !== current.stageId;
+  const data = {
+    ...parsed.data,
+    subSegment: parsed.data.segment === "particulier" ? parsed.data.subSegment : null,
+    currency: await currencyFor(parsed.data.country, parsed.data.currency),
+  };
 
   await db
     .update(contacts)
-    .set({ ...parsed.data, ...(stageChanged && { stageChangedAt: new Date() }) })
+    .set({ ...data, ...(stageChanged && { stageChangedAt: new Date() }) })
     .where(eq(contacts.id, contactId));
 
   await syncClientForStage(contactId, parsed.data.stageId);

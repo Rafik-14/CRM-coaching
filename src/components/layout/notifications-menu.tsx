@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Bell, CalendarClock, CircleAlert } from "lucide-react";
+import { Bell, CalendarClock, CircleAlert, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -15,7 +15,7 @@ import { APP_TIME_ZONE, formatDate, fullName } from "@/lib/format";
 const timeFmt = new Intl.DateTimeFormat("fr-FR", { hour: "2-digit", minute: "2-digit", timeZone: APP_TIME_ZONE });
 
 export async function NotificationsMenu() {
-  const { overdue, today, count } = await getNotifications();
+  const { overdue, today, keyMoments, count } = await getNotifications();
 
   return (
     <DropdownMenu>
@@ -42,6 +42,21 @@ export async function NotificationsMenu() {
               <span className="grid">
                 <span className="text-sm">{s.type} · {fullName(s.contact)}</span>
                 <span className="text-xs text-muted-foreground">Aujourd&apos;hui à {timeFmt.format(s.startsAt)}</span>
+              </span>
+            </Link>
+          </DropdownMenuItem>
+        ))}
+        {keyMoments.map((c) => (
+          <DropdownMenuItem key={c.id} asChild>
+            <Link href={`/contacts/${c.id}`} className="items-start gap-3">
+              <Target className="mt-0.5 text-heading" />
+              <span className="grid">
+                <span className="text-sm">
+                  {c.stake ?? "Moment décisif"} · {fullName(c)}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {c.inDays <= 0 ? "Aujourd'hui" : c.inDays === 1 ? "Demain" : `Dans ${c.inDays} jours`} · {formatDate(c.keyMomentAt)}
+                </span>
               </span>
             </Link>
           </DropdownMenuItem>

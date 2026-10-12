@@ -1,4 +1,5 @@
 import { exportContacts } from "@/server/queries/contacts";
+import { countryLabel, segmentLabel, subSegmentLabel } from "@/lib/jg";
 
 // Neutralize spreadsheet formulas (CSV injection) and quote every cell.
 function cell(value: unknown) {
@@ -12,9 +13,10 @@ export async function GET(request: Request) {
   const rows = await exportContacts({
     q: url.searchParams.get("q") ?? undefined,
     stage: url.searchParams.get("etape") ?? undefined,
+    segment: url.searchParams.get("profil") ?? undefined,
   });
 
-  const header = ["Prénom", "Nom", "E-mail", "Téléphone", "Étape", "Source", "Valeur estimée", "Devise", "Tags", "Ajouté le"];
+  const header = ["Prénom", "Nom", "E-mail", "Téléphone", "Étape", "Source", "Type de client", "Situation", "Organisation", "Pays", "Enjeu", "Moment décisif", "Valeur estimée", "Devise", "Tags", "Ajouté le"];
   const lines = rows.map((r) =>
     [
       r.firstName,
@@ -23,6 +25,12 @@ export async function GET(request: Request) {
       r.phone,
       r.stageName,
       r.source,
+      segmentLabel(r.segment),
+      subSegmentLabel(r.subSegment),
+      r.organization,
+      countryLabel(r.country),
+      r.stake,
+      r.keyMomentAt?.toLocaleDateString("fr-FR"),
       r.estimatedValue ? Number(r.estimatedValue).toFixed(2).replace(".", ",") : "",
       r.currency,
       r.tags.join(", "),

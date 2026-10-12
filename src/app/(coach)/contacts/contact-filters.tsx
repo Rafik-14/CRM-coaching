@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { Loader2, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SEGMENTS } from "@/lib/jg";
 
 const ALL = "all";
 
@@ -12,22 +13,26 @@ export function ContactFilters({
   stages,
   q,
   stage,
+  segment,
 }: {
   stages: { id: string; name: string }[];
   q: string;
   stage: string;
+  segment: string;
 }) {
   const router = useRouter();
   const pathname = usePathname();
   const [pending, startTransition] = useTransition();
   const [search, setSearch] = useState(q);
 
-  function update(next: { q?: string; etape?: string }) {
+  function update(next: { q?: string; etape?: string; profil?: string }) {
     const params = new URLSearchParams();
     const nq = next.q ?? search;
     const ne = next.etape ?? stage;
+    const np = next.profil ?? segment;
     if (nq) params.set("q", nq);
     if (ne && ne !== ALL) params.set("etape", ne);
+    if (np && np !== ALL) params.set("profil", np);
     startTransition(() => router.replace(params.size ? `${pathname}?${params}` : pathname));
   }
 
@@ -45,7 +50,7 @@ export function ContactFilters({
         <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           type="search"
-          placeholder="Rechercher un nom, un e-mail, un téléphone…"
+          placeholder="Rechercher un nom, un e-mail, une organisation…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="pl-9"
@@ -66,6 +71,20 @@ export function ContactFilters({
               {s.name}
             </SelectItem>
           ))}
+        </SelectContent>
+      </Select>
+      <Select value={segment || ALL} onValueChange={(v) => update({ profil: v })}>
+        <SelectTrigger className="w-full sm:w-60" aria-label="Filtrer par type de client">
+          <SelectValue placeholder="Tous les profils" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value={ALL}>Tous les profils</SelectItem>
+          {SEGMENTS.map((s) => (
+            <SelectItem key={s.value} value={s.value}>
+              {s.label}
+            </SelectItem>
+          ))}
+          <SelectItem value="aucun">Profil non précisé</SelectItem>
         </SelectContent>
       </Select>
     </div>

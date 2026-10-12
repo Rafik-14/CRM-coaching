@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { ArrowLeft, CalendarPlus, LockKeyhole, Mail, Phone } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StageBadge } from "@/components/stage-badge";
@@ -18,7 +18,9 @@ import { GoalsPanel } from "@/components/coaching/goals-panel";
 import { PackagesPanel } from "@/components/coaching/packages-panel";
 import { DocumentsPanel } from "@/components/coaching/documents-panel";
 import { DeleteTaskButton, TaskDialog } from "@/components/coaching/task-dialog";
-import { getContact, getContactTimeline, getStages } from "@/server/queries/contacts";
+import { getContact, getContactTimeline, getStages, listPartnerOptions } from "@/server/queries/contacts";
+import { getBusinessSettings } from "@/server/business";
+import { countryLabel, segmentLabel, subSegmentLabel } from "@/lib/jg";
 import { getActivePackages, getNoteTemplateFields } from "@/server/queries/settings";
 import { formatDate, formatDayTime, fullName, isOverdue, isUpcoming } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -53,12 +55,14 @@ async function ContactDetail({
 }) {
   const [{ id }, sp] = await Promise.all([params, searchParams]);
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
-  const [contact, stages, timeline, templateFields, packageOptions] = await Promise.all([
+  const [contact, stages, timeline, templateFields, packageOptions, partners, business] = await Promise.all([
     getContact(id),
     getStages(),
     getContactTimeline(id),
     getNoteTemplateFields(),
     getActivePackages(),
+    listPartnerOptions(),
+    getBusinessSettings(),
   ]);
   if (!contact) notFound();
   const tab = TABS.find((t) => t === sp.onglet) ?? "apercu";
@@ -94,9 +98,10 @@ async function ContactDetail({
               </a>
             )}
           </div>
+          <ProfileLine contact={contact} />
         </div>
         <div className="flex flex-wrap gap-2">
-          <ContactFormDialog stages={stages} contact={contact} />
+          <ContactFormDialog stages={stages} partners={partners} defaultCurrency={business.currency} contact={contact} />
           {client && <CloseCoachingDialog contactId={contact.id} contactName={name} active={active} />}
           {client && !active && <ReopenCoachingButton contactId={contact.id} />}
           <ScheduleSessionDialog
@@ -150,6 +155,14 @@ async function ContactDetail({
             <CardContent>
               <dl className="grid gap-4 text-sm sm:grid-cols-2">
                 <Info label="Source" value={contact.source} />
+                <Info
+                  label="Type de client"
+                  value={[segmentLabel(contact.segment), subSegmentLabel(contact.subSegment)].filter(Boolean).join(" · ") || null}
+                />
+                {contact.organization && <Info label="Organisation" value={contact.organization} />}
+                <Info label="Pays · devise" value={[countryLabel(contact.country), contact.currency].filter(Boolean).join(" · ")} />
+                {contact.stake && <Info label="Enjeu" value={contact.stake} />}
+                {contact.keyMomentAt && <Info label="Moment décisif" value={formatDate(contact.keyMomentAt)} />}
                 <Info label="Ajouté le" value={formatDate(contact.createdAt)} />
                 {client && <Info label="Client depuis" value={formatDate(client.startDate)} />}
                 {client && <Info label="Objectif principal" value={client.mainGoal} />}
@@ -174,6 +187,32 @@ async function ContactDetail({
           </Card>
 
           <div className="grid content-start gap-6">
+            {contact.referrals.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Contacts recommandés</CardTitle>
+                  <CardDescription>
+                    {contact.referrals.length} recommandé{contact.referrals.length > 1 ? "s" : ""} ·{" "}
+                    {contact.referrals.filter((r) => r.stage?.isClient).length} devenu
+                    {contact.referrals.filter((r) => r.stage?.isClient).length > 1 ? "s" : ""} client
+                    {contact.referrals.filter((r) => r.stage?.isClient).length > 1 ? "s" : ""}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ul className="grid gap-2">
+                    {contact.referrals.map((r) => (
+                      <li key={r.id} className="flex items-center justify-between gap-2 text-sm">
+                        <Link href={`/contacts/${r.id}`} className="min-w-0 truncate font-medium hover:underline">
+                          {fullName(r)}
+                          {r.stake && <span className="ml-1.5 font-normal text-muted-foreground">· {r.stake}</span>}
+                        </Link>
+                        <StageBadge name={r.stage?.name ?? null} color={r.stage?.color ?? null} />
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            )}
             {upcoming[0] && (
               <Card className="gap-1 py-4">
                 <CardContent>
@@ -188,7 +227,7 @@ async function ContactDetail({
             {client && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Forfaits</CardTitle>
+                  <CardTitle>Accompagnements</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <PackagesPanel
@@ -332,5 +371,53 @@ function Info({ label, value }: { label: string; value: string | null | undefine
       <dt className="text-muted-foreground">{label}</dt>
       <dd className="mt-1">{value || "—"}</dd>
     </div>
+  );
+}
+
+/** JG® profile under the name: type of client, organisation, stake, decisive moment, referrer. */
+function ProfileLine({
+  contact,
+}: {
+  contact: {
+    segment: string | null;
+    subSegment: string | null;
+    organization: string | null;
+    stake: string | null;
+    keyMomentAt: Date | null;
+    referredBy: { id: string; firstName: string; lastName: string; organization: string | null } | null;
+  };
+}) {
+  const items: React.ReactNode[] = [];
+  const segment = subSegmentLabel(contact.subSegment) ?? segmentLabel(contact.segment);
+  if (segment) items.push(<span key="seg">{segment}</span>);
+  if (contact.organization) items.push(<span key="org">{contact.organization}</span>);
+  if (contact.stake) {
+    items.push(
+      <span key="stake" className="font-medium text-foreground">
+        Enjeu : {contact.stake}
+        {contact.keyMomentAt && <> · le {formatDate(contact.keyMomentAt)}</>}
+      </span>,
+    );
+  }
+  if (contact.referredBy) {
+    items.push(
+      <span key="ref">
+        Recommandé par{" "}
+        <Link href={`/contacts/${contact.referredBy.id}`} className="underline-offset-2 hover:underline">
+          {contact.referredBy.organization ?? fullName(contact.referredBy)}
+        </Link>
+      </span>,
+    );
+  }
+  if (!items.length) return null;
+  return (
+    <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
+      {items.map((item, i) => (
+        <span key={i} className="inline-flex items-center gap-2">
+          {i > 0 && <span aria-hidden className="size-1 rounded-full bg-gold" />}
+          {item}
+        </span>
+      ))}
+    </p>
   );
 }
