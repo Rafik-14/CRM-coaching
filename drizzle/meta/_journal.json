@@ -29,6 +29,13 @@
       "when": 1791832661281,
       "tag": "0003_jg_tailoring",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791833812564,
+      "tag": "0004_note_template_session_type",
+      "breakpoints": true
     }
   ]
 }

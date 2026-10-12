@@ -1,0 +1,1 @@
+ALTER TABLE "note_templates" ADD COLUMN "session_type" text;

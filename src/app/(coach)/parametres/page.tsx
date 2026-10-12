@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageHeader } from "@/components/page-header";
 import { getSettingsOverview } from "@/server/queries/settings";
 import { initials } from "@/lib/format";
-import { BusinessForm, NoteTemplateForm, PackagesEditor, StagesEditor } from "./settings-forms";
+import { BusinessForm, NoteTemplatesEditor, PackagesEditor, StagesEditor } from "./settings-forms";
 
 export const metadata: Metadata = { title: "Paramètres" };
 
@@ -42,7 +42,6 @@ function Row({ label, value }: { label: React.ReactNode; value: React.ReactNode 
 
 async function Settings() {
   const { user, business, stages, packages, templates } = await getSettingsOverview();
-  const template = templates[0];
   const origins = (process.env.SITE_FORM_ORIGINS ?? "").split(",").map((o) => o.trim()).filter(Boolean);
   const endpoint = `${process.env.BETTER_AUTH_URL ?? "https://crm.example.com"}/api/formulaire-site`;
   const snippet = `<form action="${endpoint}" method="post">
@@ -62,7 +61,7 @@ async function Settings() {
         <TabsTrigger value="general">Général</TabsTrigger>
         <TabsTrigger value="pipeline">Pipeline</TabsTrigger>
         <TabsTrigger value="forfaits">Accompagnements</TabsTrigger>
-        <TabsTrigger value="notes">Modèle de note</TabsTrigger>
+        <TabsTrigger value="notes">Modèles de note</TabsTrigger>
       </TabsList>
 
       <TabsContent value="general" className="mt-6 grid gap-6 lg:grid-cols-2">
@@ -131,8 +130,11 @@ async function Settings() {
       </TabsContent>
 
       <TabsContent value="notes" className="mt-6">
-        <Panel title="Modèle de note" description="Rubriques remplies après chaque séance">
-          <NoteTemplateForm fields={template?.fields ?? []} />
+        <Panel
+          title="Modèles de note"
+          description="Un modèle par accompagnement ou par type de séance, construit sur la Méthode JG®."
+        >
+          <NoteTemplatesEditor templates={templates} />
         </Panel>
       </TabsContent>
     </Tabs>

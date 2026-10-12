@@ -19,7 +19,7 @@ export async function getSettingsOverview() {
     db.query.packages.findMany({
       orderBy: [desc(packages.active), asc(packages.position), asc(packages.sessionsCount)],
     }),
-    db.query.noteTemplates.findMany({ orderBy: desc(noteTemplates.isDefault) }),
+    db.query.noteTemplates.findMany({ orderBy: [desc(noteTemplates.isDefault), asc(noteTemplates.name)] }),
     db.query.settings.findFirst({ where: eq(settings.key, "business") }),
   ]);
   const biz = (business?.value ?? {}) as { name?: string; currency?: string };
@@ -32,11 +32,32 @@ export async function getSettingsOverview() {
   };
 }
 
-/** Labels of the default note template (rubriques). */
-export async function getNoteTemplateFields() {
+/** All note templates (default first), for the session note dialog. */
+export async function getNoteTemplates() {
   await requireCoach();
-  const t = await db.query.noteTemplates.findFirst({ orderBy: desc(noteTemplates.isDefault) });
-  return t?.fields ?? [];
+  return db.query.noteTemplates.findMany({
+    columns: { id: true, name: true, fields: true, isDefault: true, sessionType: true },
+    orderBy: [desc(noteTemplates.isDefault), asc(noteTemplates.name)],
+  });
+}
+
+export type NoteTemplateOption = Awaited<ReturnType<typeof getNoteTemplates>>[number];
+
+/**
+ * Template a session opens with: the one tied to its type (e.g. Échange stratégique),
+ * else the template of the offer it was counted against / the client's latest offer, else the default.
+ */
+export function pickTemplateId(
+  session: { type: string; clientPackageId: string | null },
+  templates: NoteTemplateOption[],
+  clientPackages: { id: string; package: { noteTemplateId: string | null } }[],
+) {
+  const byType = templates.find((t) => t.sessionType === session.type);
+  if (byType) return byType.id;
+  const pkg = clientPackages.find((cp) => cp.id === session.clientPackageId) ?? clientPackages[0];
+  const fromOffer = pkg?.package.noteTemplateId;
+  if (fromOffer && templates.some((t) => t.id === fromOffer)) return fromOffer;
+  return templates.find((t) => t.isDefault)?.id ?? templates[0]?.id ?? null;
 }
 
 /** Offers currently on sale, for the "attribuer un accompagnement" dialog. */

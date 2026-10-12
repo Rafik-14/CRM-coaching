@@ -21,7 +21,7 @@ import { DeleteTaskButton, TaskDialog } from "@/components/coaching/task-dialog"
 import { getContact, getContactTimeline, getStages, listPartnerOptions } from "@/server/queries/contacts";
 import { getBusinessSettings } from "@/server/business";
 import { countryLabel, segmentLabel, subSegmentLabel } from "@/lib/jg";
-import { getActivePackages, getNoteTemplateFields } from "@/server/queries/settings";
+import { getActivePackages, getNoteTemplates, pickTemplateId } from "@/server/queries/settings";
 import { formatDate, formatDayTime, fullName, isOverdue, isUpcoming } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { ContactFormDialog } from "../contact-form-dialog";
@@ -55,11 +55,11 @@ async function ContactDetail({
 }) {
   const [{ id }, sp] = await Promise.all([params, searchParams]);
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
-  const [contact, stages, timeline, templateFields, packageOptions, partners, business] = await Promise.all([
+  const [contact, stages, timeline, templates, packageOptions, partners, business] = await Promise.all([
     getContact(id),
     getStages(),
     getContactTimeline(id),
-    getNoteTemplateFields(),
+    getNoteTemplates(),
     getActivePackages(),
     listPartnerOptions(),
     getBusinessSettings(),
@@ -285,7 +285,8 @@ async function ContactDetail({
               <SessionCard
                 key={item.key}
                 session={item.session}
-                templateFields={templateFields}
+                templates={templates}
+                templateId={pickTemplateId(item.session, templates, client?.packages ?? [])}
                 upcoming={item.upcoming}
               />
             ),

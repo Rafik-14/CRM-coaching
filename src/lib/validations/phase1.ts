@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { SEGMENT_VALUES } from "@/lib/jg";
+import { SESSION_TYPES } from "@/lib/validations/coaching";
 
 const optionalText = (max: number) =>
   z
@@ -132,6 +133,15 @@ export const packageSchema = z.object({
 });
 
 export const noteTemplateSchema = z.object({
+  name: z.string().trim().min(1, "Le nom est obligatoire").max(80),
+  sessionType: z
+    .union([z.literal(""), z.literal("none"), z.enum(SESSION_TYPES)])
+    .optional()
+    .transform((v) => (v && v !== "none" ? v : null)),
+  isDefault: z
+    .union([z.literal("on"), z.literal("true"), z.literal("")])
+    .optional()
+    .transform((v) => v === "on" || v === "true"),
   fields: z
     .string()
     .transform((v) =>

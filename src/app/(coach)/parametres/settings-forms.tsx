@@ -22,7 +22,9 @@ import { StageBadge, stageDot } from "@/components/stage-badge";
 import { cn } from "@/lib/utils";
 import { formatMoney } from "@/lib/format";
 import { STAGE_COLORS } from "@/lib/validations/phase1";
+import { SESSION_TYPES } from "@/lib/validations/coaching";
 import {
+  deleteNoteTemplate,
   deleteStage,
   moveStage,
   saveBusiness,
@@ -384,23 +386,135 @@ function PackageDialog({ pkg, templates }: { pkg?: Pkg; templates: TemplateOptio
 
 // ------------------------------------------------------------------ note template & business
 
-export function NoteTemplateForm({ fields }: { fields: string[] }) {
-  const [state, formAction, pending] = useSave(saveNoteTemplate, "Modèle de note enregistré");
+type Template = { id: string; name: string; fields: string[]; isDefault: boolean; sessionType: string | null };
+
+/** Several templates: one per offer / session type (Méthode JG®), one default. */
+export function NoteTemplatesEditor({ templates }: { templates: Template[] }) {
   return (
-    <form action={formAction} className="grid gap-3">
-      <FormField
-        label="Rubriques (une par ligne)"
-        htmlFor="fields"
-        error={state.fieldErrors?.fields?.[0]}
-        hint="Elles apparaissent dans chaque note de séance. Les notes déjà écrites ne changent pas."
-      >
-        <Textarea id="fields" name="fields" rows={6} defaultValue={fields.join("\n")} />
-      </FormField>
-      <Button type="submit" disabled={pending} className="justify-self-start">
-        {pending && <Loader2 className="animate-spin" />}
-        Enregistrer
-      </Button>
-    </form>
+    <div className="grid gap-4">
+      <div className="grid gap-4 md:grid-cols-2">
+        {templates.map((t) => (
+          <article key={t.id} className="rounded-xl border border-border bg-card p-4">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <h3 className="truncate text-sm font-semibold">{t.name}</h3>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  {t.isDefault ? "Par défaut" : "Modèle"}
+                  {t.sessionType && ` · séances « ${t.sessionType} »`}
+                </p>
+              </div>
+              <div className="-mt-1 -mr-1 flex">
+                <NoteTemplateDialog template={t} />
+                {!t.isDefault && (
+                  <ConfirmDialog
+                    title={`Supprimer « ${t.name} » ?`}
+                    description="Les notes déjà écrites ne changent pas. Les accompagnements qui l'utilisaient passeront au modèle par défaut."
+                    confirmLabel="Supprimer"
+                    successMessage="Modèle supprimé"
+                    onConfirm={() => deleteNoteTemplate(t.id)}
+                    trigger={
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="size-8 text-muted-foreground"
+                        aria-label={`Supprimer ${t.name}`}
+                      >
+                        <Trash2 />
+                      </Button>
+                    }
+                  />
+                )}
+              </div>
+            </div>
+            <ol className="mt-3 grid gap-1 text-sm">
+              {t.fields.map((f, i) => (
+                <li key={f} className="flex gap-2">
+                  <span className="w-5 shrink-0 text-xs text-muted-foreground tabular-nums">{String(i + 1).padStart(2, "0")}</span>
+                  {f}
+                </li>
+              ))}
+            </ol>
+          </article>
+        ))}
+      </div>
+      <NoteTemplateDialog />
+    </div>
+  );
+}
+
+function NoteTemplateDialog({ template }: { template?: Template }) {
+  const [open, setOpen] = useState(false);
+  const [state, formAction, pending] = useSave(
+    (prev, fd) => saveNoteTemplate(template?.id ?? null, prev, fd),
+    template ? "Modèle mis à jour" : "Modèle ajouté",
+    () => setOpen(false),
+  );
+  const err = (f: string) => state.fieldErrors?.[f]?.[0];
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        {template ? (
+          <Button variant="ghost" size="icon" className="size-8 text-muted-foreground" aria-label={`Modifier ${template.name}`}>
+            <Pencil />
+          </Button>
+        ) : (
+          <Button variant="outline" size="sm" className="justify-self-start">
+            <Plus /> Ajouter un modèle
+          </Button>
+        )}
+      </DialogTrigger>
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>{template ? "Modifier le modèle" : "Nouveau modèle de note"}</DialogTitle>
+          <DialogDescription>Les rubriques proposées dans la note de séance. Les notes déjà écrites ne changent pas.</DialogDescription>
+        </DialogHeader>
+        <form action={formAction} className="grid gap-4">
+          <FormField label="Nom *" htmlFor="tpl-name" error={err("name")}>
+            <Input id="tpl-name" name="name" defaultValue={template?.name} placeholder="ex. Parcours Signature JG®" />
+          </FormField>
+          <FormField
+            label="Rubriques (une par ligne) *"
+            htmlFor="tpl-fields"
+            error={err("fields")}
+            hint="Une rubrique qui commence par « Exercices » propose de créer une tâche de suivi."
+          >
+            <Textarea id="tpl-fields" name="fields" rows={7} defaultValue={template?.fields.join("\n")} />
+          </FormField>
+          <FormField
+            label="Utilisé automatiquement pour les séances de type"
+            htmlFor="tpl-type"
+            hint="Sinon : le modèle de l'accompagnement du client, puis le modèle par défaut."
+          >
+            <Select name="sessionType" defaultValue={template?.sessionType ?? "none"}>
+              <SelectTrigger id="tpl-type" className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Aucun type en particulier</SelectItem>
+                {SESSION_TYPES.map((t) => (
+                  <SelectItem key={t} value={t}>
+                    {t}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </FormField>
+          <label className="flex items-center gap-2.5 text-sm">
+            <input type="checkbox" name="isDefault" defaultChecked={template?.isDefault} className="size-4 accent-[var(--primary)]" />
+            Modèle par défaut
+          </label>
+          <DialogFooter>
+            <Button type="button" variant="ghost" onClick={() => setOpen(false)}>
+              Annuler
+            </Button>
+            <Button type="submit" disabled={pending}>
+              {pending && <Loader2 className="animate-spin" />}
+              Enregistrer
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
 

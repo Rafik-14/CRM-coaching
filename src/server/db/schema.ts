@@ -211,6 +211,8 @@ export const noteTemplates = pgTable("note_templates", {
   /** Ordered list of field labels, e.g. ["Sujet", "Prises de conscience", ...]. */
   fields: jsonb("fields").$type<string[]>().notNull(),
   isDefault: boolean("is_default").notNull().default(false),
+  /** Used automatically for sessions of this type (e.g. « Échange stratégique »). */
+  sessionType: text("session_type"),
   ...timestamps,
 });
 
