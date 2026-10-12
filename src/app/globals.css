@@ -177,4 +177,15 @@
   h4 {
     @apply font-heading text-heading;
   }
+  /* Brief JG®: touch targets of at least 44 px on phones and tablets (desktop keeps the dense layout). */
+  @media (pointer: coarse) {
+    [data-slot="button"],
+    [data-slot="select-trigger"],
+    [data-slot="input"] {
+      min-height: 44px;
+    }
+    [data-slot="button"]:has(> svg:only-child) {
+      min-width: 44px;
+    }
+  }
 }

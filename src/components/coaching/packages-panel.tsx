@@ -102,14 +102,14 @@ function PackageRow({ cp }: { cp: ClientPackage }) {
           {cp.sessionsUsed === 0 && (
             <ConfirmDialog
               trigger={
-                <Button variant="ghost" size="icon" className="size-7 text-muted-foreground" aria-label="Retirer le forfait">
+                <Button variant="ghost" size="icon" className="size-7 text-muted-foreground" aria-label="Retirer l'accompagnement">
                   <Trash2 />
                 </Button>
               }
-              title="Retirer ce forfait ?"
-              description="Aucune séance n'a encore été décomptée : le forfait peut être retiré sans effet sur l'historique."
+              title="Retirer cet accompagnement ?"
+              description="Aucune séance n'a encore été décomptée : il peut être retiré sans effet sur l'historique."
               confirmLabel="Retirer"
-              successMessage="Forfait retiré"
+              successMessage="Accompagnement retiré"
               onConfirm={() => removeClientPackage(cp.id)}
             />
           )}

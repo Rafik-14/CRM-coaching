@@ -166,7 +166,7 @@ function StageDialog({ stage }: { stage?: Stage }) {
             <span>
               <span className="font-medium">Étape « client »</span>
               <span className="block text-muted-foreground">
-                Un contact placé ici devient client (séances, forfaits, objectifs, documents).
+                Un contact placé ici devient client (séances, accompagnements, objectifs, documents).
               </span>
             </span>
           </label>

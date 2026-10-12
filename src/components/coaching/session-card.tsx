@@ -101,7 +101,7 @@ export function SessionCard({
       const r = await setSessionStatus(session.id, status);
       if (r.error) return void toast.error(r.error);
       if (status === "done") {
-        toast.success(r.counted ? "Séance effectuée · décomptée du forfait" : "Séance effectuée");
+        toast.success(r.counted ? "Séance effectuée · décomptée de l'accompagnement" : "Séance effectuée");
         if (!note) setNoteOpen(true); // invite to write the note right away
       } else {
         toast.success(`Séance : ${sessionStatusLabel[status].toLowerCase()}`);
@@ -174,7 +174,7 @@ export function SessionCard({
                 </Button>
               }
               title="Supprimer cette séance ?"
-              description="La séance et sa note seront définitivement supprimées. Si elle était décomptée d'un forfait, la séance est rendue au forfait."
+              description="La séance et sa note seront définitivement supprimées. Si elle était décomptée d'un accompagnement, la séance est rendue au forfait."
               successMessage="Séance supprimée"
               onConfirm={() => deleteSession(session.id)}
             />

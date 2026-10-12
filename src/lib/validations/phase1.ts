@@ -81,7 +81,7 @@ export const paymentLabel = { pending: "En attente", partial: "Partiel", paid: "
 
 export const assignPackageSchema = z.object({
   contactId: z.uuid(),
-  packageId: z.uuid("Choisissez un forfait."),
+  packageId: z.uuid("Choisissez un accompagnement."),
   paymentStatus: z.enum(PAYMENT_STATUSES).default("pending"),
 });
 
