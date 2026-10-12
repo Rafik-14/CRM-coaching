@@ -7,6 +7,9 @@
 > **Estimate:** 6 to 8 working days (one developer).
 > **Sources:** client folder `OneDrive_2026-10-12/Jeremy Galea/Website Project/01 - Request Client/` (visual brief, site instructions, raw site text, pictures) + `docs/brand/logobleu-source.svg`.
 > **Last updated:** 2026-10-12
+> **Status:** steps 0–14 done (branch `feat/jg-tailoring`), deployed to the Vercel demo on 2026-10-12. Open questions (§9) still use their defaults. Website connection (§12) waits for the site's source code.
+>
+> **Differences from the plan:** logo files were re-traced from the client's PNG (the supplied SVG was an automatic trace with ~90 navy shades and holes painted white); an extra migration `0004` ties a note template to a session type; the website form already accepts an optional `segment` and `cta`; demo data is re-created with `SEED_RESET_DEMO=true` (one-off, refused on non-demo data).
 
 ---
 
