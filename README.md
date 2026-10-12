@@ -17,7 +17,13 @@ npm run db:reset            # creates the local DB, runs migrations, loads Frenc
 npm run dev                 # starts the DB server + the app on http://localhost:3100
 ```
 
-Log in with the demo coach account defined in `.env` (`SEED_COACH_EMAIL` / `SEED_COACH_PASSWORD`).
+Log in with the coach account defined in your `.env` (`SEED_COACH_EMAIL` / `SEED_COACH_PASSWORD`, values you choose).
+
+Which login is where:
+- **Local (your machine):** `.env` → created by `npm run db:seed`.
+- **Online demo (Vercel):** `.env.vercel-demo` (not committed). Its password is set from the Vercel variable
+  `SEED_COACH_PASSWORD` at each deploy.
+- `.env.example` only contains placeholders.
 
 The seed creates Jérémy's reference data (`src/server/db/jg-defaults.ts`: pipeline stages, note templates,
 the three JG® offers) and, unless `SEED_DEMO_DATA=false`, fake demo contacts. For the real installation run it
