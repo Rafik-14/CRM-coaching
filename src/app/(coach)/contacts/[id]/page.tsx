@@ -191,7 +191,12 @@ async function ContactDetail({
                   <CardTitle>Forfaits</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <PackagesPanel contactId={contact.id} clientPackages={client.packages} options={packageOptions} />
+                  <PackagesPanel
+                    contactId={contact.id}
+                    currency={contact.currency}
+                    clientPackages={client.packages}
+                    options={packageOptions}
+                  />
                 </CardContent>
               </Card>
             )}

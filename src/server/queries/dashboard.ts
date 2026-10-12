@@ -11,6 +11,7 @@ import {
   tasks,
 } from "@/server/db/schema";
 import { requireCoach } from "@/server/dal";
+import { addMoney, type MoneyByCurrency } from "@/lib/format";
 
 const DAY = 86_400_000;
 
@@ -60,7 +61,12 @@ export async function getDashboard() {
       .from(coachingSessions)
       .where(and(eq(coachingSessions.status, "done"), gte(coachingSessions.startsAt, d60), lt(coachingSessions.startsAt, d30))),
     db
-      .select({ price: packages.price, purchasedAt: clientPackages.purchasedAt })
+      .select({
+        // Price/currency frozen on the sale (fallback: package list price for old rows).
+        price: sql<string>`coalesce(${clientPackages.price}, ${packages.price})`,
+        currency: sql<string>`coalesce(${clientPackages.currency}, ${packages.currency})`,
+        purchasedAt: clientPackages.purchasedAt,
+      })
       .from(clientPackages)
       .innerJoin(packages, eq(clientPackages.packageId, packages.id))
       .where(and(inArray(clientPackages.paymentStatus, ["paid", "partial"]), gte(clientPackages.purchasedAt, d60))),
@@ -88,6 +94,7 @@ export async function getDashboard() {
         source: contacts.source,
         createdAt: contacts.createdAt,
         estimatedValue: contacts.estimatedValue,
+        currency: contacts.currency,
         stageName: pipelineStages.name,
         stageColor: pipelineStages.color,
       })
@@ -106,8 +113,14 @@ export async function getDashboard() {
       .orderBy(desc(count())),
   ]);
 
-  const revenue30 = revenueRows.filter((r) => r.purchasedAt >= d30).reduce((s, r) => s + Number(r.price), 0);
-  const revenuePrev = revenueRows.filter((r) => r.purchasedAt < d30).reduce((s, r) => s + Number(r.price), 0);
+  // Revenue per currency (EUR and CHF are never converted or summed together).
+  const revenue30: MoneyByCurrency = {};
+  const revenuePrev: MoneyByCurrency = {};
+  for (const r of revenueRows) addMoney(r.purchasedAt >= d30 ? revenue30 : revenuePrev, r.price, r.currency);
+  const currencies = new Set([...Object.keys(revenue30), ...Object.keys(revenuePrev)]);
+  const [only] = currencies;
+  // A trend only makes sense within one currency.
+  const revenueTrend = currencies.size === 1 ? trend(revenue30[only] ?? 0, revenuePrev[only] ?? 0) : null;
 
   // Sessions per week (last 8 weeks, current week included)
   const currentWeek = startOfWeek(now).getTime();
@@ -132,7 +145,7 @@ export async function getDashboard() {
       activeClients: activeClients.n,
       newLeads: { value: newLeads30.n, trend: trend(newLeads30.n, newLeadsPrev.n) },
       sessionsDone: { value: done30.n, trend: trend(done30.n, donePrev.n) },
-      revenue: { value: revenue30, trend: trend(revenue30, revenuePrev) },
+      revenue: { value: revenue30, trend: revenueTrend },
     },
     weeks,
     sourceSlices,

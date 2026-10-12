@@ -9,7 +9,7 @@ import { StatCard } from "@/components/stat-card";
 import { NewContactButton } from "@/components/new-contact-button";
 import { EmptyState } from "@/components/empty-state";
 import { CONTACTS_PAGE_SIZE, getContactStats, getStages, listContacts } from "@/server/queries/contacts";
-import { formatMoney, formatRelative } from "@/lib/format";
+import { formatMoneyTotals, formatRelative } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { ContactFilters } from "./contact-filters";
 import { ContactsTable } from "./contacts-table";
@@ -166,11 +166,11 @@ async function ContactKpis() {
     <div className="grid gap-4 sm:grid-cols-3">
       <StatCard
         label="Valeur du pipeline"
-        value={formatMoney(s.openPipelineValue)}
+        value={formatMoneyTotals(s.openPipelineValue)}
         icon={Wallet}
         hint={`${s.openCount} prospect${s.openCount > 1 ? "s" : ""} en cours`}
       />
-      <StatCard label="Valeur moyenne" value={formatMoney(s.averageValue)} icon={WalletCards} accent="info" hint="par prospect" />
+      <StatCard label="Valeur moyenne" value={formatMoneyTotals(s.averageValue)} icon={WalletCards} accent="info" hint="par prospect" />
       <StatCard
         label="Taux de conversion"
         value={`${Math.round(s.conversionRate * 100)} %`}

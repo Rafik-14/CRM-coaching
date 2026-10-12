@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
-import { Euro, Lightbulb, Percent, Trophy, UserX } from "lucide-react";
+import { Banknote, Lightbulb, Percent, Trophy, UserX } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/page-header";
 import { StatCard } from "@/components/stat-card";
@@ -10,7 +10,7 @@ import { stageDot } from "@/components/stage-badge";
 import { getAnalytics } from "@/server/queries/analytics";
 import { Button } from "@/components/ui/button";
 import { IconMark } from "@/components/empty-state";
-import { formatMoney } from "@/lib/format";
+import { formatMoneyTotals } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Analyses" };
@@ -77,10 +77,10 @@ async function Analytics() {
         <StatCard label="Taux de conversion" value={pct(a.kpis.conversionRate)} icon={Percent} hint="contacts → clients" />
         <StatCard
           label="Revenus encaissés"
-          value={formatMoney(a.kpis.revenueTotal)}
-          icon={Euro}
+          value={formatMoneyTotals(a.kpis.revenueTotal, a.mainCurrency)}
+          icon={Banknote}
           accent="warning"
-          hint={`forfait moyen ${formatMoney(a.kpis.averagePackage)}`}
+          hint={`accompagnement moyen ${formatMoneyTotals(a.kpis.averagePackage, a.mainCurrency)}`}
         />
         <StatCard
           label="Accompagnements réussis"
@@ -155,11 +155,12 @@ async function Analytics() {
           )}
         </section>
         <section className="rounded-2xl border border-border bg-card p-5">
-          <h2 className="mb-5 font-semibold">Revenus par forfait</h2>
+          <h2 className="mb-5 font-semibold">Revenus par accompagnement</h2>
           {a.revenueByPackage.length ? (
             <ul className="grid gap-4">
               {a.revenueByPackage.map((r) => {
-                const max = a.revenueByPackage[0].value || 1;
+                const max = a.revenueByPackage[0].value[a.mainCurrency] || 1;
+                const main = r.value[a.mainCurrency] ?? 0;
                 return (
                   <li key={r.label} className="grid gap-1.5">
                     <div className="flex items-baseline justify-between gap-3 text-sm">
@@ -167,17 +168,17 @@ async function Analytics() {
                         {r.label}
                         <span className="ml-1.5 text-xs text-muted-foreground">× {r.count}</span>
                       </span>
-                      <span className="font-semibold tabular-nums">{formatMoney(r.value)}</span>
+                      <span className="font-semibold tabular-nums">{formatMoneyTotals(r.value, a.mainCurrency)}</span>
                     </div>
                     <div className="h-2.5 overflow-hidden rounded-full bg-muted">
-                      <div className="h-full rounded-full bg-warning/80" style={{ width: `${(r.value / max) * 100}%` }} />
+                      <div className="h-full rounded-full bg-gold" style={{ width: `${(main / max) * 100}%` }} />
                     </div>
                   </li>
                 );
               })}
             </ul>
           ) : (
-            <p className="text-sm text-muted-foreground">Aucun forfait vendu pour le moment.</p>
+            <p className="text-sm text-muted-foreground">Aucun accompagnement vendu pour le moment.</p>
           )}
         </section>
       </div>

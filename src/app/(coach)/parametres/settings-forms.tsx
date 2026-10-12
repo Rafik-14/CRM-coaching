@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useState, useTransition } from "react";
-import { ArchiveRestore, ArrowDown, ArrowUp, Archive, Loader2, Pencil, Plus, Trash2 } from "lucide-react";
+import { ArchiveRestore, ArrowDown, ArrowUp, Archive, Check, Loader2, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -183,24 +183,44 @@ function StageDialog({ stage }: { stage?: Stage }) {
   );
 }
 
-// ------------------------------------------------------------------ packages
+// ------------------------------------------------------------------ offers (« accompagnements »)
 
-type Pkg = { id: string; name: string; sessionsCount: number; price: string; currency: string; active: boolean };
+export type Pkg = {
+  id: string;
+  name: string;
+  sessionsCount: number;
+  price: string;
+  priceChf: string | null;
+  active: boolean;
+  position: number;
+  tagline: string | null;
+  description: string | null;
+  includes: string[];
+  goalPresets: string[];
+  noteTemplateId: string | null;
+};
+type TemplateOption = { id: string; name: string };
 
-export function PackagesEditor({ packages }: { packages: Pkg[] }) {
+export function PackagesEditor({ packages, templates }: { packages: Pkg[]; templates: TemplateOption[] }) {
   const [pending, startTransition] = useTransition();
   return (
     <div className="grid gap-4">
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {packages.map((p) => (
-          <div key={p.id} className={cn("rounded-xl border border-border bg-muted/40 p-4", !p.active && "opacity-60")}>
+          <article
+            key={p.id}
+            className={cn("flex flex-col rounded-xl border border-border bg-card p-5", !p.active && "opacity-60")}
+          >
             <div className="flex items-start justify-between gap-2">
-              <p className="text-sm text-muted-foreground">
-                {p.name}
-                {!p.active && <span className="ml-1.5 text-xs">(archivé)</span>}
-              </p>
+              <div>
+                <p className="text-xs tracking-[0.16em] text-muted-foreground tabular-nums">
+                  {String(p.position || 0).padStart(2, "0")}
+                  {!p.active && <span className="ml-2 tracking-normal">· archivé</span>}
+                </p>
+                <span aria-hidden className="mt-1.5 block h-0.5 w-6 rounded-full bg-gold" />
+              </div>
               <div className="-mt-1 -mr-1 flex">
-                <PackageDialog pkg={p} />
+                <PackageDialog pkg={p} templates={templates} />
                 <Button
                   variant="ghost"
                   size="icon"
@@ -211,7 +231,7 @@ export function PackagesEditor({ packages }: { packages: Pkg[] }) {
                   onClick={() =>
                     startTransition(async () => {
                       await setPackageActive(p.id, !p.active);
-                      toast.success(p.active ? "Forfait archivé" : "Forfait réactivé");
+                      toast.success(p.active ? "Accompagnement archivé" : "Accompagnement réactivé");
                     })
                   }
                 >
@@ -219,23 +239,42 @@ export function PackagesEditor({ packages }: { packages: Pkg[] }) {
                 </Button>
               </div>
             </div>
-            <p className="mt-2 text-2xl font-bold text-primary tabular-nums">{formatMoney(p.price, p.currency)}</p>
-            <p className="mt-1 text-xs text-muted-foreground">
+            <h3 className="mt-3 text-base font-semibold">{p.name}</h3>
+            {p.tagline && <p className="mt-1 text-sm text-muted-foreground">{p.tagline}</p>}
+            <p className="mt-3 font-heading text-lg font-semibold text-heading tabular-nums">
+              {formatMoney(p.price, "EUR")}
+              {p.priceChf != null && <span> · {formatMoney(p.priceChf, "CHF")}</span>}
+            </p>
+            <p className="text-xs text-muted-foreground">
               {p.sessionsCount} séance{p.sessionsCount > 1 ? "s" : ""}
             </p>
-          </div>
+            {p.includes.length > 0 && (
+              <ul className="mt-3 grid gap-1 text-sm">
+                {p.includes.map((item) => (
+                  <li key={item} className="flex items-start gap-2">
+                    <Check className="mt-0.5 size-3.5 shrink-0 text-success" strokeWidth={2} /> {item}
+                  </li>
+                ))}
+              </ul>
+            )}
+            {p.goalPresets.length > 0 && (
+              <p className="mt-3 text-xs text-muted-foreground">
+                Objectifs créés à la vente : {p.goalPresets.join(" · ")}
+              </p>
+            )}
+          </article>
         ))}
       </div>
-      <PackageDialog />
+      <PackageDialog templates={templates} />
     </div>
   );
 }
 
-function PackageDialog({ pkg }: { pkg?: Pkg }) {
+function PackageDialog({ pkg, templates }: { pkg?: Pkg; templates: TemplateOption[] }) {
   const [open, setOpen] = useState(false);
   const [state, formAction, pending] = useSave(
     (prev, fd) => savePackage(pkg?.id ?? null, prev, fd),
-    pkg ? "Forfait mis à jour" : "Forfait ajouté",
+    pkg ? "Accompagnement mis à jour" : "Accompagnement ajouté",
     () => setOpen(false),
   );
   const err = (f: string) => state.fieldErrors?.[f]?.[0];
@@ -248,27 +287,86 @@ function PackageDialog({ pkg }: { pkg?: Pkg }) {
           </Button>
         ) : (
           <Button variant="outline" size="sm" className="justify-self-start">
-            <Plus /> Ajouter un forfait
+            <Plus /> Ajouter un accompagnement
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>{pkg ? "Modifier le forfait" : "Nouveau forfait"}</DialogTitle>
-          <DialogDescription>Un pack de séances proposé à vos clients.</DialogDescription>
+          <DialogTitle>{pkg ? "Modifier l'accompagnement" : "Nouvel accompagnement"}</DialogTitle>
+          <DialogDescription>Une offre proposée à vos clients, avec son prix en euros et en francs suisses.</DialogDescription>
         </DialogHeader>
         <form action={formAction} className="grid gap-4">
-          <FormField label="Nom *" htmlFor="pkg-name" error={err("name")}>
-            <Input id="pkg-name" name="name" defaultValue={pkg?.name} placeholder="ex. Accompagnement 3 mois" />
+          <div className="grid grid-cols-[1fr_5rem] gap-4">
+            <FormField label="Nom *" htmlFor="pkg-name" error={err("name")}>
+              <Input id="pkg-name" name="name" defaultValue={pkg?.name} placeholder="ex. Accompagnement Décisif JG®" />
+            </FormField>
+            <FormField label="Ordre" htmlFor="pkg-position" error={err("position")}>
+              <Input id="pkg-position" name="position" type="number" min={0} max={99} defaultValue={pkg?.position ?? ""} />
+            </FormField>
+          </div>
+          <FormField label="Accroche" htmlFor="pkg-tagline" error={err("tagline")}>
+            <Input id="pkg-tagline" name="tagline" defaultValue={pkg?.tagline ?? ""} placeholder="ex. Réussir un moment qui compte." />
           </FormField>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <FormField label="Séances *" htmlFor="pkg-sessions" error={err("sessionsCount")}>
               <Input id="pkg-sessions" name="sessionsCount" type="number" min={1} defaultValue={pkg?.sessionsCount ?? 1} />
             </FormField>
-            <FormField label="Prix *" htmlFor="pkg-price" error={err("price")}>
+            <FormField label="Prix (€) *" htmlFor="pkg-price" error={err("price")}>
               <Input id="pkg-price" name="price" type="number" min={0} step={10} defaultValue={pkg ? Number(pkg.price) : ""} />
             </FormField>
+            <FormField label="Prix (CHF)" htmlFor="pkg-price-chf" error={err("priceChf")}>
+              <Input
+                id="pkg-price-chf"
+                name="priceChf"
+                type="number"
+                min={0}
+                step={10}
+                defaultValue={pkg?.priceChf != null ? Number(pkg.priceChf) : ""}
+              />
+            </FormField>
           </div>
+          <FormField label="Description" htmlFor="pkg-description" error={err("description")}>
+            <Textarea id="pkg-description" name="description" rows={2} defaultValue={pkg?.description ?? ""} />
+          </FormField>
+          <FormField label="Inclus (un élément par ligne)" htmlFor="pkg-includes" error={err("includes")}>
+            <Textarea
+              id="pkg-includes"
+              name="includes"
+              rows={3}
+              defaultValue={pkg?.includes.join("\n")}
+              placeholder={"Workbook Signature JG®\nExercices entre les séances"}
+            />
+          </FormField>
+          <FormField
+            label="Objectifs créés à la vente (un par ligne)"
+            htmlFor="pkg-goals"
+            error={err("goalPresets")}
+            hint="Ajoutés automatiquement à la fiche du client quand cet accompagnement lui est attribué."
+          >
+            <Textarea
+              id="pkg-goals"
+              name="goalPresets"
+              rows={3}
+              defaultValue={pkg?.goalPresets.join("\n")}
+              placeholder={"Identité\nValeur\nPositionnement"}
+            />
+          </FormField>
+          <FormField label="Modèle de note des séances" htmlFor="pkg-template">
+            <Select name="noteTemplateId" defaultValue={pkg?.noteTemplateId ?? "none"}>
+              <SelectTrigger id="pkg-template" className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Modèle par défaut</SelectItem>
+                {templates.map((t) => (
+                  <SelectItem key={t.id} value={t.id}>
+                    {t.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </FormField>
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={() => setOpen(false)}>
               Annuler
@@ -313,7 +411,11 @@ export function BusinessForm({ name, currency }: { name: string; currency: strin
       <FormField label="Nom de l'activité" htmlFor="biz-name" error={state.fieldErrors?.name?.[0]}>
         <Input id="biz-name" name="name" defaultValue={name === "—" ? "" : name} />
       </FormField>
-      <FormField label="Devise" htmlFor="biz-currency">
+      <FormField
+        label="Devise par défaut"
+        htmlFor="biz-currency"
+        hint="Pour les nouveaux contacts. Chaque contact peut ensuite être en euros ou en francs suisses."
+      >
         <Select name="currency" defaultValue={currency}>
           <SelectTrigger id="biz-currency" className="w-full">
             <SelectValue />

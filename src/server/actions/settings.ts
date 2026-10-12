@@ -62,8 +62,6 @@ export async function savePackage(packageId: string | null, _prev: ActionState, 
   await requireCoach();
   const parsed = packageSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return fieldErrors(parsed.error);
-  const business = await db.query.settings.findFirst({ where: eq(settings.key, "business") });
-  const currency = (business?.value as { currency?: string } | undefined)?.currency ?? "EUR";
 
   if (packageId) {
     const id = z.uuid().parse(packageId);
@@ -71,11 +69,12 @@ export async function savePackage(packageId: string | null, _prev: ActionState, 
     const [{ sold }] = await db.select({ sold: count() }).from(clientPackages).where(eq(clientPackages.packageId, id));
     const current = await db.query.packages.findFirst({ where: eq(packages.id, id) });
     if (sold > 0 && current && current.sessionsCount !== parsed.data.sessionsCount) {
-      return { error: "Ce forfait a déjà été vendu : créez un nouveau forfait pour changer le nombre de séances." };
+      return { error: "Cet accompagnement a déjà été vendu : créez-en un nouveau pour changer le nombre de séances." };
     }
-    await db.update(packages).set({ ...parsed.data, currency }).where(eq(packages.id, id));
+    // Clients who already bought keep the price they paid (stored on client_packages).
+    await db.update(packages).set(parsed.data).where(eq(packages.id, id));
   } else {
-    await db.insert(packages).values({ ...parsed.data, currency });
+    await db.insert(packages).values(parsed.data);
   }
   refresh();
   return { ok: true };

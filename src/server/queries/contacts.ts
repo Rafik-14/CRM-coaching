@@ -3,6 +3,7 @@ import { and, asc, count, desc, eq, ilike, or, sql, type SQL } from "drizzle-orm
 import { db } from "@/server/db";
 import { clients, contacts, pipelineStages } from "@/server/db/schema";
 import { requireCoach } from "@/server/dal";
+import type { MoneyByCurrency } from "@/lib/format";
 import { buildTimeline } from "./timeline";
 
 export const CONTACTS_PAGE_SIZE = 15;
@@ -62,6 +63,7 @@ export async function listContacts({ q, stage, page = 1 }: { q?: string; stage?:
         tags: contacts.tags,
         createdAt: contacts.createdAt,
         estimatedValue: contacts.estimatedValue,
+        currency: contacts.currency,
         stageId: contacts.stageId,
         stageName: pipelineStages.name,
         stageColor: pipelineStages.color,
@@ -83,23 +85,26 @@ export async function listContacts({ q, stage, page = 1 }: { q?: string; stage?:
 /** KPI cards above the contacts list. */
 export async function getContactStats() {
   await requireCoach();
-  const [[open], [all], [won]] = await Promise.all([
+  const [open, [all], [won]] = await Promise.all([
+    // Grouped by currency: EUR and CHF deals are never summed together.
     db
       .select({
+        currency: contacts.currency,
         value: sql<string>`coalesce(sum(${contacts.estimatedValue}), 0)`,
         avg: sql<string>`coalesce(avg(${contacts.estimatedValue}), 0)`,
         n: count(),
       })
       .from(contacts)
       .leftJoin(pipelineStages, eq(contacts.stageId, pipelineStages.id))
-      .where(sql`coalesce(${pipelineStages.isClient}, false) = false`),
+      .where(sql`coalesce(${pipelineStages.isClient}, false) = false`)
+      .groupBy(contacts.currency),
     db.select({ n: count() }).from(contacts),
     db.select({ n: count() }).from(clients),
   ]);
   return {
-    openPipelineValue: Number(open.value),
-    averageValue: Number(open.avg),
-    openCount: open.n,
+    openPipelineValue: Object.fromEntries(open.map((r) => [r.currency, Number(r.value)])) as MoneyByCurrency,
+    averageValue: Object.fromEntries(open.map((r) => [r.currency, Number(r.avg)])) as MoneyByCurrency,
+    openCount: open.reduce((n, r) => n + r.n, 0),
     conversionRate: all.n ? won.n / all.n : 0,
   };
 }
@@ -116,6 +121,7 @@ export async function exportContacts(filters: { q?: string; stage?: string }) {
       stageName: pipelineStages.name,
       source: contacts.source,
       estimatedValue: contacts.estimatedValue,
+        currency: contacts.currency,
       tags: contacts.tags,
       createdAt: contacts.createdAt,
     })
@@ -165,6 +171,7 @@ export async function getPipeline() {
         stageId: contacts.stageId,
         stageChangedAt: contacts.stageChangedAt,
         estimatedValue: contacts.estimatedValue,
+        currency: contacts.currency,
         tags: contacts.tags,
         nextTaskDue: nextTaskDueMs.mapWith(toDate),
       })

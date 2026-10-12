@@ -16,7 +16,9 @@ export async function getSettingsOverview() {
   const user = await requireCoach();
   const [stages, pkgs, templates, business] = await Promise.all([
     db.query.pipelineStages.findMany({ orderBy: asc(pipelineStages.position) }),
-    db.query.packages.findMany({ orderBy: [desc(packages.active), asc(packages.sessionsCount)] }),
+    db.query.packages.findMany({
+      orderBy: [desc(packages.active), asc(packages.position), asc(packages.sessionsCount)],
+    }),
     db.query.noteTemplates.findMany({ orderBy: desc(noteTemplates.isDefault) }),
     db.query.settings.findFirst({ where: eq(settings.key, "business") }),
   ]);
@@ -37,10 +39,13 @@ export async function getNoteTemplateFields() {
   return t?.fields ?? [];
 }
 
-/** Packages currently on sale, for the "attribuer un forfait" dialog. */
+/** Offers currently on sale, for the "attribuer un accompagnement" dialog. */
 export async function getActivePackages() {
   await requireCoach();
-  return db.query.packages.findMany({ where: eq(packages.active, true), orderBy: asc(packages.sessionsCount) });
+  return db.query.packages.findMany({
+    where: eq(packages.active, true),
+    orderBy: [asc(packages.position), asc(packages.sessionsCount)],
+  });
 }
 
 /** Lightweight list of contacts for pickers (tasks…). */

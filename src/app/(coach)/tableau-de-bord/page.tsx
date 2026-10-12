@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
-import { ArrowUpRight, CalendarCheck, Euro, ListChecks, UserPlus, Users } from "lucide-react";
+import { ArrowUpRight, Banknote, CalendarCheck, ListChecks, UserPlus, Users } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StageBadge } from "@/components/stage-badge";
 import { StatCard } from "@/components/stat-card";
@@ -10,7 +10,7 @@ import { DonutChart, SessionsBarChart } from "@/components/charts";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/empty-state";
 import { getDashboard } from "@/server/queries/dashboard";
-import { formatDate, formatDayTime, formatMoney, fullName, initials, isOverdue } from "@/lib/format";
+import { formatDate, formatDayTime, formatMoney, formatMoneyTotals, fullName, initials, isOverdue } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Tableau de bord" };
 
@@ -108,11 +108,11 @@ async function Dashboard() {
         />
         <StatCard
           label="Chiffre d'affaires"
-          value={formatMoney(d.stats.revenue.value)}
-          icon={Euro}
+          value={formatMoneyTotals(d.stats.revenue.value)}
+          icon={Banknote}
           accent="warning"
           trend={d.stats.revenue.trend}
-          hint="forfaits payés · 30 j"
+          hint="accompagnements payés · 30 j"
         />
       </div>
 
@@ -203,7 +203,7 @@ async function Dashboard() {
                 </p>
               </div>
               <span className="hidden text-sm font-semibold tabular-nums sm:block">
-                {c.estimatedValue ? formatMoney(c.estimatedValue) : ""}
+                {c.estimatedValue ? formatMoney(c.estimatedValue, c.currency) : ""}
               </span>
               <StageBadge name={c.stageName} color={c.stageColor} />
             </li>

@@ -14,7 +14,7 @@ export async function GET(request: Request) {
     stage: url.searchParams.get("etape") ?? undefined,
   });
 
-  const header = ["Prénom", "Nom", "E-mail", "Téléphone", "Étape", "Source", "Valeur estimée (€)", "Tags", "Ajouté le"];
+  const header = ["Prénom", "Nom", "E-mail", "Téléphone", "Étape", "Source", "Valeur estimée", "Devise", "Tags", "Ajouté le"];
   const lines = rows.map((r) =>
     [
       r.firstName,
@@ -24,6 +24,7 @@ export async function GET(request: Request) {
       r.stageName,
       r.source,
       r.estimatedValue ? Number(r.estimatedValue).toFixed(2).replace(".", ",") : "",
+      r.currency,
       r.tags.join(", "),
       r.createdAt.toLocaleDateString("fr-FR"),
     ]

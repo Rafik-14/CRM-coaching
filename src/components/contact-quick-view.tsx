@@ -102,11 +102,11 @@ function QuickViewBody({ c }: { c: ContactPreview }) {
             </div>
             <div className="text-right">
               <p className="text-[11px] text-muted-foreground uppercase">Valeur</p>
-              <p className="text-2xl font-bold text-primary">
+              <p className="font-heading text-2xl font-semibold text-heading">
                 {c.package
-                  ? formatMoney(c.package.price)
+                  ? formatMoney(c.package.price, c.package.currency)
                   : c.estimatedValue
-                    ? formatMoney(c.estimatedValue)
+                    ? formatMoney(c.estimatedValue, c.currency)
                     : "—"}
               </p>
             </div>

@@ -22,6 +22,13 @@
       "when": 1791574556079,
       "tag": "0002_sessions_contact_link",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791832661281,
+      "tag": "0003_jg_tailoring",
+      "breakpoints": true
     }
   ]
 }

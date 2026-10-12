@@ -4,7 +4,8 @@ import { eq } from "drizzle-orm";
 import { refresh } from "next/cache";
 import { z } from "zod";
 import { db } from "@/server/db";
-import { activityLog, clientPackages, clients, goals, packages, tasks } from "@/server/db/schema";
+import { activityLog, clientPackages, clients, contacts, goals, packages, tasks } from "@/server/db/schema";
+import { offerPrice } from "@/lib/format";
 import { requireCoach } from "@/server/dal";
 import { assignPackageSchema, goalSchema, PAYMENT_STATUSES, taskSchema } from "@/lib/validations/phase1";
 import type { ActionState } from "./coaching";
@@ -29,12 +30,29 @@ export async function assignPackage(_prev: ActionState, formData: FormData): Pro
   const client = await clientForContact(parsed.data.contactId);
   if (!client) return { error: "Ce contact n'est pas encore client." };
   const pkg = await db.query.packages.findFirst({ where: eq(packages.id, parsed.data.packageId) });
-  if (!pkg?.active) return { error: "Forfait introuvable." };
+  if (!pkg?.active) return { error: "Accompagnement introuvable." };
+  const contact = await db.query.contacts.findFirst({
+    where: eq(contacts.id, parsed.data.contactId),
+    columns: { currency: true },
+  });
+  // Price list of the contact's currency, frozen on the sale.
+  const { amount, currency } = offerPrice(pkg, contact?.currency ?? "EUR");
 
-  await db.insert(clientPackages).values({
-    clientId: client.id,
-    packageId: pkg.id,
-    paymentStatus: parsed.data.paymentStatus,
+  await db.transaction(async (tx) => {
+    await tx.insert(clientPackages).values({
+      clientId: client.id,
+      packageId: pkg.id,
+      paymentStatus: parsed.data.paymentStatus,
+      price: amount,
+      currency,
+    });
+    // e.g. Parcours Signature JG®: Identité, Valeur, Positionnement, Posture, Impact (skip goals already there).
+    if (pkg.goalPresets.length) {
+      const existing = await tx.query.goals.findMany({ where: eq(goals.clientId, client.id), columns: { title: true } });
+      const have = new Set(existing.map((g) => g.title.toLowerCase()));
+      const fresh = pkg.goalPresets.filter((t) => !have.has(t.toLowerCase()));
+      if (fresh.length) await tx.insert(goals).values(fresh.map((title) => ({ clientId: client.id, title })));
+    }
   });
   await log(user.id, parsed.data.contactId, "package_assigned");
   refresh();
@@ -54,8 +72,8 @@ export async function removeClientPackage(clientPackageId: string): Promise<Acti
   await requireCoach();
   const id = z.uuid().parse(clientPackageId);
   const cp = await db.query.clientPackages.findFirst({ where: eq(clientPackages.id, id) });
-  if (!cp) return { error: "Forfait introuvable." };
-  if (cp.sessionsUsed > 0) return { error: "Des séances ont déjà été décomptées sur ce forfait." };
+  if (!cp) return { error: "Accompagnement introuvable." };
+  if (cp.sessionsUsed > 0) return { error: "Des séances ont déjà été décomptées sur cet accompagnement." };
   await db.delete(clientPackages).where(eq(clientPackages.id, id));
   refresh();
   return { ok: true };

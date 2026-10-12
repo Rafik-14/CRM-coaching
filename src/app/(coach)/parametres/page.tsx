@@ -61,7 +61,7 @@ async function Settings() {
       <TabsList>
         <TabsTrigger value="general">Général</TabsTrigger>
         <TabsTrigger value="pipeline">Pipeline</TabsTrigger>
-        <TabsTrigger value="forfaits">Forfaits</TabsTrigger>
+        <TabsTrigger value="forfaits">Accompagnements</TabsTrigger>
         <TabsTrigger value="notes">Modèle de note</TabsTrigger>
       </TabsList>
 
@@ -82,7 +82,7 @@ async function Settings() {
             value={<span className="text-xs text-muted-foreground">Double authentification : bientôt</span>}
           />
         </Panel>
-        <Panel title="Mon activité" description="Nom affiché et devise des forfaits">
+        <Panel title="Mon activité" description="Nom affiché et devise par défaut">
           <BusinessForm name={business.name} currency={business.currency} />
         </Panel>
         <section className="rounded-2xl border border-border bg-card p-5 lg:col-span-2">
@@ -119,8 +119,11 @@ async function Settings() {
       </TabsContent>
 
       <TabsContent value="forfaits" className="mt-6">
-        <Panel title="Forfaits" description="Packs de séances proposés à vos clients. Archivez un forfait pour ne plus le proposer.">
-          <PackagesEditor packages={packages} />
+        <Panel
+          title="Accompagnements"
+          description="Vos offres, avec leur prix en euros et en francs suisses. Archivez une offre pour ne plus la proposer."
+        >
+          <PackagesEditor packages={packages} templates={templates.map((t) => ({ id: t.id, name: t.name }))} />
         </Panel>
       </TabsContent>
 

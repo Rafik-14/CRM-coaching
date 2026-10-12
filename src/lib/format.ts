@@ -28,6 +28,36 @@ export function formatMoney(amount: number | string, currency = "EUR") {
   );
 }
 
+export const CURRENCIES = ["EUR", "CHF"] as const;
+export type Currency = (typeof CURRENCIES)[number];
+
+/** Amounts per currency. Jérémy sells in EUR and CHF: totals are never converted or mixed. */
+export type MoneyByCurrency = Partial<Record<string, number>>;
+
+export function addMoney(totals: MoneyByCurrency, amount: number | string | null | undefined, currency?: string | null) {
+  if (amount == null) return totals;
+  const c = currency || "EUR";
+  totals[c] = (totals[c] ?? 0) + Number(amount);
+  return totals;
+}
+
+/** « 6 750 € · 1 190 CHF » (one figure per currency). Shows 0 in the fallback currency when empty. */
+export function formatMoneyTotals(totals: MoneyByCurrency, fallback = "EUR") {
+  const entries = Object.entries(totals).filter((e): e is [string, number] => !!e[1]);
+  if (!entries.length) return formatMoney(0, fallback);
+  return entries
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([c, v]) => formatMoney(v, c))
+    .join(" · ");
+}
+
+/** Price of an offer in a given currency (CHF list price when set, else EUR). */
+export function offerPrice(pkg: { price: string; priceChf: string | null }, currency: string) {
+  return currency === "CHF" && pkg.priceChf != null
+    ? { amount: pkg.priceChf, currency: "CHF" }
+    : { amount: pkg.price, currency: "EUR" };
+}
+
 export function initials(name: string) {
   return name
     .split(/\s+/)

@@ -78,7 +78,7 @@ export function ContactsTable({
                 <StageBadge name={c.stageName} color={c.stageColor} />
               </TableCell>
               <TableCell className="hidden font-semibold tabular-nums md:table-cell">
-                {c.estimatedValue ? formatMoney(c.estimatedValue) : <span className="text-muted-foreground">—</span>}
+                {c.estimatedValue ? formatMoney(c.estimatedValue, c.currency) : <span className="text-muted-foreground">—</span>}
               </TableCell>
               <TableCell className="hidden text-sm text-muted-foreground xl:table-cell first-letter:uppercase">
                 {c.lastActivityLabel ?? "—"}
