@@ -8,13 +8,16 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/page-header";
 import { getCalendarSessions, type CalendarSession } from "@/server/queries/calendar";
 import { cn } from "@/lib/utils";
+import { APP_TIME_ZONE } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Calendrier" };
 
 const WEEKDAYS = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
-const monthFmt = new Intl.DateTimeFormat("fr-FR", { month: "long", year: "numeric" });
-const timeFmt = new Intl.DateTimeFormat("fr-FR", { hour: "2-digit", minute: "2-digit" });
-const dayFmt = new Intl.DateTimeFormat("fr-FR", { weekday: "long", day: "numeric", month: "long" });
+const monthFmt = new Intl.DateTimeFormat("fr-FR", { month: "long", year: "numeric", timeZone: APP_TIME_ZONE });
+const timeFmt = new Intl.DateTimeFormat("fr-FR", { hour: "2-digit", minute: "2-digit", timeZone: APP_TIME_ZONE });
+const dayFmt = new Intl.DateTimeFormat("fr-FR", { weekday: "long", day: "numeric", month: "long", timeZone: APP_TIME_ZONE });
+// Calendar day of a date in the coach's time zone (the server may run in UTC).
+const dayKeyFmt = new Intl.DateTimeFormat("en-CA", { year: "numeric", month: "2-digit", day: "2-digit", timeZone: APP_TIME_ZONE });
 
 const chip: Record<CalendarSession["status"], string> = {
   planned: "bg-primary/12 text-primary hover:bg-primary/20",
@@ -34,7 +37,7 @@ export default function CalendarPage({ searchParams }: PageProps<"/calendrier">)
   );
 }
 
-const key = (d: Date) => `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+const key = (d: Date) => dayKeyFmt.format(d);
 const monthParam = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 
 async function Calendar({ searchParams }: { searchParams: PageProps<"/calendrier">["searchParams"] }) {

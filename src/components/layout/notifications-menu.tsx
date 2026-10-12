@@ -10,9 +10,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { getNotifications } from "@/server/queries/notifications";
-import { formatDate, fullName } from "@/lib/format";
+import { APP_TIME_ZONE, formatDate, fullName } from "@/lib/format";
 
-const timeFmt = new Intl.DateTimeFormat("fr-FR", { hour: "2-digit", minute: "2-digit" });
+const timeFmt = new Intl.DateTimeFormat("fr-FR", { hour: "2-digit", minute: "2-digit", timeZone: APP_TIME_ZONE });
 
 export async function NotificationsMenu() {
   const { overdue, today, count } = await getNotifications();

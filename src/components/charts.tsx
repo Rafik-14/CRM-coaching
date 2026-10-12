@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
+import { APP_TIME_ZONE } from "@/lib/format";
 
-const weekFmt = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "short" });
+const weekFmt = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "short", timeZone: APP_TIME_ZONE });
 
 /** Sessions per week: done (solid) stacked with planned (lighter). */
 export function SessionsBarChart({

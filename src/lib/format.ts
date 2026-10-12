@@ -1,5 +1,17 @@
-const dateFmt = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "short", year: "numeric" });
+/**
+ * The coach's time zone. Servers (e.g. Vercel) run in UTC, so every date rendered on the server
+ * is formatted explicitly in this zone. Europe/Zurich = same offset as Paris.
+ */
+export const APP_TIME_ZONE = process.env.NEXT_PUBLIC_TIME_ZONE ?? "Europe/Zurich";
+
+const dateFmt = new Intl.DateTimeFormat("fr-FR", {
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+  timeZone: APP_TIME_ZONE,
+});
 const dayTimeFmt = new Intl.DateTimeFormat("fr-FR", {
+  timeZone: APP_TIME_ZONE,
   weekday: "short",
   day: "numeric",
   month: "short",

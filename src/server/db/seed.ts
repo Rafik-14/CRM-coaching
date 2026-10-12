@@ -1,4 +1,5 @@
 import { fakerFR as faker } from "@faker-js/faker";
+import { and, eq } from "drizzle-orm";
 import { hashPassword } from "better-auth/crypto";
 import { db } from "./index";
 import * as s from "./schema";
@@ -28,6 +29,14 @@ async function main() {
 
   const existing = await db.query.user.findFirst({ where: (u, { eq }) => eq(u.email, COACH_EMAIL) });
   if (existing) {
+    // Demo hosts only: rotate the demo coach's password to SEED_COACH_PASSWORD.
+    if (process.env.SEED_UPDATE_PASSWORD === "true") {
+      await db
+        .update(s.account)
+        .set({ password: await hashPassword(COACH_PASSWORD) })
+        .where(and(eq(s.account.userId, existing.id), eq(s.account.providerId, "credential")));
+      console.log("✓ Demo coach password updated");
+    }
     console.log("Seed already applied (coach account exists). Run `npm run db:reset` to start over.");
     process.exit(0);
   }
