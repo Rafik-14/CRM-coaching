@@ -18,6 +18,10 @@ npm run dev                 # starts the DB server + the app on http://localhost
 ```
 
 Log in with the demo coach account defined in `.env` (`SEED_COACH_EMAIL` / `SEED_COACH_PASSWORD`).
+
+The seed creates Jérémy's reference data (`src/server/db/jg-defaults.ts`: pipeline stages, note templates,
+the three JG® offers) and, unless `SEED_DEMO_DATA=false`, fake demo contacts. For the real installation run it
+with `SEED_DEMO_DATA=false`. `SEED_RESET_DEMO=true` re-creates the demo data on an existing demo database.
 All demo data is fake — never put real client data on a development machine.
 
 ## Scripts
