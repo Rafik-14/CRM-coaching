@@ -92,6 +92,63 @@ async function Analytics() {
         <StatCard label="Taux d'absence" value={pct(a.kpis.noShowRate)} icon={UserX} accent="info" hint="séances non honorées" />
       </div>
 
+      <div className="grid gap-6 lg:grid-cols-3">
+        <section className="rounded-xl border border-border bg-card p-5">
+          <h2 className="font-semibold">Échange stratégique → client</h2>
+          <p className="mb-4 text-sm text-muted-foreground">Contacts ayant eu leur échange, devenus clients</p>
+          <p className="font-heading text-3xl font-semibold text-heading tabular-nums">
+            {a.echange.held ? pct(a.echange.converted / a.echange.held) : "—"}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {a.echange.converted} client{a.echange.converted > 1 ? "s" : ""} sur {a.echange.held} échange
+            {a.echange.held > 1 ? "s" : ""} effectué{a.echange.held > 1 ? "s" : ""}
+          </p>
+        </section>
+        <section className="rounded-xl border border-border bg-card p-5">
+          <h2 className="mb-4 font-semibold">Par type de client</h2>
+          <ul className="grid gap-3">
+            {a.segments.map((s) => (
+              <li key={s.label} className="grid gap-1">
+                <div className="flex items-baseline justify-between gap-3 text-sm">
+                  <span className="truncate">{s.label}</span>
+                  <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
+                    {s.clients} client{s.clients > 1 ? "s" : ""} / {s.contacts}
+                  </span>
+                </div>
+                <div className="h-2 overflow-hidden rounded-full bg-muted">
+                  <div
+                    className="h-full rounded-full bg-primary"
+                    style={{ width: `${(s.contacts / Math.max(1, a.segments[0]?.contacts ?? 1)) * 100}%` }}
+                  />
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+        <section className="rounded-xl border border-border bg-card p-5">
+          <h2 className="font-semibold">Partenaires</h2>
+          <p className="mb-4 text-sm text-muted-foreground">Contacts recommandés · devenus clients</p>
+          {a.partners.length ? (
+            <ul className="grid gap-2.5">
+              {a.partners.map((p) => (
+                <li key={p.id} className="flex items-baseline justify-between gap-3 text-sm">
+                  <Link href={`/contacts/${p.id}`} className="truncate hover:underline">
+                    {p.name}
+                  </Link>
+                  <span className="shrink-0 tabular-nums">
+                    {p.referred} <span className="text-muted-foreground">·</span> {p.clients}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              Aucune recommandation pour le moment. Indiquez « Recommandé par » sur la fiche d&apos;un contact.
+            </p>
+          )}
+        </section>
+      </div>
+
       <div className="grid gap-6 lg:grid-cols-2">
         <section className="rounded-2xl border border-border bg-card p-5">
           <h2 className="font-semibold">Entonnoir de conversion</h2>
