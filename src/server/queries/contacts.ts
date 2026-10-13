@@ -216,3 +216,28 @@ export async function listPartnerOptions() {
   });
   return rows.map((r) => ({ id: r.id, name: r.organization ? `${r.organization} (${fullName(r)})` : fullName(r) }));
 }
+
+/**
+ * People who can be booked from the calendar: clients with an active coaching, and prospects in the pipeline
+ * (prospects can only book an échange stratégique). Closed coachings and partners are left out.
+ */
+export async function listScheduleOptions() {
+  await requireCoach();
+  const rows = await db
+    .select({
+      id: contacts.id,
+      firstName: contacts.firstName,
+      lastName: contacts.lastName,
+      clientStatus: clients.status,
+    })
+    .from(contacts)
+    .leftJoin(clients, eq(clients.contactId, contacts.id))
+    .where(
+      or(
+        eq(clients.status, "active"),
+        and(sql`${clients.id} is null`, sql`${contacts.stageId} is not null`),
+      ),
+    )
+    .orderBy(asc(contacts.firstName), asc(contacts.lastName));
+  return rows.map((r) => ({ id: r.id, name: fullName(r), prospect: r.clientStatus == null }));
+}

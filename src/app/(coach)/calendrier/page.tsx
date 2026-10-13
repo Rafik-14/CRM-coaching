@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/page-header";
 import { getCalendarSessions, type CalendarSession } from "@/server/queries/calendar";
+import { listScheduleOptions } from "@/server/queries/contacts";
+import { ScheduleSessionDialog } from "@/components/coaching/schedule-session-dialog";
 import { cn } from "@/lib/utils";
 import { APP_TIME_ZONE } from "@/lib/format";
 
@@ -29,12 +31,22 @@ const chip: Record<CalendarSession["status"], string> = {
 export default function CalendarPage({ searchParams }: PageProps<"/calendrier">) {
   return (
     <>
-      <PageHeader title="Calendrier" description="Toutes vos séances et échanges stratégiques" />
+      <PageHeader title="Calendrier" description="Toutes vos séances et échanges stratégiques">
+        <Suspense fallback={<Skeleton className="h-9 w-52" />}>
+          <PlanButton />
+        </Suspense>
+      </PageHeader>
       <Suspense fallback={<Skeleton className="h-[36rem] rounded-2xl" />}>
         <Calendar searchParams={searchParams} />
       </Suspense>
     </>
   );
+}
+
+/** « Planifier un rendez-vous »: the coach picks the client or prospect inside the dialog. */
+async function PlanButton() {
+  const contacts = await listScheduleOptions();
+  return <ScheduleSessionDialog contacts={contacts} triggerLabel="Planifier un rendez-vous" />;
 }
 
 const key = (d: Date) => dayKeyFmt.format(d);

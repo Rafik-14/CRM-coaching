@@ -7,7 +7,15 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { scheduleSession, type ActionState } from "@/server/actions/coaching";
 import {
@@ -31,27 +39,52 @@ const locationIcon = { Visio: Video, Cabinet: MapPin, Téléphone: Phone } as co
 const toKey = (d: Date) =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
+export type ScheduleContactOption = { id: string; name: string; prospect: boolean };
+
+/**
+ * From a contact file: pass `contactId` / `contactName` / `prospect`.
+ * From the calendar: pass `contacts` instead, and the coach picks the person in the dialog.
+ */
 export function ScheduleSessionDialog({
   contactId,
   contactName,
   disabledReason,
   triggerClassName,
+  triggerLabel,
   prospect,
+  contacts,
 }: {
-  contactId: string;
-  contactName: string;
+  contactId?: string;
+  contactName?: string;
   /** When set, the trigger is disabled and shows this hint. */
   disabledReason?: string;
   triggerClassName?: string;
+  triggerLabel?: string;
   /** Prospects (not yet clients) can only book an « Échange stratégique ». */
   prospect?: boolean;
+  /** People who can be booked (active clients and prospects), when no contact is given. */
+  contacts?: ScheduleContactOption[];
 }) {
-  const types: readonly SessionType[] = prospect ? [DISCOVERY_TYPE] : SESSION_TYPES;
-  const label = prospect ? "Planifier un échange stratégique" : "Planifier une séance";
+  const [picked, setPicked] = useState("");
+  const current: ScheduleContactOption | undefined = contactId
+    ? { id: contactId, name: contactName ?? "", prospect: !!prospect }
+    : contacts?.find((c) => c.id === picked);
+  const isProspect = current?.prospect ?? false;
+  const types: readonly SessionType[] = isProspect ? [DISCOVERY_TYPE] : SESSION_TYPES;
+  const label = triggerLabel ?? (prospect ? "Planifier un échange stratégique" : "Planifier une séance");
   const [open, setOpen] = useState(false);
   const [type, setType] = useState<SessionType>(types[0]);
   // Picking a type proposes its usual duration (20 min for an échange stratégique); still editable.
   const [duration, setDuration] = useState<string>(String(DEFAULT_DURATION[types[0]]));
+
+  function pickContact(id: string) {
+    setPicked(id);
+    // A prospect can only book an échange stratégique.
+    if (contacts?.find((c) => c.id === id)?.prospect) {
+      setType(DISCOVERY_TYPE);
+      setDuration(String(DEFAULT_DURATION[DISCOVERY_TYPE]));
+    }
+  }
   const today = useMemo(() => {
     const d = new Date();
     d.setHours(0, 0, 0, 0);
@@ -68,7 +101,8 @@ export function ScheduleSessionDialog({
       setOpen(false);
       setDate(null);
       setTime(null);
-      toast.success(`${prospect ? "Échange stratégique planifié" : "Séance planifiée"} avec ${contactName}`);
+      toast.success(`${isProspect ? "Échange stratégique planifié" : "Séance planifiée"} avec ${current?.name ?? ""}`);
+      if (!contactId) setPicked("");
     } else if (result.error) {
       toast.error(result.error);
     }
@@ -110,7 +144,7 @@ export function ScheduleSessionDialog({
       </DialogTrigger>
       <DialogContent className="gap-0 overflow-hidden p-0 sm:max-w-3xl">
         <form action={formAction} className="grid md:grid-cols-[1fr_1.15fr]">
-          <input type="hidden" name="contactId" value={contactId} />
+          <input type="hidden" name="contactId" value={current?.id ?? ""} />
           <input type="hidden" name="date" value={date ? toKey(date) : ""} />
           <input type="hidden" name="time" value={time ?? ""} />
           <input type="hidden" name="location" value={location} />
@@ -207,8 +241,38 @@ export function ScheduleSessionDialog({
           <div className="grid content-start gap-5 p-5">
             <div>
               <DialogTitle className="text-xl">Détails de la séance</DialogTitle>
-              <DialogDescription>Avec {contactName}</DialogDescription>
+              <DialogDescription>{current ? `Avec ${current.name}` : "Choisissez la personne concernée"}</DialogDescription>
             </div>
+
+            {!contactId && (
+              <div className="grid gap-2">
+                <Label htmlFor="schedule-contact">Avec</Label>
+                <Select value={picked} onValueChange={pickContact}>
+                  <SelectTrigger id="schedule-contact" className="w-full">
+                    <SelectValue placeholder="Choisir un client ou un prospect" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-72">
+                    {[
+                      { label: "Clients en accompagnement", list: contacts?.filter((c) => !c.prospect) ?? [] },
+                      { label: "Prospects · échange stratégique", list: contacts?.filter((c) => c.prospect) ?? [] },
+                    ].map(
+                      (g) =>
+                        g.list.length > 0 && (
+                          <SelectGroup key={g.label}>
+                            <SelectLabel>{g.label}</SelectLabel>
+                            {g.list.map((c) => (
+                              <SelectItem key={c.id} value={c.id}>
+                                {c.name}
+                              </SelectItem>
+                            ))}
+                          </SelectGroup>
+                        ),
+                    )}
+                  </SelectContent>
+                </Select>
+                {err("contactId") && <p className="text-xs text-destructive">Choisissez la personne.</p>}
+              </div>
+            )}
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="grid gap-2">
@@ -285,7 +349,7 @@ export function ScheduleSessionDialog({
               </Button>
               <Button
                 type="submit"
-                disabled={pending || !date || !time}
+                disabled={pending || !date || !time || !current}
                
               >
                 {pending ? <Loader2 className="animate-spin" /> : <CircleCheck />}
