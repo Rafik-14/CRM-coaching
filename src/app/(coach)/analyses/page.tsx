@@ -10,6 +10,7 @@ import { stageDot } from "@/components/stage-badge";
 import { getAnalytics } from "@/server/queries/analytics";
 import { Button } from "@/components/ui/button";
 import { IconMark } from "@/components/empty-state";
+import { AnimateOnView, CountUp } from "@/components/animate";
 import { formatMoneyTotals } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -93,21 +94,21 @@ async function Analytics() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
-        <section className="rounded-xl border border-border bg-card p-5">
+        <AnimateOnView className="rounded-xl border border-border bg-card p-5">
           <h2 className="font-semibold">Échange stratégique → client</h2>
           <p className="mb-4 text-sm text-muted-foreground">Contacts ayant eu leur échange, devenus clients</p>
           <p className="font-heading text-3xl font-semibold text-heading tabular-nums">
-            {a.echange.held ? pct(a.echange.converted / a.echange.held) : "—"}
+            <CountUp value={a.echange.held ? pct(a.echange.converted / a.echange.held) : "—"} />
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
             {a.echange.converted} client{a.echange.converted > 1 ? "s" : ""} sur {a.echange.held} échange
             {a.echange.held > 1 ? "s" : ""} effectué{a.echange.held > 1 ? "s" : ""}
           </p>
-        </section>
-        <section className="rounded-xl border border-border bg-card p-5">
+        </AnimateOnView>
+        <AnimateOnView className="rounded-xl border border-border bg-card p-5">
           <h2 className="mb-4 font-semibold">Par type de client</h2>
           <ul className="grid gap-3">
-            {a.segments.map((s) => (
+            {a.segments.map((s, i) => (
               <li key={s.label} className="grid gap-1">
                 <div className="flex items-baseline justify-between gap-3 text-sm">
                   <span className="truncate">{s.label}</span>
@@ -117,15 +118,18 @@ async function Analytics() {
                 </div>
                 <div className="h-2 overflow-hidden rounded-full bg-muted">
                   <div
-                    className="h-full rounded-full bg-primary"
-                    style={{ width: `${(s.contacts / Math.max(1, a.segments[0]?.contacts ?? 1)) * 100}%` }}
+                    className="animate-grow-x h-full rounded-full bg-primary"
+                    style={{
+                      width: `${(s.contacts / Math.max(1, a.segments[0]?.contacts ?? 1)) * 100}%`,
+                      animationDelay: `${i * 70}ms`,
+                    }}
                   />
                 </div>
               </li>
             ))}
           </ul>
-        </section>
-        <section className="rounded-xl border border-border bg-card p-5">
+        </AnimateOnView>
+        <AnimateOnView className="rounded-xl border border-border bg-card p-5">
           <h2 className="font-semibold">Partenaires</h2>
           <p className="mb-4 text-sm text-muted-foreground">Contacts recommandés · devenus clients</p>
           {a.partners.length ? (
@@ -146,11 +150,11 @@ async function Analytics() {
               Aucune recommandation pour le moment. Indiquez « Recommandé par » sur la fiche d&apos;un contact.
             </p>
           )}
-        </section>
+        </AnimateOnView>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <section className="rounded-2xl border border-border bg-card p-5">
+        <AnimateOnView className="rounded-xl border border-border bg-card p-5">
           <h2 className="font-semibold">Entonnoir de conversion</h2>
           <p className="mb-5 text-sm text-muted-foreground">Contacts ayant atteint chaque étape</p>
           <ol className="grid gap-3">
@@ -166,56 +170,56 @@ async function Analytics() {
                     </span>
                     <span className="flex items-center gap-3 tabular-nums">
                       {drop != null && drop > 0 && <span className="text-xs text-destructive">−{pct(drop)}</span>}
-                      <span className="font-semibold">{f.reached}</span>
+                      <CountUp value={String(f.reached)} className="font-semibold" />
                     </span>
                   </div>
                   <div className="h-3 overflow-hidden rounded-full bg-muted">
                     <div
-                      className="h-full rounded-full bg-primary"
-                      style={{ width: `${(f.reached / maxReached) * 100}%` }}
+                      className="animate-grow-x h-full rounded-full bg-primary"
+                      style={{ width: `${(f.reached / maxReached) * 100}%`, animationDelay: `${i * 70}ms` }}
                     />
                   </div>
                 </li>
               );
             })}
           </ol>
-        </section>
+        </AnimateOnView>
 
-        <section className="rounded-2xl border border-border bg-card p-5">
+        <AnimateOnView className="rounded-xl border border-border bg-card p-5">
           <h2 className="font-semibold">Temps moyen par étape</h2>
           <p className="mb-5 text-sm text-muted-foreground">Jours passés par les contacts actuellement dans l&apos;étape</p>
           <ul className="grid gap-3">
-            {a.funnel.map((f) => (
+            {a.funnel.map((f, i) => (
               <li key={f.name} className="grid grid-cols-[8rem_1fr_3rem] items-center gap-3 text-sm">
                 <span className="truncate text-muted-foreground">{f.name}</span>
                 <div className="h-2.5 overflow-hidden rounded-full bg-muted">
                   <div
-                    className={cn("h-full rounded-full", f.avgDays >= 14 ? "bg-destructive/70" : "bg-info/70")}
-                    style={{ width: `${(f.avgDays / maxDays) * 100}%` }}
+                    className={cn("animate-grow-x h-full rounded-full", f.avgDays >= 14 ? "bg-destructive/70" : "bg-info/70")}
+                    style={{ width: `${(f.avgDays / maxDays) * 100}%`, animationDelay: `${i * 70}ms` }}
                   />
                 </div>
-                <span className="text-right font-medium tabular-nums">{f.current ? `${f.avgDays} j` : "—"}</span>
+                <CountUp value={f.current ? `${f.avgDays} j` : "—"} className="text-right font-medium tabular-nums" />
               </li>
             ))}
           </ul>
           <p className="mt-5 text-xs text-muted-foreground">En rouge : plus de 14 jours, pensez à relancer.</p>
-        </section>
+        </AnimateOnView>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <section className="rounded-2xl border border-border bg-card p-5">
+        <AnimateOnView className="rounded-xl border border-border bg-card p-5">
           <h2 className="mb-5 font-semibold">Séances</h2>
           {a.sessions.length ? (
             <DonutChart slices={a.sessions} centerLabel="séances" />
           ) : (
             <p className="text-sm text-muted-foreground">Aucune séance pour le moment.</p>
           )}
-        </section>
-        <section className="rounded-2xl border border-border bg-card p-5">
+        </AnimateOnView>
+        <AnimateOnView className="rounded-xl border border-border bg-card p-5">
           <h2 className="mb-5 font-semibold">Revenus par accompagnement</h2>
           {a.revenueByPackage.length ? (
             <ul className="grid gap-4">
-              {a.revenueByPackage.map((r) => {
+              {a.revenueByPackage.map((r, i) => {
                 const max = a.revenueByPackage[0].value[a.mainCurrency] || 1;
                 const main = r.value[a.mainCurrency] ?? 0;
                 return (
@@ -225,10 +229,13 @@ async function Analytics() {
                         {r.label}
                         <span className="ml-1.5 text-xs text-muted-foreground">× {r.count}</span>
                       </span>
-                      <span className="font-semibold tabular-nums">{formatMoneyTotals(r.value, a.mainCurrency)}</span>
+                      <CountUp value={formatMoneyTotals(r.value, a.mainCurrency)} className="font-semibold tabular-nums" />
                     </div>
                     <div className="h-2.5 overflow-hidden rounded-full bg-muted">
-                      <div className="h-full rounded-full bg-gold" style={{ width: `${(main / max) * 100}%` }} />
+                      <div
+                        className="animate-grow-x h-full rounded-full bg-gold"
+                        style={{ width: `${(main / max) * 100}%`, animationDelay: `${i * 90}ms` }}
+                      />
                     </div>
                   </li>
                 );
@@ -237,10 +244,10 @@ async function Analytics() {
           ) : (
             <p className="text-sm text-muted-foreground">Aucun accompagnement vendu pour le moment.</p>
           )}
-        </section>
+        </AnimateOnView>
       </div>
 
-      <section className="rounded-xl border border-border bg-card p-5">
+      <AnimateOnView className="rounded-xl border border-border bg-card p-5">
         <h2 className="font-semibold">Transformations</h2>
         <p className="mb-5 text-sm text-muted-foreground">
           Accompagnements terminés rédigés en étude de cas, avec l&apos;accord du client : prêts pour votre site.
@@ -284,7 +291,7 @@ async function Analytics() {
             Aucune pour le moment. Elles se remplissent en clôturant un accompagnement « Terminé avec succès ».
           </p>
         )}
-      </section>
+      </AnimateOnView>
     </div>
   );
 }

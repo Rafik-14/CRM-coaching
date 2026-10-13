@@ -189,3 +189,53 @@
     }
   }
 }
+
+/* Entrance animations for charts (components/animate.tsx): bars grow, the donut draws itself.
+   Paused until the chart scrolls into view (AnimateOnView sets data-visible); off with « reduce motion ». */
+@property --reveal {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 100%;
+}
+
+@layer components {
+  .animate-grow-x {
+    transform-origin: left center;
+    animation: grow-x 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .animate-grow-y {
+    transform-origin: center bottom;
+    animation: grow-y 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .animate-reveal {
+    -webkit-mask-image: conic-gradient(#000 var(--reveal), transparent 0);
+    mask-image: conic-gradient(#000 var(--reveal), transparent 0);
+    animation: reveal 1s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  [data-animate]:not([data-visible]) :is(.animate-grow-x, .animate-grow-y, .animate-reveal) {
+    animation-play-state: paused;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .animate-grow-x,
+    .animate-grow-y,
+    .animate-reveal {
+      animation: none;
+    }
+  }
+}
+
+@keyframes grow-x {
+  from {
+    transform: scaleX(0);
+  }
+}
+@keyframes grow-y {
+  from {
+    transform: scaleY(0);
+  }
+}
+@keyframes reveal {
+  from {
+    --reveal: 0%;
+  }
+}

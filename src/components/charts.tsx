@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
 import { APP_TIME_ZONE } from "@/lib/format";
+import { AnimateOnView, CountUp } from "@/components/animate";
 
 const weekFmt = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "short", timeZone: APP_TIME_ZONE });
 
@@ -11,9 +12,9 @@ export function SessionsBarChart({
 }) {
   const max = Math.max(1, ...weeks.map((w) => w.done + w.planned));
   return (
-    <figure className="grid gap-3">
+    <AnimateOnView className="grid gap-3">
       <div className="flex h-52 items-end gap-2 sm:gap-3" role="img" aria-label="Séances par semaine sur 8 semaines">
-        {weeks.map((w) => {
+        {weeks.map((w, i) => {
           const total = w.done + w.planned;
           return (
             <div key={w.start.toISOString()} className="group flex h-full flex-1 flex-col items-center justify-end gap-1.5">
@@ -21,8 +22,8 @@ export function SessionsBarChart({
                 {total}
               </span>
               <div
-                className="flex w-full max-w-10 flex-col justify-end overflow-hidden rounded-t-lg"
-                style={{ height: `${(total / max) * 100}%`, minHeight: total ? 6 : 2 }}
+                className="animate-grow-y flex w-full max-w-10 flex-col justify-end overflow-hidden rounded-t-lg"
+                style={{ height: `${(total / max) * 100}%`, minHeight: total ? 6 : 2, animationDelay: `${i * 60}ms` }}
                 title={`${w.done} effectuée(s), ${w.planned} prévue(s)`}
               >
                 {w.planned > 0 && <div className="w-full bg-gold/70" style={{ flexGrow: w.planned }} />}
@@ -56,7 +57,7 @@ export function SessionsBarChart({
           <span className="size-2 rounded-full bg-gold/70" /> Prévues
         </span>
       </figcaption>
-    </figure>
+    </AnimateOnView>
   );
 }
 
@@ -73,11 +74,11 @@ export function DonutChart({ slices, centerLabel }: { slices: { label: string; v
     .join(", ");
 
   return (
-    <div className="grid gap-5">
+    <AnimateOnView className="grid gap-5">
       <div className="relative mx-auto size-40">
-        <div className="size-full rounded-full" style={{ background: `conic-gradient(${stops})` }} aria-hidden />
+        <div className="animate-reveal size-full rounded-full" style={{ background: `conic-gradient(${stops})` }} aria-hidden />
         <div className="absolute inset-5 flex flex-col items-center justify-center rounded-full bg-card">
-          <span className="text-2xl font-bold tabular-nums">{sum}</span>
+          <CountUp value={String(sum)} className="font-heading text-2xl font-semibold text-heading tabular-nums" />
           <span className="text-[11px] text-muted-foreground uppercase">{centerLabel}</span>
         </div>
       </div>
@@ -86,10 +87,10 @@ export function DonutChart({ slices, centerLabel }: { slices: { label: string; v
           <li key={s.label} className="flex items-center gap-2 text-sm">
             <span className="size-2.5 rounded-full" style={{ background: SLICE_COLORS[i % SLICE_COLORS.length] }} />
             <span className="flex-1 truncate text-muted-foreground">{s.label}</span>
-            <span className="font-medium tabular-nums">{Math.round((s.value / total) * 100)} %</span>
+            <CountUp value={`${Math.round((s.value / total) * 100)} %`} className="font-medium tabular-nums" />
           </li>
         ))}
       </ul>
-    </div>
+    </AnimateOnView>
   );
 }
