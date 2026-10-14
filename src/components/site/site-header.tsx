@@ -2,8 +2,6 @@ import { Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { siteButton } from "./button";
 import { MobileMenu } from "./mobile-menu";
 import { bookingHref } from "./nav";
 import { NavList, SiteNavLinks } from "./site-nav-links";
@@ -36,12 +34,16 @@ export function SiteHeader() {
           </Suspense>
         </nav>
         <div className="ml-auto flex items-center gap-2 xl:ml-0">
+          {/* Light outline so it doesn't outweigh the navigation; fills navy on hover. */}
           <Link
             href={bookingHref("en-tete")}
-            className={cn(siteButton({ variant: "primary" }), "hidden min-h-12 px-5 text-[14px] sm:inline-flex")}
+            className="group hidden h-11 items-center gap-2.5 rounded-[7px] border border-navy px-4 font-heading text-[13.5px] font-semibold tracking-[0.01em] text-navy transition-colors duration-200 hover:bg-navy hover:text-white sm:inline-flex"
           >
             Réserver un échange
-            <ArrowRight aria-hidden />
+            <ArrowRight
+              aria-hidden
+              className="size-4 text-gold transition-transform duration-200 group-hover:translate-x-0.5 motion-reduce:group-hover:translate-x-0"
+            />
           </Link>
           <Suspense fallback={null}>
             <MobileMenu />
