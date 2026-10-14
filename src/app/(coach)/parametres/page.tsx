@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageHeader } from "@/components/page-header";
 import { getSettingsOverview } from "@/server/queries/settings";
 import { initials } from "@/lib/format";
-import { BusinessForm, NoteTemplatesEditor, PackagesEditor, StagesEditor } from "./settings-forms";
+import { BookingSettingsForm, BusinessForm, NoteTemplatesEditor, PackagesEditor, StagesEditor } from "./settings-forms";
 
 export const metadata: Metadata = { title: "Paramètres" };
 
@@ -41,7 +41,7 @@ function Row({ label, value }: { label: React.ReactNode; value: React.ReactNode 
 }
 
 async function Settings() {
-  const { user, business, stages, packages, templates } = await getSettingsOverview();
+  const { user, business, stages, packages, templates, booking } = await getSettingsOverview();
   const origins = (process.env.SITE_FORM_ORIGINS ?? "").split(",").map((o) => o.trim()).filter(Boolean);
   const endpoint = `${process.env.BETTER_AUTH_URL ?? "https://crm.example.com"}/api/formulaire-site`;
   const snippet = `<form action="${endpoint}" method="post">
@@ -62,6 +62,7 @@ async function Settings() {
         <TabsTrigger value="pipeline">Pipeline</TabsTrigger>
         <TabsTrigger value="forfaits">Accompagnements</TabsTrigger>
         <TabsTrigger value="notes">Modèles de note</TabsTrigger>
+        <TabsTrigger value="reservation">Réservation en ligne</TabsTrigger>
       </TabsList>
 
       <TabsContent value="general" className="mt-6 grid gap-6 lg:grid-cols-2">
@@ -126,6 +127,15 @@ async function Settings() {
           description="Vos offres, avec leur prix en euros et en francs suisses. Archivez une offre pour ne plus la proposer."
         >
           <PackagesEditor packages={packages} templates={templates.map((t) => ({ id: t.id, name: t.name }))} />
+        </Panel>
+      </TabsContent>
+
+      <TabsContent value="reservation" className="mt-6">
+        <Panel
+          title="Réservation en ligne de l'échange stratégique"
+          description="Vos disponibilités pour la page « Réserver un échange stratégique » du site. Les créneaux déjà pris par une séance prévue ne sont jamais proposés. Une réservation crée le contact (ou le retrouve par e-mail), la séance, une tâche, et fait passer le prospect à « Échange stratégique planifié »."
+        >
+          <BookingSettingsForm settings={booking} />
         </Panel>
       </TabsContent>
 

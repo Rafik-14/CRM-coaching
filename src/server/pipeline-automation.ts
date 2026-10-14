@@ -10,7 +10,12 @@ import { activityLog, contacts, pipelineStages } from "@/server/db/schema";
  * Based on stage order, not names, so it keeps working if the coach renames stages.
  * Never touches clients, and never moves a contact backwards or from a later stage.
  */
-export async function advanceProspectAfterEchange(contactId: string, actorId: string, event: "scheduled" | "done") {
+/** `actorId` is null when the visitor booked online from the website. */
+export async function advanceProspectAfterEchange(
+  contactId: string,
+  actorId: string | null,
+  event: "scheduled" | "done",
+) {
   const stages = await db.query.pipelineStages.findMany({ orderBy: asc(pipelineStages.position) });
   const from = stages[event === "scheduled" ? 0 : 1];
   const to = stages[event === "scheduled" ? 1 : 2];

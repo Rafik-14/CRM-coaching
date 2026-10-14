@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { SEGMENT_VALUES, SUB_SEGMENT_VALUES } from "@/lib/jg";
+import { SEGMENT_VALUES, STAKES, SUB_SEGMENT_VALUES } from "@/lib/jg";
 
 /** Public website forms (contact, online booking). Messages are in French: they are shown to visitors. */
 
@@ -41,6 +41,22 @@ export const visitorFields = {
 export const contactFormSchema = z.object({
   ...visitorFields,
   message: z.string().trim().min(1, "Votre message est vide.").max(4000, "4 000 caractères maximum."),
+});
+
+/** Online booking of the « Échange stratégique » (/reserver). */
+export const bookingFormSchema = z.object({
+  ...visitorFields,
+  slot: z.iso.datetime("Choisissez un créneau."),
+  stake: z
+    .union([z.literal(""), z.enum(STAKES)])
+    .optional()
+    .transform((v) => v || null),
+  message: z
+    .string()
+    .trim()
+    .max(2000, "2 000 caractères maximum.")
+    .optional()
+    .transform((v) => v || null),
 });
 
 export type SiteFormState = {

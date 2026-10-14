@@ -22,7 +22,9 @@ import { StageBadge, stageDot } from "@/components/stage-badge";
 import { cn } from "@/lib/utils";
 import { formatMoney } from "@/lib/format";
 import { STAGE_COLORS } from "@/lib/validations/phase1";
-import { SESSION_TYPES } from "@/lib/validations/coaching";
+import { SESSION_LOCATIONS, SESSION_TYPES } from "@/lib/validations/coaching";
+import { BUFFERS, SLOT_LENGTHS, WEEKDAYS, formatRanges, type BookingSettings } from "@/lib/booking";
+import { saveBookingSettings } from "@/server/actions/booking";
 import {
   deleteNoteTemplate,
   deleteStage,
@@ -540,6 +542,111 @@ export function BusinessForm({ name, currency }: { name: string; currency: strin
           </SelectContent>
         </Select>
       </FormField>
+      <Button type="submit" disabled={pending} className="justify-self-start">
+        {pending && <Loader2 className="animate-spin" />}
+        Enregistrer
+      </Button>
+    </form>
+  );
+}
+
+// ------------------------------------------------------------------ online booking (website)
+
+export function BookingSettingsForm({ settings }: { settings: BookingSettings }) {
+  const [state, formAction, pending] = useSave(saveBookingSettings, "Disponibilités enregistrées");
+  const errors = state.fieldErrors;
+  return (
+    <form action={formAction} className="grid gap-6">
+      <label className="flex items-center gap-3 text-sm font-medium">
+        <input type="checkbox" name="enabled" defaultChecked={settings.enabled} className="size-4 accent-primary" />
+        Réservation en ligne ouverte sur le site
+      </label>
+
+      <fieldset className="grid gap-3">
+        <legend className="mb-1 text-sm font-medium">Plages horaires par jour</legend>
+        <p className="-mt-1 text-xs text-muted-foreground">
+          Format : 09:00-12:00, 14:00-18:00. Laissez vide pour un jour sans rendez-vous.
+        </p>
+        {WEEKDAYS.map((d) => (
+          <div key={d.index} className="grid gap-1 sm:grid-cols-[110px_1fr] sm:items-center">
+            <label htmlFor={`day${d.index}`} className="text-sm">
+              {d.label}
+            </label>
+            <Input
+              id={`day${d.index}`}
+              name={`day${d.index}`}
+              defaultValue={formatRanges(settings.weekly[d.index] ?? [])}
+              placeholder="Pas de rendez-vous"
+              aria-invalid={!!errors?.[`day${d.index}`] || undefined}
+            />
+            {errors?.[`day${d.index}`] && (
+              <p className="text-xs text-destructive sm:col-start-2">{errors[`day${d.index}`]?.[0]}</p>
+            )}
+          </div>
+        ))}
+      </fieldset>
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <FormField label="Durée de l'échange" htmlFor="slotMinutes">
+          <Select name="slotMinutes" defaultValue={String(settings.slotMinutes)}>
+            <SelectTrigger id="slotMinutes" className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {SLOT_LENGTHS.map((n) => (
+                <SelectItem key={n} value={String(n)}>
+                  {n} minutes
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </FormField>
+        <FormField label="Pause avant / après" htmlFor="bufferMinutes" hint="Temps libre gardé autour de chaque rendez-vous.">
+          <Select name="bufferMinutes" defaultValue={String(settings.bufferMinutes)}>
+            <SelectTrigger id="bufferMinutes" className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {BUFFERS.map((n) => (
+                <SelectItem key={n} value={String(n)}>
+                  {n === 0 ? "Aucune" : `${n} minutes`}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </FormField>
+        <FormField label="Lieu" htmlFor="location">
+          <Select name="location" defaultValue={settings.location}>
+            <SelectTrigger id="location" className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {SESSION_LOCATIONS.map((l) => (
+                <SelectItem key={l} value={l}>
+                  {l}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </FormField>
+        <FormField
+          label="Délai minimum (heures)"
+          htmlFor="minNoticeHours"
+          hint="Pas de réservation moins de … heures à l'avance."
+          error={errors?.minNoticeHours?.[0]}
+        >
+          <Input id="minNoticeHours" name="minNoticeHours" type="number" min={0} max={336} defaultValue={settings.minNoticeHours} />
+        </FormField>
+        <FormField
+          label="Réservable jusqu'à (jours)"
+          htmlFor="horizonDays"
+          hint="Combien de jours à l'avance."
+          error={errors?.horizonDays?.[0]}
+        >
+          <Input id="horizonDays" name="horizonDays" type="number" min={1} max={120} defaultValue={settings.horizonDays} />
+        </FormField>
+      </div>
+
       <Button type="submit" disabled={pending} className="justify-self-start">
         {pending && <Loader2 className="animate-spin" />}
         Enregistrer
