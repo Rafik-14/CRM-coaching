@@ -190,6 +190,87 @@
   }
 }
 
+/* Public website (brief §3 typography, §16 accessibility). Always light, whatever the CRM theme. */
+@layer components {
+  .jg-site {
+    color: var(--jg-anthracite);
+    font-size: 1.0625rem;
+    line-height: 1.6;
+  }
+  @media (min-width: 1024px) {
+    .jg-site {
+      font-size: 1.125rem;
+    }
+  }
+  .jg-site :is(h1, h2, h3, h4) {
+    color: var(--jg-navy);
+    font-weight: 600;
+    text-wrap: balance;
+  }
+  .jg-site strong {
+    color: var(--jg-navy);
+    font-weight: 700;
+  }
+  .jg-site .jg-on-navy,
+  .jg-site .jg-on-navy :is(h1, h2, h3, h4, strong) {
+    color: var(--jg-white);
+  }
+  .jg-h1 {
+    font-size: 2.375rem;
+    line-height: 1.08;
+    letter-spacing: -0.6px;
+  }
+  .jg-h2 {
+    font-size: 1.9375rem;
+    line-height: 1.15;
+  }
+  .jg-h3 {
+    font-size: 1.4375rem;
+    line-height: 1.2;
+  }
+  .jg-h4 {
+    font-size: 1.1875rem;
+    line-height: 1.25;
+  }
+  @media (min-width: 768px) {
+    .jg-h1 {
+      font-size: 2.875rem;
+    }
+    .jg-h2 {
+      font-size: 2.125rem;
+    }
+  }
+  @media (min-width: 1024px) {
+    .jg-h1 {
+      font-size: 3.5rem;
+    }
+    .jg-h2 {
+      font-size: 2.5rem;
+    }
+    .jg-h3 {
+      font-size: 1.625rem;
+    }
+    .jg-h4 {
+      font-size: 1.25rem;
+    }
+  }
+  .jg-small {
+    font-size: 0.9375rem;
+    line-height: 1.5;
+  }
+  .jg-prose > * + * {
+    margin-top: 1em;
+  }
+  /* Visible focus: navy ring on light backgrounds, white on navy. */
+  .jg-site :focus-visible {
+    outline: 2px solid var(--jg-navy);
+    outline-offset: 3px;
+  }
+  .jg-site .jg-on-navy :focus-visible {
+    outline-color: var(--jg-white);
+  }
+}
+
 /* Entrance animations for charts (components/animate.tsx): bars grow, the donut draws itself.
    Paused until the chart scrolls into view (AnimateOnView sets data-visible); off with « reduce motion ». */
 @property --reveal {

@@ -12,7 +12,7 @@ export default function NotFound() {
         description="Cette page n'existe pas ou a été supprimée."
         action={
           <Button asChild>
-            <Link href="/tableau-de-bord">Retour au tableau de bord</Link>
+            <Link href="/">Retour à l’accueil</Link>
           </Button>
         }
       />
