@@ -7,6 +7,7 @@
 > **Objectifs :** (1) faire réserver un échange stratégique, (2) montrer le travail (méthode, offres, transformations),
 > (3) présenter Jérémy (à propos, livre).
 > **Dernière mise à jour :** 2026-10-14
+> **État :** étapes 1 à 8 réalisées sur `feat/website` (vérifiées sur ordinateur, tablette et téléphone). Démo Vercel : pas encore déployée.
 
 ---
 
@@ -65,7 +66,24 @@
 | 7 | FAQ et pages légales, SEO (titres, description, sitemap, robots), accessibilité | Prêt à publier |
 | 8 | Vérification desktop / mobile, déploiement de démonstration | Lien à partager |
 
-## 5. À confirmer avec le client
+## 5. Réalisé — écarts et points d'attention
+
+- **Textes** repris tels quels du document client. Seuls ajouts : petits libellés au-dessus des titres, « Le moment révélateur »
+  (anecdote de Yannick), « 20 minutes · Sans engagement » sous les boutons.
+- **Accueil, section 6** : trois cartes avec les pictogrammes Clarifier / Révéler / Incarner ; le schéma « Ma méthode »
+  est placé sur la page Méthode (nom du fichier client). Il indique **CLARIFIER** alors que la page Méthode dit **RELIER** :
+  à faire trancher par Jérémy (Q1 du plan JG).
+- **Pour qui ?** : le client demandait « le même visuel que la page d'accueil » (de l'ancien site, non fourni). Photos utilisées :
+  intervention (Entreprises) et atelier (Écoles) ; Particuliers et Entrepreneurs sans photo.
+- **Transformations** : pas de photo de Yannick ni de Jean-Gabriel → initiale dans un cercle. Les cas du CRM (client terminé +
+  accord témoignage) s'ajoutent sous « D'autres parcours » (prénom et enjeu seulement, 4 maximum).
+- **Prix** lus dans le CRM. La description du Parcours Signature dans la base locale est l'ancienne version courte :
+  la valeur par défaut a été corrigée (jg-defaults), la base existante se modifie dans Paramètres → Accompagnements.
+- **Pages légales** : structure prête, passages manquants signalés « à compléter ».
+- **Réservation** : pas d'e-mail de confirmation (Phase 2) ; Jérémy reçoit la séance, la tâche et le contact dans le CRM.
+  Disponibilités par défaut : lundi–vendredi 9 h–12 h et 14 h–18 h, créneaux de 20 min, pause 10 min, délai 24 h, 30 jours.
+
+## 6. À confirmer avec le client
 
 - Nom de domaine (.com ou .ch) et accès OVH.
 - Disponibilités réelles pour l'échange stratégique.

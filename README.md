@@ -1,6 +1,7 @@
 # CRM Coaching
 
-Custom CRM for a life coach (SwissWAI client): contacts, pipeline, clients, sessions & notes, goals, tasks.
+Custom CRM for a life coach (SwissWAI client): contacts, pipeline, clients, sessions & notes, goals, tasks —
+plus the coach's public website (Méthode JG®) with online booking, in the same app. Website plan: [`docs/WEBSITE-PLAN.md`](docs/WEBSITE-PLAN.md).
 Full plan and architecture: [`docs/STACK.md`](docs/STACK.md).
 
 **Stack:** Next.js 16 (App Router, Cache Components) · TypeScript · Tailwind v4 + shadcn/ui · PostgreSQL + Drizzle ORM · Better Auth
@@ -48,6 +49,8 @@ All demo data is fake — never put real client data on a development machine.
 ```
 src/
   app/
+    (site)/               public website: /, /methode, /accompagnements, /pour-qui, /transformations,
+                          /a-propos, /le-chant-du-merle, /contact, /reserver (online booking), /faq, legal pages
     connexion/            login page
     (coach)/              coach area (sidebar layout)
       tableau-de-bord/    dashboard
@@ -63,7 +66,8 @@ src/
     queries/              read functions (each starts with requireCoach)
     actions/              server actions (each starts with requireCoach + Zod validation)
   lib/validations/        Zod schemas shared by forms and server
-  proxy.ts                optimistic redirect to /connexion without a session cookie
+  components/site/        website building blocks (header, footer, sections, forms, booking widget)
+  proxy.ts                optimistic redirect to /connexion on CRM paths only (the website is public)
 ```
 
 ## Security rules
@@ -72,7 +76,20 @@ src/
 - Every input is validated with Zod on the server.
 - Public sign-up is disabled: accounts are created by the coach / seed script.
 
-## Website contact form → CRM
+## Public website
+
+- Pages live in `src/app/(site)/`; texts come from the client's « Site web JG instructions », design from the « Brief maître ».
+- Offers and prices (`/accompagnements`, FAQ) and consented case studies (`/transformations`) are read from the CRM
+  through cached queries (`src/server/queries/site.ts`); CRM actions call `updateTag` so changes show at once.
+- **Contact form** (`/contact`): server action → contact (found by e-mail or created in stage 1) + « Rappeler » task.
+- **Online booking** (`/reserver`): availability set in **Paramètres → Réservation en ligne**; slots computed on the server
+  in the coach's time zone, re-checked in a locked transaction. A booking creates/finds the contact, creates the
+  « Échange stratégique » session, moves a prospect to stage 2 and adds a task. Confirmation page with a signed link + .ics.
+- Every button passes `?source=…` (stored in the contact's source) and, where relevant, `?profil=…` (pre-selects the client type).
+- SEO: metadata per page, `/sitemap.xml`, `/robots.txt`; the whole site is `noindex` on Vercel (demo) or with `SITE_NOINDEX=true`.
+  Set `NEXT_PUBLIC_SITE_URL` to the public address in production.
+
+## Website contact form → CRM (external site)
 
 `POST /api/formulaire-site` creates a lead (stage "Nouveau", source "Site web") and a "Rappeler…" task;
 an existing e-mail only gets a new task. Accepts JSON or a plain HTML form.
