@@ -70,6 +70,16 @@ src/
   proxy.ts                optimistic redirect to /connexion on CRM paths only (the website is public)
 ```
 
+## Continuous integration
+
+GitHub Actions ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs on every push to `main`, `feat/**`, `fix/**` and on pull requests:
+typecheck, lint (no warnings allowed), unit tests (`npm test`), a check that every schema change has a migration,
+migrations + seed on PostgreSQL 16, and a production build. Nothing is deployed from CI.
+
+- Run the same checks locally: `npm run typecheck && npx eslint . && npm test`.
+- **Changed dependencies on Windows?** npm there can leave out Linux-only packages and `npm ci` then fails in CI.
+  The « Lockfile (Linux) » workflow runs when `package.json` changes: download its `package-lock` artifact and commit it.
+
 ## Security rules
 
 - Every query and server action calls `requireCoach()` (or `requireUser()`) first. The proxy is only an optimistic redirect, not the real check.
