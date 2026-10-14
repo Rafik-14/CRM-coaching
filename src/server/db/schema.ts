@@ -438,3 +438,7 @@ export const documentsRelations = relations(documents, ({ one }) => ({
 export const packagesRelations = relations(packages, ({ one }) => ({
   noteTemplate: one(noteTemplates, { fields: [packages.noteTemplateId], references: [noteTemplates.id] }),
 }));
+
+export const emailLogRelations = relations(emailLog, ({ one }) => ({
+  contact: one(contacts, { fields: [emailLog.contactId], references: [contacts.id] }),
+}));

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Suspense } from "react";
 import { Globe, ShieldCheck, UserRound } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -6,7 +7,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageHeader } from "@/components/page-header";
 import { getSettingsOverview } from "@/server/queries/settings";
 import { initials } from "@/lib/format";
-import { BookingSettingsForm, BusinessForm, NoteTemplatesEditor, PackagesEditor, StagesEditor } from "./settings-forms";
+import { getEmailOverview } from "@/server/queries/email";
+import { formatDayTime } from "@/lib/format";
+import {
+  BookingSettingsForm,
+  BusinessForm,
+  EmailNotifyForm,
+  NoteTemplatesEditor,
+  PackagesEditor,
+  StagesEditor,
+  TestEmailForm,
+} from "./settings-forms";
 
 export const metadata: Metadata = { title: "Paramètres" };
 
@@ -41,7 +52,10 @@ function Row({ label, value }: { label: React.ReactNode; value: React.ReactNode 
 }
 
 async function Settings() {
-  const { user, business, stages, packages, templates, booking } = await getSettingsOverview();
+  const [{ user, business, stages, packages, templates, booking }, email] = await Promise.all([
+    getSettingsOverview(),
+    getEmailOverview(),
+  ]);
   const origins = (process.env.SITE_FORM_ORIGINS ?? "").split(",").map((o) => o.trim()).filter(Boolean);
   const endpoint = `${process.env.BETTER_AUTH_URL ?? "https://crm.example.com"}/api/formulaire-site`;
   const snippet = `<form action="${endpoint}" method="post">
@@ -63,6 +77,7 @@ async function Settings() {
         <TabsTrigger value="forfaits">Accompagnements</TabsTrigger>
         <TabsTrigger value="notes">Modèles de note</TabsTrigger>
         <TabsTrigger value="reservation">Réservation en ligne</TabsTrigger>
+        <TabsTrigger value="emails">E-mails</TabsTrigger>
       </TabsList>
 
       <TabsContent value="general" className="mt-6 grid gap-6 lg:grid-cols-2">
@@ -137,6 +152,79 @@ async function Settings() {
         >
           <BookingSettingsForm settings={booking} />
         </Panel>
+      </TabsContent>
+
+      <TabsContent value="emails" className="mt-6 grid gap-6 lg:grid-cols-2">
+        <Panel title="Envoi des e-mails" description="Configuré sur le serveur (fichier .env), jamais dans la base de données.">
+          <Row
+            label="État"
+            value={
+              email.config.configured ? (
+                <span className="rounded-md bg-success/15 px-2.5 py-1 text-xs font-medium text-success">Envoi réel actif</span>
+              ) : (
+                <span className="rounded-md bg-warning/15 px-2.5 py-1 text-xs font-medium text-warning">
+                  Mode test : e-mails enregistrés, pas envoyés
+                </span>
+              )
+            }
+          />
+          <Row label="Serveur SMTP" value={email.config.host ? `${email.config.host}:${email.config.port}` : "—"} />
+          <Row label="Expéditeur" value={email.config.from} />
+          {email.config.redirectTo && (
+            <Row
+              label="Redirection de test"
+              value={<span className="text-warning">Tous les e-mails vont à {email.config.redirectTo}</span>}
+            />
+          )}
+          {email.config.missing.length > 0 && (
+            <p className="mt-3 text-xs text-muted-foreground">À compléter dans .env : {email.config.missing.join(", ")}</p>
+          )}
+        </Panel>
+        <Panel title="Notifications et test">
+          <div className="grid gap-6">
+            <EmailNotifyForm notifyTo={email.notifyTo} fallback={email.coachEmail} />
+            <TestEmailForm defaultTo={email.config.redirectTo ?? email.notifyTo ?? email.coachEmail} />
+          </div>
+        </Panel>
+        <section className="rounded-2xl border border-border bg-card p-5 lg:col-span-2">
+          <h2 className="font-semibold">Derniers e-mails</h2>
+          {email.recent.length === 0 ? (
+            <p className="mt-2 text-sm text-muted-foreground">Aucun e-mail pour l’instant.</p>
+          ) : (
+            <ul className="mt-3 divide-y divide-border text-sm">
+              {email.recent.map((m) => (
+                <li key={m.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 py-2.5">
+                  <span className="w-32 shrink-0 text-muted-foreground tabular-nums">{formatDayTime(m.createdAt)}</span>
+                  <span className="min-w-0 flex-1 truncate font-medium">{m.subject}</span>
+                  <span className="text-muted-foreground">
+                    {m.contact ? (
+                      <Link href={`/contacts/${m.contact.id}`} className="hover:underline">
+                        {m.to}
+                      </Link>
+                    ) : (
+                      m.to
+                    )}
+                  </span>
+                  <span
+                    title={m.error ?? undefined}
+                    className={
+                      m.status === "failed"
+                        ? "rounded-md bg-destructive/10 px-2 py-0.5 text-xs font-medium text-destructive"
+                        : m.providerId === "mode-test"
+                          ? "rounded-md bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground"
+                          : m.status === "sent"
+                            ? "rounded-md bg-success/15 px-2 py-0.5 text-xs font-medium text-success"
+                            : "rounded-md bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground"
+                    }
+                  >
+                    {m.status === "failed" ? "Échec" : m.providerId === "mode-test" ? "Mode test" : m.status === "sent" ? "Envoyé" : "En cours"}
+                  </span>
+                  {m.status === "failed" && m.error && <p className="w-full text-xs text-destructive">{m.error}</p>}
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
       </TabsContent>
 
       <TabsContent value="notes" className="mt-6">

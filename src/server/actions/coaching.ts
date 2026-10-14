@@ -10,7 +10,13 @@ import { requireCoach } from "@/server/dal";
 import { advanceProspectAfterEchange } from "@/server/pipeline-automation";
 import { DISCOVERY_TYPE, caseStudySchema, closeCoachingSchema, scheduleSessionSchema } from "@/lib/validations/coaching";
 
-export type ActionState = { ok?: boolean; error?: string; fieldErrors?: Record<string, string[] | undefined> };
+export type ActionState = {
+  ok?: boolean;
+  error?: string;
+  fieldErrors?: Record<string, string[] | undefined>;
+  /** Optional success text that replaces the default toast. */
+  message?: string;
+};
 
 async function getClientForContact(contactId: string) {
   return db.query.clients.findFirst({ where: eq(clients.contactId, contactId) });
