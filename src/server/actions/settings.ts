@@ -1,9 +1,10 @@
 "use server";
 
 import { asc, count, desc, eq, sql } from "drizzle-orm";
-import { refresh } from "next/cache";
+import { refresh, updateTag } from "next/cache";
 import { z } from "zod";
 import { db } from "@/server/db";
+import { SITE_OFFERS_TAG } from "@/server/queries/site";
 import { clientPackages, contacts, noteTemplates, packages, pipelineStages, settings } from "@/server/db/schema";
 import { requireCoach } from "@/server/dal";
 import { businessSchema, noteTemplateSchema, packageSchema, stageSchema } from "@/lib/validations/phase1";
@@ -76,6 +77,7 @@ export async function savePackage(packageId: string | null, _prev: ActionState, 
   } else {
     await db.insert(packages).values(parsed.data);
   }
+  updateTag(SITE_OFFERS_TAG);
   refresh();
   return { ok: true };
 }
@@ -84,6 +86,7 @@ export async function savePackage(packageId: string | null, _prev: ActionState, 
 export async function setPackageActive(packageId: string, active: boolean) {
   await requireCoach();
   await db.update(packages).set({ active }).where(eq(packages.id, z.uuid().parse(packageId)));
+  updateTag(SITE_OFFERS_TAG);
   refresh();
 }
 

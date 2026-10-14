@@ -1,9 +1,10 @@
 "use server";
 
 import { and, asc, desc, eq, gte } from "drizzle-orm";
-import { refresh } from "next/cache";
+import { refresh, updateTag } from "next/cache";
 import { z } from "zod";
 import { db } from "@/server/db";
+import { SITE_CASES_TAG } from "@/server/queries/site";
 import { activityLog, clients, coachingSessions, contacts, pipelineStages } from "@/server/db/schema";
 import { requireCoach } from "@/server/dal";
 import { advanceProspectAfterEchange } from "@/server/pipeline-automation";
@@ -114,6 +115,7 @@ export async function closeCoaching(_prev: ActionState, formData: FormData): Pro
     entityId: v.contactId,
     action: `coaching_${v.outcome}`,
   });
+  updateTag(SITE_CASES_TAG);
   refresh();
   return { ok: true };
 }
@@ -149,6 +151,7 @@ export async function saveCaseStudy(_prev: ActionState, formData: FormData): Pro
     entityId: parsed.data.contactId,
     action: "case_study_saved",
   });
+  updateTag(SITE_CASES_TAG);
   refresh();
   return { ok: true };
 }
@@ -174,5 +177,6 @@ export async function reopenCoaching(contactId: string) {
       .where(eq(contacts.id, id));
   }
   await db.insert(activityLog).values({ actorId: user.id, entity: "contact", entityId: id, action: "coaching_reopened" });
+  updateTag(SITE_CASES_TAG);
   refresh();
 }

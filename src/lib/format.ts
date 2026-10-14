@@ -23,9 +23,10 @@ export const formatDate = (d: Date | null | undefined) => (d ? dateFmt.format(d)
 export const formatDayTime = (d: Date) => dayTimeFmt.format(d);
 
 export function formatMoney(amount: number | string, currency = "EUR") {
-  return new Intl.NumberFormat("fr-FR", { style: "currency", currency, maximumFractionDigits: 0 }).format(
-    Number(amount),
-  );
+  // fr-FR groups thousands with a narrow no-break space (U+202F), missing from the Lato subset: use a regular one.
+  return new Intl.NumberFormat("fr-FR", { style: "currency", currency, maximumFractionDigits: 0 })
+    .format(Number(amount))
+    .replace(/ /g, " ");
 }
 
 export const CURRENCIES = ["EUR", "CHF"] as const;

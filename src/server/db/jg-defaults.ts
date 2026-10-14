@@ -92,7 +92,7 @@ export const DEFAULT_OFFERS = [
     name: "Parcours Signature JG®",
     tagline: "Transformer durablement votre manière d'incarner votre valeur.",
     description:
-      "L'accompagnement de référence pour construire une identité professionnelle plus claire, plus assumée et plus cohérente avec votre potentiel.",
+      "L'accompagnement de référence pour aller au-delà d'un enjeu ponctuel et construire une identité professionnelle plus claire, plus assumée et plus cohérente avec votre potentiel.",
     sessionsCount: 8,
     price: "1090.00",
     priceChf: "1190.00",

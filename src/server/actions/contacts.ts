@@ -1,10 +1,11 @@
 "use server";
 
 import { eq } from "drizzle-orm";
-import { refresh } from "next/cache";
+import { refresh, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { db } from "@/server/db";
+import { SITE_CASES_TAG } from "@/server/queries/site";
 import { activityLog, clients, contacts, pipelineStages, tasks } from "@/server/db/schema";
 import { requireCoach } from "@/server/dal";
 import { contactSchema } from "@/lib/validations/contact";
@@ -78,6 +79,8 @@ export async function updateContact(
     action: stageChanged ? "stage_changed" : "updated",
   });
 
+  // A published case study shows the contact's first name and stake.
+  updateTag(SITE_CASES_TAG);
   refresh();
   return { ok: true };
 }
@@ -101,6 +104,7 @@ export async function deleteContact(id: string) {
   const contactId = z.uuid().parse(id);
   await db.delete(contacts).where(eq(contacts.id, contactId));
   await db.insert(activityLog).values({ actorId: user.id, entity: "contact", entityId: contactId, action: "deleted" });
+  updateTag(SITE_CASES_TAG);
   redirect("/contacts");
 }
 
