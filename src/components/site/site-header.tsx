@@ -1,7 +1,6 @@
 import { Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
 import { MobileMenu } from "./mobile-menu";
 import { bookingHref } from "./nav";
 import { NavList, SiteNavLinks } from "./site-nav-links";
@@ -34,16 +33,12 @@ export function SiteHeader() {
           </Suspense>
         </nav>
         <div className="ml-auto flex items-center gap-2 xl:ml-0">
-          {/* Light outline so it doesn't outweigh the navigation; fills navy on hover. */}
+          {/* Sized like the navigation: same 14 px type, slim navy button (hit area stays 44 px). */}
           <Link
             href={bookingHref("en-tete")}
-            className="group hidden h-11 items-center gap-2.5 rounded-[7px] border border-navy px-4 font-heading text-[13.5px] font-semibold tracking-[0.01em] text-navy transition-colors duration-200 hover:bg-navy hover:text-white sm:inline-flex"
+            className="relative hidden h-10 items-center rounded-[7px] bg-navy px-[18px] font-heading text-[14px] font-medium text-white transition-colors duration-200 after:absolute after:inset-x-0 after:-inset-y-0.5 hover:bg-[var(--jg-navy-hover)] sm:inline-flex"
           >
             Réserver un échange
-            <ArrowRight
-              aria-hidden
-              className="size-4 text-gold transition-transform duration-200 group-hover:translate-x-0.5 motion-reduce:group-hover:translate-x-0"
-            />
           </Link>
           <Suspense fallback={null}>
             <MobileMenu />
