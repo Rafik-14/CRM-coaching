@@ -4,12 +4,12 @@ import { BookingButton, Container, DotList, GoldLine } from "./ui";
 import { LEGAL_NAV, SITE_NAV } from "./nav";
 
 const footerLink =
-  "inline-flex min-h-11 items-center text-white/80 transition-colors duration-200 hover:text-white hover:underline hover:decoration-gold hover:underline-offset-4";
+  "inline-flex min-h-11 items-center text-white/80 md:min-h-9 transition-colors duration-200 hover:text-white hover:underline hover:decoration-gold hover:underline-offset-4";
 
 export function SiteFooter() {
   return (
-    <footer className="jg-on-navy bg-navy text-white">
-      <Container className="grid gap-12 py-16 md:py-20 lg:grid-cols-[1.3fr_1fr_1fr] lg:gap-16">
+    <footer className="jg-on-navy border-t border-white/10 bg-navy text-white">
+      <Container className="grid gap-12 py-16 md:py-20 lg:grid-cols-[1.2fr_0.8fr_1.2fr] lg:gap-16">
         <div>
           <Image
             src="/brand/jg-logo-white.svg"

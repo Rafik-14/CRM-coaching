@@ -87,34 +87,39 @@ export function BookingButton({
   );
 }
 
-/** Text link with an arrow (« Comprendre la Méthode JG® → »). */
+/** Text link with an arrow (« Comprendre la Méthode JG® → »). The arrow stays on the last line when the text wraps. */
 export function ArrowLink({ className, children, ...props }: React.ComponentProps<typeof Link>) {
   return (
     <Link
       className={cn(
-        "group inline-flex min-h-11 items-center gap-2 font-heading text-[15px] font-semibold text-navy underline decoration-gold decoration-2 underline-offset-[6px] transition-colors duration-200 hover:decoration-navy [.jg-on-navy_&]:text-white [.jg-on-navy_&]:hover:decoration-white",
+        "group inline-block max-w-full py-2.5 font-heading text-[15px] leading-snug font-semibold text-navy transition-colors duration-200 [.jg-on-navy_&]:text-white",
         className,
       )}
       {...props}
     >
-      {children}
-      <ArrowRight aria-hidden className="size-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+      <span className="underline decoration-gold decoration-2 underline-offset-[6px] transition-colors duration-200 group-hover:decoration-navy [.jg-on-navy_&]:group-hover:decoration-white">
+        {children}
+      </span>
+      <ArrowRight
+        aria-hidden
+        className="ml-2 inline size-4 align-[-3px] transition-transform duration-200 group-hover:translate-x-0.5"
+      />
     </Link>
   );
 }
 
-/** « Mot • mot • mot » list (domains, « Pour : … »). */
+/** « Mot • mot • mot » list (domains, « Pour : … »). Separators end a line, they never start one. */
 export function DotList({ items, className }: { items: readonly string[]; className?: string }) {
   return (
-    <ul className={cn("flex flex-wrap gap-x-2 gap-y-1", className)}>
+    <ul className={cn("leading-relaxed", className)}>
       {items.map((item, i) => (
-        <li key={item} className="inline-flex items-center gap-2">
-          {i > 0 && (
+        <li key={item} className="inline">
+          <span className="whitespace-nowrap">{item}</span>
+          {i < items.length - 1 && (
             <span aria-hidden className="text-gold">
-              •
+              {"\u00a0• "}
             </span>
           )}
-          {item}
         </li>
       ))}
     </ul>
