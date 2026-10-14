@@ -339,6 +339,30 @@ export const activityLog = pgTable(
   (t) => [index("activity_log_entity_idx").on(t.entity, t.entityId)],
 );
 
+export const emailStatus = pgEnum("email_status", ["queued", "sent", "failed"]);
+
+/** Every e-mail the app sends (or tries to): shown in the contact history and in Paramètres › E-mails. */
+export const emailLog = pgTable(
+  "email_log",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    contactId: uuid("contact_id").references(() => contacts.id, { onDelete: "set null" }),
+    /** Intended recipient (before any test redirection). */
+    to: text("to").notNull(),
+    /** Where it really went when MAIL_REDIRECT_TO was set (tests). */
+    redirectedTo: text("redirected_to"),
+    /** booking_confirmation, coach_new_booking, contact_ack, coach_new_message, test… */
+    templateKey: text("template_key").notNull(),
+    subject: text("subject").notNull(),
+    status: emailStatus("status").notNull().default("queued"),
+    error: text("error"),
+    providerId: text("provider_id"),
+    sentAt: timestamp("sent_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("email_log_contact_idx").on(t.contactId), index("email_log_created_idx").on(t.createdAt)],
+);
+
 export const settings = pgTable("settings", {
   key: text("key").primaryKey(),
   value: jsonb("value").notNull(),

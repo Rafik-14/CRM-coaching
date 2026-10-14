@@ -36,6 +36,13 @@
       "when": 1791833812564,
       "tag": "0004_note_template_session_type",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1792008019765,
+      "tag": "0005_email_log",
+      "breakpoints": true
     }
   ]
 }

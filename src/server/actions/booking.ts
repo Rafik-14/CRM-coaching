@@ -2,6 +2,7 @@
 
 import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/server/db";
@@ -15,6 +16,8 @@ import { bookingSettingsSchema } from "@/lib/booking";
 import { bookingFormSchema, formValues, type SiteFormState } from "@/lib/validations/site";
 import { DISCOVERY_TYPE } from "@/lib/validations/coaching";
 import { formatDayTime } from "@/lib/format";
+import { sendEmail } from "@/server/email/send";
+import { bookingConfirmation, coachNewBooking, coachNotificationAddress } from "@/server/email/messages";
 import type { ActionState } from "./coaching";
 
 /** Any number; only used to serialise bookings so two visitors never get the same slot. */
@@ -91,7 +94,37 @@ export async function bookEchange(_prev: SiteFormState, formData: FormData): Pro
   });
   await db.insert(activityLog).values({ entity: "contact", entityId: contactId, action: "echange_booked_online" });
 
-  redirect(`/reserver/confirmation?r=${bookingToken(sessionId)}`);
+  // E-mails after the response: the visitor never waits for the mail server.
+  const token = bookingToken(sessionId);
+  after(async () => {
+    const confirmation = bookingConfirmation({
+      sessionId,
+      firstName: v.firstName,
+      startsAt,
+      durationMin: config.slotMinutes,
+      location: config.location,
+      token,
+    });
+    await sendEmail({ ...confirmation, to: v.email, contactId, templateKey: "booking_confirmation" });
+    const coach = await coachNotificationAddress();
+    if (coach) {
+      const notice = coachNewBooking({
+        contactId,
+        name: `${v.firstName} ${v.lastName}`.trim(),
+        email: v.email,
+        phone: v.phone,
+        segment: v.segment,
+        stake: v.stake,
+        message: v.message,
+        startsAt,
+        durationMin: config.slotMinutes,
+        source: v.source ?? null,
+      });
+      await sendEmail({ ...notice, to: coach, contactId, templateKey: "coach_new_booking", replyTo: v.email });
+    }
+  });
+
+  redirect(`/reserver/confirmation?r=${token}`);
 }
 
 // ------------------------------------------------------------------ CRM › Paramètres
