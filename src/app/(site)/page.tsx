@@ -188,7 +188,7 @@ export default function HomePage() {
               alt="Jérémy Galéa au travail sur un accompagnement"
               placeholder="blur"
               sizes="(min-width: 1024px) 480px, 100vw"
-              className="order-last aspect-[4/5] w-full max-w-[480px] rounded-[12px] object-cover lg:order-first"
+              className="order-last h-auto w-full max-w-[440px] rounded-[12px] lg:order-first"
             />
             <div>
               <SectionHeading eyebrow="La Méthode JG®" title="Comprendre votre parcours pour révéler votre valeur.">

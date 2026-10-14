@@ -52,7 +52,7 @@ export default function ChantDuMerlePage() {
             priority
             placeholder="blur"
             sizes="(min-width: 1024px) 460px, 100vw"
-            className="order-last aspect-[4/5] w-full max-w-[460px] rounded-[12px] object-cover object-[50%_40%] lg:order-first"
+            className="order-last h-auto w-full max-w-[420px] rounded-[12px] lg:order-first"
           />
           <div>
             <Eyebrow>Le premier roman de Jérémy Galéa</Eyebrow>

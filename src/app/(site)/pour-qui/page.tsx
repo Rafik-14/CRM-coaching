@@ -144,8 +144,8 @@ export default function PourQuiPage() {
                 src={a.photo.src}
                 alt={a.photo.alt}
                 placeholder="blur"
-                sizes="(min-width: 1024px) 560px, 100vw"
-                className="aspect-[4/3] w-full rounded-[12px] object-cover"
+                sizes="(min-width: 1024px) 440px, 100vw"
+                className="h-auto w-full max-w-[440px] rounded-[12px] lg:justify-self-end"
               />
             ) : null}
           </Container>

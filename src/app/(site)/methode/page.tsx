@@ -69,7 +69,7 @@ export default function MethodePage() {
             priority
             placeholder="blur"
             sizes="(min-width: 1024px) 460px, 100vw"
-            className="aspect-[4/5] w-full max-w-[460px] rounded-[12px] object-cover lg:justify-self-end"
+            className="h-auto w-full max-w-[420px] rounded-[12px] lg:justify-self-end"
           />
         </Container>
       </Section>
