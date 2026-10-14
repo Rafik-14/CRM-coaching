@@ -65,7 +65,9 @@ const rangeText = z
   .string()
   .trim()
   .max(200)
+  .optional()
   .transform((text, ctx) => {
+    // A missing or empty day = no appointments that day.
     if (!text) return [] as TimeRange[];
     const ranges: TimeRange[] = [];
     for (const part of text.split(/[,;]/).map((p) => p.trim()).filter(Boolean)) {
