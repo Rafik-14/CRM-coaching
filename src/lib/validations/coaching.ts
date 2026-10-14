@@ -1,8 +1,18 @@
 import { z } from "zod";
 
-export const SESSION_TYPES = ["Séance individuelle", "Appel découverte", "Bilan"] as const;
+/** Méthode JG®: every relationship starts with a free 20-minute « Échange stratégique ». */
+export const DISCOVERY_TYPE = "Échange stratégique";
+export const SESSION_TYPES = ["Séance individuelle", DISCOVERY_TYPE, "Bilan", "Intervention"] as const;
+export type SessionType = (typeof SESSION_TYPES)[number];
 export const SESSION_LOCATIONS = ["Visio", "Cabinet", "Téléphone"] as const;
-export const SESSION_DURATIONS = [30, 45, 60, 90] as const;
+export const SESSION_DURATIONS = [20, 30, 45, 60, 90, 120] as const;
+/** Default duration (minutes) when a type is picked; « Intervention » = B2B workshop / talk. */
+export const DEFAULT_DURATION: Record<SessionType, (typeof SESSION_DURATIONS)[number]> = {
+  "Séance individuelle": 60,
+  [DISCOVERY_TYPE]: 20,
+  Bilan: 60,
+  Intervention: 120,
+};
 
 export const scheduleSessionSchema = z.object({
   contactId: z.uuid(),
@@ -30,13 +40,47 @@ export const CLOSE_OUTCOMES = {
 } as const;
 
 export const CLOSE_REASONS = {
-  finished: ["Objectifs atteints", "Forfait terminé", "Autonomie acquise"],
+  finished: ["Objectifs atteints", "Moment décisif réussi", "Accompagnement terminé", "Autonomie acquise"],
   paused: ["Raisons personnelles", "Raisons financières", "Manque de disponibilité"],
   stopped: ["Raisons financières", "Ne correspond pas aux attentes", "Changement de situation", "Sans nouvelles"],
 } as const;
 
+const caseText = (max: number) =>
+  z
+    .string()
+    .trim()
+    .max(max, `${max} caractères maximum.`)
+    .optional()
+    .transform((v) => v || null);
+
+/** « Transformations » case study: Avant → Le déclic → Après → Ce qui a changé (+ positioning statement). */
+const caseStudyShape = {
+  before: caseText(1500),
+  trigger: caseText(1500),
+  after: caseText(1500),
+  changes: z
+    .string()
+    .optional()
+    .transform((v) =>
+      (v ?? "")
+        .split("\n")
+        .map((l) => l.trim())
+        .filter(Boolean)
+        .slice(0, 8),
+    )
+    .refine((a) => a.every((l) => l.length <= 200), "200 caractères maximum par ligne."),
+  positioningStatement: caseText(400),
+  testimonialConsent: z
+    .union([z.literal("on"), z.literal("true"), z.literal("")])
+    .optional()
+    .transform((v) => v === "on" || v === "true"),
+};
+
+export const caseStudySchema = z.object({ contactId: z.uuid(), ...caseStudyShape });
+
 export const closeCoachingSchema = z
   .object({
+    ...caseStudyShape,
     contactId: z.uuid(),
     outcome: z.enum(["finished", "paused", "stopped"], "Choisissez un résultat."),
     reason: z.string().trim().min(1, "Choisissez une raison.").max(200),

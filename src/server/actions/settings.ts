@@ -1,9 +1,10 @@
 "use server";
 
 import { asc, count, desc, eq, sql } from "drizzle-orm";
-import { refresh } from "next/cache";
+import { refresh, updateTag } from "next/cache";
 import { z } from "zod";
 import { db } from "@/server/db";
+import { SITE_OFFERS_TAG } from "@/server/queries/site";
 import { clientPackages, contacts, noteTemplates, packages, pipelineStages, settings } from "@/server/db/schema";
 import { requireCoach } from "@/server/dal";
 import { businessSchema, noteTemplateSchema, packageSchema, stageSchema } from "@/lib/validations/phase1";
@@ -62,8 +63,6 @@ export async function savePackage(packageId: string | null, _prev: ActionState, 
   await requireCoach();
   const parsed = packageSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return fieldErrors(parsed.error);
-  const business = await db.query.settings.findFirst({ where: eq(settings.key, "business") });
-  const currency = (business?.value as { currency?: string } | undefined)?.currency ?? "EUR";
 
   if (packageId) {
     const id = z.uuid().parse(packageId);
@@ -71,12 +70,14 @@ export async function savePackage(packageId: string | null, _prev: ActionState, 
     const [{ sold }] = await db.select({ sold: count() }).from(clientPackages).where(eq(clientPackages.packageId, id));
     const current = await db.query.packages.findFirst({ where: eq(packages.id, id) });
     if (sold > 0 && current && current.sessionsCount !== parsed.data.sessionsCount) {
-      return { error: "Ce forfait a déjà été vendu : créez un nouveau forfait pour changer le nombre de séances." };
+      return { error: "Cet accompagnement a déjà été vendu : créez-en un nouveau pour changer le nombre de séances." };
     }
-    await db.update(packages).set({ ...parsed.data, currency }).where(eq(packages.id, id));
+    // Clients who already bought keep the price they paid (stored on client_packages).
+    await db.update(packages).set(parsed.data).where(eq(packages.id, id));
   } else {
-    await db.insert(packages).values({ ...parsed.data, currency });
+    await db.insert(packages).values(parsed.data);
   }
+  updateTag(SITE_OFFERS_TAG);
   refresh();
   return { ok: true };
 }
@@ -85,21 +86,47 @@ export async function savePackage(packageId: string | null, _prev: ActionState, 
 export async function setPackageActive(packageId: string, active: boolean) {
   await requireCoach();
   await db.update(packages).set({ active }).where(eq(packages.id, z.uuid().parse(packageId)));
+  updateTag(SITE_OFFERS_TAG);
   refresh();
 }
 
 // ------------------------------------------------------------------ note template & business
 
-export async function saveNoteTemplate(_prev: ActionState, formData: FormData): Promise<ActionState> {
+/** One default template; a session type is used by one template at most. Existing notes never change. */
+export async function saveNoteTemplate(
+  templateId: string | null,
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
   await requireCoach();
   const parsed = noteTemplateSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return fieldErrors(parsed.error);
-  const current = await db.query.noteTemplates.findFirst({ where: eq(noteTemplates.isDefault, true) });
-  if (current) {
-    await db.update(noteTemplates).set({ fields: parsed.data.fields }).where(eq(noteTemplates.id, current.id));
-  } else {
-    await db.insert(noteTemplates).values({ name: "Séance standard", fields: parsed.data.fields, isDefault: true });
-  }
+  const v = parsed.data;
+  const id = templateId ? z.uuid().parse(templateId) : null;
+
+  await db.transaction(async (tx) => {
+    const [{ total }] = await tx.select({ total: count() }).from(noteTemplates);
+    const isDefault = v.isDefault || total === 0;
+    if (isDefault) await tx.update(noteTemplates).set({ isDefault: false });
+    if (v.sessionType) {
+      await tx.update(noteTemplates).set({ sessionType: null }).where(eq(noteTemplates.sessionType, v.sessionType));
+    }
+    const values = { name: v.name, fields: v.fields, sessionType: v.sessionType, ...(isDefault && { isDefault: true }) };
+    if (id) await tx.update(noteTemplates).set(values).where(eq(noteTemplates.id, id));
+    else await tx.insert(noteTemplates).values(values);
+  });
+  refresh();
+  return { ok: true };
+}
+
+export async function deleteNoteTemplate(templateId: string): Promise<ActionState> {
+  await requireCoach();
+  const id = z.uuid().parse(templateId);
+  const t = await db.query.noteTemplates.findFirst({ where: eq(noteTemplates.id, id) });
+  if (!t) return { error: "Modèle introuvable." };
+  if (t.isDefault) return { error: "Le modèle par défaut ne peut pas être supprimé." };
+  // Offers using it fall back to the default template (FK on delete set null).
+  await db.delete(noteTemplates).where(eq(noteTemplates.id, id));
   refresh();
   return { ok: true };
 }

@@ -1,10 +1,10 @@
-import { asc, eq } from "drizzle-orm";
-import { db } from "@/server/db";
-import { activityLog, contacts, pipelineStages, tasks } from "@/server/db/schema";
 import { siteFormSchema } from "@/lib/validations/phase1";
+import { rateLimited } from "@/server/rate-limit";
+import { recordSiteMessage } from "@/server/site-leads";
 
 /**
- * Contact form of the coach's existing website → new lead in the CRM.
+ * Contact form of an external website → new lead in the CRM.
+ * (The public site in this project uses a server action with the same logic: src/server/actions/site.ts.)
  *
  * Accepted when EITHER:
  * - the browser posts from an allowed site (SITE_FORM_ORIGINS, comma-separated), or
@@ -15,15 +15,6 @@ const allowedOrigins = (process.env.SITE_FORM_ORIGINS ?? "")
   .split(",")
   .map((o) => o.trim())
   .filter(Boolean);
-
-const hits = new Map<string, number[]>();
-function rateLimited(ip: string) {
-  const now = Date.now();
-  const recent = (hits.get(ip) ?? []).filter((t) => now - t < 60_000);
-  recent.push(now);
-  hits.set(ip, recent);
-  return recent.length > 5;
-}
 
 function corsHeaders(origin: string | null): Record<string, string> {
   if (!origin || !allowedOrigins.includes(origin)) return {};
@@ -54,7 +45,7 @@ export async function POST(request: Request) {
   if (!trustedServer && !trustedOrigin) return Response.json({ ok: false }, { status: 403, headers });
 
   const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "local";
-  if (rateLimited(ip)) return Response.json({ ok: false, error: "Trop de demandes" }, { status: 429, headers });
+  if (rateLimited(`api:${ip}`)) return Response.json({ ok: false, error: "Trop de demandes" }, { status: 429, headers });
 
   const body = request.headers.get("content-type")?.includes("application/json")
     ? await request.json().catch(() => ({}))
@@ -66,35 +57,10 @@ export async function POST(request: Request) {
   // Honeypot filled → pretend success so bots don't retry.
   if (v.website) return Response.json({ ok: true }, { headers });
 
-  const existing = await db.query.contacts.findFirst({ where: eq(contacts.email, v.email) });
-  let contactId = existing?.id;
-  if (!existing) {
-    const firstStage = await db.query.pipelineStages.findFirst({ orderBy: asc(pipelineStages.position) });
-    const [created] = await db
-      .insert(contacts)
-      .values({
-        firstName: v.firstName,
-        lastName: v.lastName,
-        email: v.email,
-        phone: v.phone || null,
-        source: "Site web",
-        stageId: firstStage?.id ?? null,
-        notes: v.message ? `Message du site : ${v.message}` : null,
-      })
-      .returning({ id: contacts.id });
-    contactId = created.id;
-  }
-
-  await db.insert(tasks).values({
-    title: existing ? `Nouveau message de ${v.firstName} via le site` : `Rappeler ${v.firstName} (formulaire du site)`,
-    dueAt: new Date(),
-    contactId,
-  });
-  await db.insert(activityLog).values({
-    entity: "contact",
-    entityId: contactId!,
-    action: existing ? "site_form_message" : "created_from_site",
-  });
+  await recordSiteMessage(
+    { firstName: v.firstName, lastName: v.lastName, email: v.email, phone: v.phone, segment: v.segment, cta: v.cta },
+    v.message,
+  );
 
   const thanks = process.env.SITE_FORM_THANKS_URL;
   if (wantsHtml && thanks) return Response.redirect(thanks, 303);

@@ -1,0 +1,5 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "regions": ["fra1"],
+  "buildCommand": "npm run db:migrate && if [ \"$DEMO_SEED\" = \"true\" ]; then npm run db:seed; fi && npm run build"
+}

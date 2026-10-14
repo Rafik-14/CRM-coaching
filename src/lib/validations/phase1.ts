@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { SEGMENT_VALUES } from "@/lib/jg";
+import { SESSION_TYPES } from "@/lib/validations/coaching";
 
 const optionalText = (max: number) =>
   z
@@ -79,7 +81,7 @@ export const paymentLabel = { pending: "En attente", partial: "Partiel", paid: "
 
 export const assignPackageSchema = z.object({
   contactId: z.uuid(),
-  packageId: z.uuid("Choisissez un forfait."),
+  packageId: z.uuid("Choisissez un accompagnement."),
   paymentStatus: z.enum(PAYMENT_STATUSES).default("pending"),
 });
 
@@ -96,13 +98,50 @@ export const stageSchema = z.object({
     .transform((v) => v === "on" || v === "true"),
 });
 
+/** Textarea, one item per line → string[]. */
+const lines = (maxItems: number, maxLen: number) =>
+  z
+    .string()
+    .optional()
+    .transform((v) =>
+      (v ?? "")
+        .split("\n")
+        .map((l) => l.trim())
+        .filter(Boolean)
+        .slice(0, maxItems),
+    )
+    .refine((a) => a.every((l) => l.length <= maxLen), `${maxLen} caractères maximum par ligne.`);
+
+/** « Accompagnement » (offer): EUR price + optional CHF price list. */
 export const packageSchema = z.object({
   name: z.string().trim().min(1, "Le nom est obligatoire").max(80),
   sessionsCount: z.coerce.number().int().min(1, "Au moins 1 séance").max(200),
-  price: z.coerce.number().min(0).max(100_000).transform((n) => n.toFixed(2)),
+  price: z.coerce.number("Prix en euros obligatoire").min(0).max(100_000).transform((n) => n.toFixed(2)),
+  priceChf: z
+    .union([z.literal(""), z.coerce.number().min(0).max(100_000)])
+    .optional()
+    .transform((v) => (v === "" || v == null ? null : v.toFixed(2))),
+  position: z.coerce.number().int().min(0).max(99).default(0),
+  tagline: optionalText(120),
+  description: optionalText(500),
+  includes: lines(8, 80),
+  goalPresets: lines(8, 80),
+  noteTemplateId: z
+    .union([z.literal(""), z.literal("none"), z.uuid()])
+    .optional()
+    .transform((v) => (v && v !== "none" ? v : null)),
 });
 
 export const noteTemplateSchema = z.object({
+  name: z.string().trim().min(1, "Le nom est obligatoire").max(80),
+  sessionType: z
+    .union([z.literal(""), z.literal("none"), z.enum(SESSION_TYPES)])
+    .optional()
+    .transform((v) => (v && v !== "none" ? v : null)),
+  isDefault: z
+    .union([z.literal("on"), z.literal("true"), z.literal("")])
+    .optional()
+    .transform((v) => v === "on" || v === "true"),
   fields: z
     .string()
     .transform((v) =>
@@ -118,6 +157,7 @@ export const noteTemplateSchema = z.object({
 
 export const businessSchema = z.object({
   name: z.string().trim().min(1, "Le nom est obligatoire").max(120),
+  /** Default currency for new contacts (each contact can be switched to EUR or CHF). */
   currency: z.enum(["EUR", "CHF"]).default("EUR"),
 });
 
@@ -129,6 +169,10 @@ export const siteFormSchema = z.object({
   email: z.email().trim().toLowerCase().max(200),
   phone: z.string().trim().max(40).optional(),
   message: z.string().trim().max(4000).optional(),
+  /** Optional JG® audience sent by the site's button (e.g. « Construire un partenariat » → cabinet_rh). */
+  segment: z.enum(SEGMENT_VALUES).optional().catch(undefined),
+  /** Optional label of the button / page the visitor came from. */
+  cta: z.string().trim().max(80).optional().catch(undefined),
   /** Honeypot: real visitors leave it empty (checked by the route, which then fakes success). */
   website: z.string().max(500).optional(),
 });

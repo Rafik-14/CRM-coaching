@@ -14,6 +14,16 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // Public: login page, auth endpoints, the website contact form endpoint (it checks origin/secret itself), assets.
-  matcher: ["/((?!connexion|api/auth|api/formulaire-site|_next/static|_next/image|favicon.ico).*)"],
+  // Only the CRM is private. The public website (/, /methode, /reserver…), the login page,
+  // auth endpoints, the website form endpoint and static files stay open.
+  matcher: [
+    "/tableau-de-bord/:path*",
+    "/contacts/:path*",
+    "/pipeline/:path*",
+    "/calendrier/:path*",
+    "/taches/:path*",
+    "/analyses/:path*",
+    "/parametres/:path*",
+    "/api/fichiers/:path*",
+  ],
 };

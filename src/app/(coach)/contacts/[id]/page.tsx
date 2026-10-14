@@ -1,26 +1,28 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { ArrowLeft, Mail, Phone } from "lucide-react";
+import { ArrowLeft, CalendarPlus, LockKeyhole, Mail, Phone } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StageBadge } from "@/components/stage-badge";
 import { TaskCheckbox } from "@/components/task-checkbox";
 import { Timeline } from "@/components/timeline";
-import { EmptyState } from "@/components/illustrations/empty-state";
-import { Illustration3D } from "@/components/illustrations/illustration-3d";
+import { EmptyState, IconMark } from "@/components/empty-state";
 import { ScheduleSessionDialog } from "@/components/coaching/schedule-session-dialog";
 import { CloseCoachingDialog } from "@/components/coaching/close-coaching-dialog";
+import { CaseStudyDialog } from "@/components/coaching/case-study";
 import { ReopenCoachingButton } from "@/components/coaching/reopen-coaching-button";
 import { SessionCard } from "@/components/coaching/session-card";
 import { GoalsPanel } from "@/components/coaching/goals-panel";
 import { PackagesPanel } from "@/components/coaching/packages-panel";
 import { DocumentsPanel } from "@/components/coaching/documents-panel";
 import { DeleteTaskButton, TaskDialog } from "@/components/coaching/task-dialog";
-import { getContact, getContactTimeline, getStages } from "@/server/queries/contacts";
-import { getActivePackages, getNoteTemplateFields } from "@/server/queries/settings";
+import { getContact, getContactTimeline, getStages, listPartnerOptions } from "@/server/queries/contacts";
+import { getBusinessSettings } from "@/server/business";
+import { countryLabel, segmentLabel, subSegmentLabel } from "@/lib/jg";
+import { getActivePackages, getNoteTemplates, pickTemplateId } from "@/server/queries/settings";
 import { formatDate, formatDayTime, fullName, isOverdue, isUpcoming } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { ContactFormDialog } from "../contact-form-dialog";
@@ -54,12 +56,14 @@ async function ContactDetail({
 }) {
   const [{ id }, sp] = await Promise.all([params, searchParams]);
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
-  const [contact, stages, timeline, templateFields, packageOptions] = await Promise.all([
+  const [contact, stages, timeline, templates, packageOptions, partners, business] = await Promise.all([
     getContact(id),
     getStages(),
     getContactTimeline(id),
-    getNoteTemplateFields(),
+    getNoteTemplates(),
     getActivePackages(),
+    listPartnerOptions(),
+    getBusinessSettings(),
   ]);
   if (!contact) notFound();
   const tab = TABS.find((t) => t === sp.onglet) ?? "apercu";
@@ -95,10 +99,22 @@ async function ContactDetail({
               </a>
             )}
           </div>
+          <ProfileLine contact={contact} />
         </div>
         <div className="flex flex-wrap gap-2">
-          <ContactFormDialog stages={stages} contact={contact} />
-          {client && <CloseCoachingDialog contactId={contact.id} contactName={name} active={active} />}
+          <ContactFormDialog stages={stages} partners={partners} defaultCurrency={business.currency} contact={contact} />
+          {client && (
+            <CloseCoachingDialog
+              contactId={contact.id}
+              contactName={name}
+              active={active}
+              caseValues={{
+                positioningStatement: client.positioningStatement,
+                caseStudy: client.caseStudy,
+                testimonialConsent: client.testimonialConsent,
+              }}
+            />
+          )}
           {client && !active && <ReopenCoachingButton contactId={contact.id} />}
           <ScheduleSessionDialog
             contactId={contact.id}
@@ -118,6 +134,18 @@ async function ContactDetail({
           {client.closeReason && <span className="text-muted-foreground">· {client.closeReason}</span>}
           {client.closeNote && <span className="w-full text-muted-foreground">{client.closeNote}</span>}
         </div>
+      )}
+
+      {/* The positioning statement is the key output of the Méthode JG®: always visible at the top. */}
+      {client?.positioningStatement && (
+        <figure className="rounded-xl border border-border bg-card px-5 py-4">
+          <figcaption className="text-[11px] tracking-[0.14em] text-muted-foreground uppercase">
+            Formulation de positionnement
+          </figcaption>
+          <blockquote className="mt-2 border-l-2 border-gold pl-4 font-heading text-base font-semibold text-heading">
+            « {client.positioningStatement} »
+          </blockquote>
+        </figure>
       )}
 
       <Tabs defaultValue={tab}>
@@ -151,6 +179,14 @@ async function ContactDetail({
             <CardContent>
               <dl className="grid gap-4 text-sm sm:grid-cols-2">
                 <Info label="Source" value={contact.source} />
+                <Info
+                  label="Type de client"
+                  value={[segmentLabel(contact.segment), subSegmentLabel(contact.subSegment)].filter(Boolean).join(" · ") || null}
+                />
+                {contact.organization && <Info label="Organisation" value={contact.organization} />}
+                <Info label="Pays · devise" value={[countryLabel(contact.country), contact.currency].filter(Boolean).join(" · ")} />
+                {contact.stake && <Info label="Enjeu" value={contact.stake} />}
+                {contact.keyMomentAt && <Info label="Moment décisif" value={formatDate(contact.keyMomentAt)} />}
                 <Info label="Ajouté le" value={formatDate(contact.createdAt)} />
                 {client && <Info label="Client depuis" value={formatDate(client.startDate)} />}
                 {client && <Info label="Objectif principal" value={client.mainGoal} />}
@@ -174,7 +210,81 @@ async function ContactDetail({
             </CardContent>
           </Card>
 
-          <div className="grid content-start gap-6">
+          {client && (
+            <Card className="lg:col-span-2">
+              <CardHeader>
+                <CardTitle>Transformation</CardTitle>
+                <CardDescription>
+                  Avant · Le déclic · Après · Ce qui a changé
+                  {client.testimonialConsent && " · accord pour une étude de cas"}
+                </CardDescription>
+                <CardAction>
+                  <CaseStudyDialog
+                    contactId={contact.id}
+                    values={{
+                      positioningStatement: client.positioningStatement,
+                      caseStudy: client.caseStudy,
+                      testimonialConsent: client.testimonialConsent,
+                    }}
+                  />
+                </CardAction>
+              </CardHeader>
+              <CardContent>
+                {client.caseStudy ? (
+                  <dl className="grid gap-4 text-sm sm:grid-cols-3">
+                    <CaseStep label="Avant" value={client.caseStudy.before} />
+                    <CaseStep label="Le déclic" value={client.caseStudy.trigger} />
+                    <CaseStep label="Après" value={client.caseStudy.after} />
+                    {!!client.caseStudy.changes?.length && (
+                      <div className="sm:col-span-3">
+                        <dt className="text-muted-foreground">Ce qui a changé</dt>
+                        <dd className="mt-1 grid gap-1">
+                          {client.caseStudy.changes.map((c) => (
+                            <span key={c} className="flex gap-2">
+                              <span aria-hidden className="mt-2 h-0.5 w-3 shrink-0 rounded-full bg-gold" />
+                              {c}
+                            </span>
+                          ))}
+                        </dd>
+                      </div>
+                    )}
+                  </dl>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    À rédiger en fin d&apos;accompagnement : ce que le client disait avant, le déclic, ce qu&apos;il dit après.
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          <div className="grid content-start gap-6 lg:col-start-3 lg:row-start-1 lg:row-span-2">
+            {contact.referrals.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Contacts recommandés</CardTitle>
+                  <CardDescription>
+                    {contact.referrals.length} recommandé{contact.referrals.length > 1 ? "s" : ""} ·{" "}
+                    {contact.referrals.filter((r) => r.stage?.isClient).length} devenu
+                    {contact.referrals.filter((r) => r.stage?.isClient).length > 1 ? "s" : ""} client
+                    {contact.referrals.filter((r) => r.stage?.isClient).length > 1 ? "s" : ""}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ul className="grid gap-2">
+                    {contact.referrals.map((r) => (
+                      <li key={r.id} className="flex items-center justify-between gap-2 text-sm">
+                        <Link href={`/contacts/${r.id}`} className="min-w-0 truncate font-medium hover:underline">
+                          {fullName(r)}
+                          {r.stake && <span className="ml-1.5 font-normal text-muted-foreground">· {r.stake}</span>}
+                        </Link>
+                        <StageBadge name={r.stage?.name ?? null} color={r.stage?.color ?? null} />
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            )}
             {upcoming[0] && (
               <Card className="gap-1 py-4">
                 <CardContent>
@@ -189,10 +299,15 @@ async function ContactDetail({
             {client && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Forfaits</CardTitle>
+                  <CardTitle>Accompagnements</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <PackagesPanel contactId={contact.id} clientPackages={client.packages} options={packageOptions} />
+                  <PackagesPanel
+                    contactId={contact.id}
+                    currency={contact.currency}
+                    clientPackages={client.packages}
+                    options={packageOptions}
+                  />
                 </CardContent>
               </Card>
             )}
@@ -205,14 +320,13 @@ async function ContactDetail({
             <Card>
               <CardContent>
                 <EmptyState
-                  illustration="sitting-normal"
+                  icon={CalendarPlus}
                   layout="horizontal"
-                  size={120}
-                  title={client ? "Aucune séance prévue" : "Aucun appel prévu"}
+                  title={client ? "Aucune séance prévue" : "Aucun échange prévu"}
                   description={
                     client
                       ? `Planifiez la prochaine séance avec ${contact.firstName} pour garder le rythme.`
-                      : `Proposez un appel découverte à ${contact.firstName} pour faire connaissance.`
+                      : `Proposez un échange stratégique (20 min, sans engagement) à ${contact.firstName}.`
                   }
                   action={<ScheduleSessionDialog contactId={contact.id} contactName={name} prospect={!client} />}
                   className="py-2"
@@ -222,7 +336,7 @@ async function ContactDetail({
           )}
           {contact.sessions.length > 0 && (
             <div className="flex items-center gap-4 rounded-2xl border border-border bg-muted/40 px-4 py-3">
-              <Illustration3D name="shhh" alt="" height={96} disc={false} />
+              <IconMark icon={LockKeyhole} size="sm" />
               <p className="text-sm">
                 <span className="font-medium">Vos notes de séance sont privées.</span>{" "}
                 <span className="text-muted-foreground">Elles ne sont visibles que par vous, jamais par le client.</span>
@@ -243,7 +357,8 @@ async function ContactDetail({
               <SessionCard
                 key={item.key}
                 session={item.session}
-                templateFields={templateFields}
+                templates={templates}
+                templateId={pickTemplateId(item.session, templates, client?.packages ?? [])}
                 upcoming={item.upcoming}
               />
             ),
@@ -328,6 +443,63 @@ function Info({ label, value }: { label: string; value: string | null | undefine
     <div>
       <dt className="text-muted-foreground">{label}</dt>
       <dd className="mt-1">{value || "—"}</dd>
+    </div>
+  );
+}
+
+/** JG® profile under the name: type of client, organisation, stake, decisive moment, referrer. */
+function ProfileLine({
+  contact,
+}: {
+  contact: {
+    segment: string | null;
+    subSegment: string | null;
+    organization: string | null;
+    stake: string | null;
+    keyMomentAt: Date | null;
+    referredBy: { id: string; firstName: string; lastName: string; organization: string | null } | null;
+  };
+}) {
+  const items: React.ReactNode[] = [];
+  const segment = subSegmentLabel(contact.subSegment) ?? segmentLabel(contact.segment);
+  if (segment) items.push(<span key="seg">{segment}</span>);
+  if (contact.organization) items.push(<span key="org">{contact.organization}</span>);
+  if (contact.stake) {
+    items.push(
+      <span key="stake" className="font-medium text-foreground">
+        Enjeu : {contact.stake}
+        {contact.keyMomentAt && <> · le {formatDate(contact.keyMomentAt)}</>}
+      </span>,
+    );
+  }
+  if (contact.referredBy) {
+    items.push(
+      <span key="ref">
+        Recommandé par{" "}
+        <Link href={`/contacts/${contact.referredBy.id}`} className="underline-offset-2 hover:underline">
+          {contact.referredBy.organization ?? fullName(contact.referredBy)}
+        </Link>
+      </span>,
+    );
+  }
+  if (!items.length) return null;
+  return (
+    <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
+      {items.map((item, i) => (
+        <span key={i} className="inline-flex items-center gap-2">
+          {i > 0 && <span aria-hidden className="size-1 rounded-full bg-gold" />}
+          {item}
+        </span>
+      ))}
+    </p>
+  );
+}
+
+function CaseStep({ label, value }: { label: string; value?: string }) {
+  return (
+    <div>
+      <dt className="text-muted-foreground">{label}</dt>
+      <dd className="mt-1 whitespace-pre-wrap">{value || "—"}</dd>
     </div>
   );
 }

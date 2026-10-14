@@ -1,5 +1,6 @@
 import { relations } from "drizzle-orm";
 import {
+  type AnyPgColumn,
   boolean,
   index,
   integer,
@@ -89,7 +90,7 @@ export const verification = pgTable(
 // CRM
 // ---------------------------------------------------------------------------
 
-/** Configurable pipeline stages (Nouveau → Appel découverte → ... ). */
+/** Configurable pipeline stages (Nouveau contact → Échange stratégique planifié → ... ). */
 export const pipelineStages = pgTable("pipeline_stages", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("name").notNull(),
@@ -116,10 +117,32 @@ export const contacts = pgTable(
     estimatedValue: numeric("estimated_value", { precision: 10, scale: 2 }),
     tags: text("tags").array().notNull().default([]),
     notes: text("notes"),
+    /** JG® audience: particulier · entrepreneur · entreprise · cabinet_rh · ecole. */
+    segment: text("segment"),
+    /** For particuliers: etudiant · recherche_emploi · reconversion. */
+    subSegment: text("sub_segment"),
+    /** Company, HR firm or school name. */
+    organization: text("organization"),
+    /** Partner (HR firm, school…) who referred this contact. */
+    referredByContactId: uuid("referred_by_contact_id").references((): AnyPgColumn => contacts.id, {
+      onDelete: "set null",
+    }),
+    /** FR · CH — decides the price list (EUR / CHF) when an offer is sold. */
+    country: text("country"),
+    currency: text("currency").notNull().default("EUR"),
+    /** The contact's stake (« enjeu »): Entretien, Pitch, Reconversion… */
+    stake: text("stake"),
+    /** Date of the decisive moment (interview, pitch…), for reminders. */
+    keyMomentAt: timestamp("key_moment_at", { withTimezone: true }),
     ...timestamps,
   },
-  (t) => [index("contacts_stage_idx").on(t.stageId)],
+  (t) => [
+    index("contacts_stage_idx").on(t.stageId),
+    index("contacts_referred_by_idx").on(t.referredByContactId),
+  ],
 );
+
+export type CaseStudy = { before?: string; trigger?: string; after?: string; changes?: string[] };
 
 export const clientStatus = pgEnum("client_status", ["active", "paused", "finished", "stopped"]);
 
@@ -138,6 +161,12 @@ export const clients = pgTable("clients", {
   closedAt: timestamp("closed_at", { withTimezone: true }),
   closeReason: text("close_reason"),
   closeNote: text("close_note"),
+  /** « Formulation de positionnement » — highlighted at the top of the client file. */
+  positioningStatement: text("positioning_statement"),
+  /** Case study written when the coaching ends: Avant / Le déclic / Après / Ce qui a changé. */
+  caseStudy: jsonb("case_study").$type<CaseStudy>(),
+  /** The client agreed to be used as an (anonymised) case study. */
+  testimonialConsent: boolean("testimonial_consent").notNull().default(false),
   ...timestamps,
 });
 
@@ -182,6 +211,8 @@ export const noteTemplates = pgTable("note_templates", {
   /** Ordered list of field labels, e.g. ["Sujet", "Prises de conscience", ...]. */
   fields: jsonb("fields").$type<string[]>().notNull(),
   isDefault: boolean("is_default").notNull().default(false),
+  /** Used automatically for sessions of this type (e.g. « Échange stratégique »). */
+  sessionType: text("session_type"),
   ...timestamps,
 });
 
@@ -236,9 +267,22 @@ export const packages = pgTable("packages", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("name").notNull(),
   sessionsCount: integer("sessions_count").notNull(),
+  /** Price in EUR. */
   price: numeric("price", { precision: 10, scale: 2 }).notNull(),
+  priceChf: numeric("price_chf", { precision: 10, scale: 2 }),
+  /** Legacy single currency (before EUR/CHF price lists); not used for display any more. */
   currency: text("currency").notNull().default("EUR"),
   active: boolean("active").notNull().default(true),
+  /** Display order (01 / 02 / 03). */
+  position: integer("position").notNull().default(0),
+  tagline: text("tagline"),
+  description: text("description"),
+  /** What's included, e.g. « Workbook Signature JG® ». */
+  includes: text("includes").array().notNull().default([]),
+  /** Session note template used for this offer. */
+  noteTemplateId: uuid("note_template_id").references(() => noteTemplates.id, { onDelete: "set null" }),
+  /** Goals created automatically when the offer is sold. */
+  goalPresets: text("goal_presets").array().notNull().default([]),
   ...timestamps,
 });
 
@@ -255,6 +299,9 @@ export const clientPackages = pgTable(
       .notNull()
       .references(() => packages.id, { onDelete: "restrict" }),
     sessionsUsed: integer("sessions_used").notNull().default(0),
+    /** Price and currency at the time of sale (later price changes never rewrite history). */
+    price: numeric("price", { precision: 10, scale: 2 }),
+    currency: text("currency"),
     purchasedAt: timestamp("purchased_at", { withTimezone: true }).notNull().defaultNow(),
     paymentStatus: paymentStatus("payment_status").notNull().default("pending"),
     ...timestamps,
@@ -311,6 +358,12 @@ export const pipelineStagesRelations = relations(pipelineStages, ({ many }) => (
 
 export const contactsRelations = relations(contacts, ({ one, many }) => ({
   stage: one(pipelineStages, { fields: [contacts.stageId], references: [pipelineStages.id] }),
+  referredBy: one(contacts, {
+    fields: [contacts.referredByContactId],
+    references: [contacts.id],
+    relationName: "referrals",
+  }),
+  referrals: many(contacts, { relationName: "referrals" }),
   client: one(clients),
   tasks: many(tasks),
   sessions: many(coachingSessions),
@@ -356,4 +409,8 @@ export const clientPackagesRelations = relations(clientPackages, ({ one }) => ({
 
 export const documentsRelations = relations(documents, ({ one }) => ({
   client: one(clients, { fields: [documents.clientId], references: [clients.id] }),
+}));
+
+export const packagesRelations = relations(packages, ({ one }) => ({
+  noteTemplate: one(noteTemplates, { fields: [packages.noteTemplateId], references: [noteTemplates.id] }),
 }));

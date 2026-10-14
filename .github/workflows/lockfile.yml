@@ -1,0 +1,32 @@
+# Manual helper: regenerates package-lock.json on Linux and returns it as a downloadable artifact.
+# Needed when dependencies are installed on Windows: npm there leaves out packages bundled inside
+# Linux-only optional dependencies (e.g. @emnapi/* in Tailwind's WASM fallback), and `npm ci` then fails in CI.
+# Run: GitHub › Actions › « Lockfile (Linux) » › Run workflow, then commit the downloaded file.
+name: Lockfile (Linux)
+
+on:
+  workflow_dispatch:
+  # Also runs by itself when dependencies change (and before the workflow exists on main).
+  push:
+    paths: ["package.json", ".github/workflows/lockfile.yml"]
+
+permissions:
+  contents: read
+
+jobs:
+  lockfile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Regenerate package-lock.json
+        run: |
+          # Keeps the locked versions; only adds the entries npm on Windows left out.
+          npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+          npm ci --dry-run --ignore-scripts
+      - uses: actions/upload-artifact@v4
+        with:
+          name: package-lock
+          path: package-lock.json

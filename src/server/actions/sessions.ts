@@ -4,8 +4,10 @@ import { and, asc, eq, sql } from "drizzle-orm";
 import { refresh } from "next/cache";
 import { z } from "zod";
 import { db } from "@/server/db";
-import { activityLog, clientPackages, coachingSessions, packages, sessionNotes } from "@/server/db/schema";
+import { activityLog, clientPackages, coachingSessions, packages, sessionNotes, tasks } from "@/server/db/schema";
 import { requireCoach } from "@/server/dal";
+import { advanceProspectAfterEchange } from "@/server/pipeline-automation";
+import { DISCOVERY_TYPE } from "@/lib/validations/coaching";
 import { parseNoteForm, rescheduleSchema, SESSION_STATUSES } from "@/lib/validations/phase1";
 import type { ActionState } from "./coaching";
 
@@ -67,6 +69,9 @@ export async function setSessionStatus(
     entityId: session.contactId,
     action: next === "done" ? "session_done" : next === "planned" ? "session_reopened" : `session_${next}`,
   });
+  if (next === "done" && !session.clientId && session.type === DISCOVERY_TYPE) {
+    await advanceProspectAfterEchange(session.contactId, user.id, "done");
+  }
   refresh();
   return { ok: true, counted: next === "done" ? !!clientPackageId : undefined };
 }
@@ -129,6 +134,27 @@ export async function saveSessionNote(_prev: ActionState, formData: FormData): P
   await db
     .insert(activityLog)
     .values({ actorId: user.id, entity: "contact", entityId: session.contactId, action: "note_saved" });
+
+  // « Exercices entre les séances » → a task to check them, due at the next planned session (or in 7 days).
+  const exercisesKey = formData.get("exerciseField");
+  const exercises = typeof exercisesKey === "string" ? v.templateData[exercisesKey] : undefined;
+  if (formData.get("exerciseTask") === "on" && exercises) {
+    const next = await db.query.coachingSessions.findFirst({
+      where: and(
+        eq(coachingSessions.contactId, session.contactId),
+        eq(coachingSessions.status, "planned"),
+        sql`${coachingSessions.startsAt} > now()`,
+      ),
+      orderBy: asc(coachingSessions.startsAt),
+      columns: { startsAt: true },
+    });
+    const title = `Exercices à revoir : ${exercises.replace(/\s+/g, " ").slice(0, 120)}`;
+    await db.insert(tasks).values({
+      title,
+      contactId: session.contactId,
+      dueAt: next?.startsAt ?? new Date(Date.now() + 7 * 86_400_000),
+    });
+  }
   refresh();
   return { ok: true };
 }

@@ -46,3 +46,9 @@ next-env.d.ts
 # local data (embedded db, uploads)
 /.data
 
+
+.vercel
+.env*
+
+# rendered videos (large)
+docs/*.mp4

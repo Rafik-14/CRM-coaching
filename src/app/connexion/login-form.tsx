@@ -22,6 +22,7 @@ export function LoginForm() {
           id="email"
           name="email"
           type="email"
+          className="h-11"
           autoComplete="username"
           placeholder="nom@domaine.fr"
           defaultValue={state.email}
@@ -40,6 +41,7 @@ export function LoginForm() {
           id="password"
           name="password"
           type="password"
+          className="h-11"
           autoComplete="current-password"
           aria-invalid={!!passwordError}
           aria-describedby={passwordError ? "password-error" : undefined}
@@ -55,7 +57,7 @@ export function LoginForm() {
           {state.error}
         </p>
       )}
-      <Button type="submit" disabled={pending}>
+      <Button type="submit" disabled={pending} className="h-11">
         {pending && <Loader2 className="animate-spin" />}
         Se connecter
       </Button>

@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -71,16 +72,22 @@ const statusStyle: Record<Status, string> = {
   no_show: "border-destructive/40 bg-destructive/10 text-destructive",
 };
 
+export type NoteTemplate = { id: string; name: string; fields: string[] };
+
 export function SessionCard({
   session,
-  templateFields,
+  templates,
+  templateId,
   upcoming,
 }: {
   session: SessionCardData;
-  templateFields: string[];
+  /** All note templates; `templateId` is the one this session opens with (type / offer / default). */
+  templates: NoteTemplate[];
+  templateId: string | null;
   /** Upcoming sessions are shown with a dashed border. */
   upcoming?: boolean;
 }) {
+  const templateFields = templates.find((t) => t.id === templateId)?.fields ?? [];
   const [noteOpen, setNoteOpen] = useState(false);
   const [rescheduleOpen, setRescheduleOpen] = useState(false);
   const [pending, startTransition] = useTransition();
@@ -94,7 +101,7 @@ export function SessionCard({
       const r = await setSessionStatus(session.id, status);
       if (r.error) return void toast.error(r.error);
       if (status === "done") {
-        toast.success(r.counted ? "Séance effectuée · décomptée du forfait" : "Séance effectuée");
+        toast.success(r.counted ? "Séance effectuée · décomptée de l'accompagnement" : "Séance effectuée");
         if (!note) setNoteOpen(true); // invite to write the note right away
       } else {
         toast.success(`Séance : ${sessionStatusLabel[status].toLowerCase()}`);
@@ -167,7 +174,7 @@ export function SessionCard({
                 </Button>
               }
               title="Supprimer cette séance ?"
-              description="La séance et sa note seront définitivement supprimées. Si elle était décomptée d'un forfait, la séance est rendue au forfait."
+              description="La séance et sa note seront définitivement supprimées. Si elle était décomptée d'un accompagnement, la séance est rendue au forfait."
               successMessage="Séance supprimée"
               onConfirm={() => deleteSession(session.id)}
             />
@@ -209,7 +216,8 @@ export function SessionCard({
         open={noteOpen}
         onOpenChange={setNoteOpen}
         session={session}
-        templateFields={templateFields}
+        templates={templates}
+        templateId={templateId}
       />
       <RescheduleDialog open={rescheduleOpen} onOpenChange={setRescheduleOpen} session={session} />
     </Card>
@@ -220,16 +228,22 @@ function NoteDialog({
   open,
   onOpenChange,
   session,
-  templateFields,
+  templates,
+  templateId,
 }: {
   open: boolean;
   onOpenChange: (o: boolean) => void;
   session: SessionCardData;
-  templateFields: string[];
+  templates: NoteTemplate[];
+  templateId: string | null;
 }) {
+  const [chosen, setChosen] = useState(templateId ?? templates[0]?.id ?? "");
+  const templateFields = templates.find((t) => t.id === chosen)?.fields ?? [];
   const saved = session.note?.templateData ?? {};
-  // Keep answers to fields that were later removed from the template.
+  // Keep answers to fields that are not in the chosen template (other template, or removed later).
   const fields = [...templateFields, ...Object.keys(saved).filter((k) => !templateFields.includes(k))];
+  // « Exercices entre les séances » (Parcours Signature): offer to create a follow-up task.
+  const exerciseField = templateFields.find((f) => f.toLowerCase().startsWith("exercice"));
 
   const [, formAction, pending] = useActionState<ActionState, FormData>(async (prev, fd) => {
     const r = await saveSessionNote(prev, fd);
@@ -251,6 +265,22 @@ function NoteDialog({
         </DialogHeader>
         <form action={formAction} className="grid gap-4">
           <input type="hidden" name="sessionId" value={session.id} />
+          {templates.length > 1 && (
+            <FormField label="Modèle de note" htmlFor={`tpl-${session.id}`}>
+              <Select value={chosen} onValueChange={setChosen}>
+                <SelectTrigger id={`tpl-${session.id}`} className="w-full sm:w-80">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {templates.map((t) => (
+                    <SelectItem key={t.id} value={t.id}>
+                      {t.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </FormField>
+          )}
           {fields.map((f, i) => (
             <FormField key={f} label={f} htmlFor={`f-${i}`}>
               <Textarea id={`f-${i}`} name={`f:${f}`} rows={2} defaultValue={saved[f] ?? ""} />
@@ -259,6 +289,18 @@ function NoteDialog({
           <FormField label="Notes libres" htmlFor="content">
             <Textarea id="content" name="content" rows={3} defaultValue={session.note?.content ?? ""} />
           </FormField>
+          {exerciseField && (
+            <label className="flex items-start gap-2.5 text-sm">
+              <input type="hidden" name="exerciseField" value={exerciseField} />
+              <input type="checkbox" name="exerciseTask" className="mt-0.5 size-4 accent-[var(--primary)]" />
+              <span>
+                Créer une tâche « Exercices à revoir »
+                <span className="block text-xs text-muted-foreground">
+                  À partir de la rubrique « {exerciseField} », pour la prochaine séance.
+                </span>
+              </span>
+            </label>
+          )}
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
               Annuler

@@ -29,6 +29,9 @@ export const auth = betterAuth({
   session: {
     expiresIn: 60 * 60 * 24 * 7, // 7 days
     updateAge: 60 * 60 * 24, // refresh daily
+    // Keep the verified session in a signed cookie for 5 min: page loads skip a DB lookup.
+    // Trade-off: a revoked session stays valid for up to 5 minutes.
+    cookieCache: { enabled: true, maxAge: 5 * 60 },
   },
   rateLimit: { enabled: true, window: 60, max: 30 },
   // Must stay last: lets server actions set auth cookies.

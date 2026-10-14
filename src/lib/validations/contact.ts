@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { SEGMENT_VALUES, SUB_SEGMENT_VALUES } from "@/lib/jg";
 
 const optionalText = (max: number) =>
   z
@@ -8,6 +9,13 @@ const optionalText = (max: number) =>
     .transform((v) => (v === "" ? null : v))
     .nullable()
     .optional();
+
+/** Select with an empty option ("" or "none") → null. */
+const optionalEnum = <T extends [string, ...string[]]>(values: T) =>
+  z
+    .union([z.literal(""), z.literal("none"), z.enum(values)])
+    .optional()
+    .transform((v) => (v && v !== "none" ? (v as T[number]) : null));
 
 export const contactSchema = z.object({
   firstName: z.string().trim().min(1, "Le prénom est obligatoire").max(80),
@@ -48,6 +56,22 @@ export const contactSchema = z.object({
         .slice(0, 10),
     ),
   notes: optionalText(5000),
+  // JG® profile
+  segment: optionalEnum(SEGMENT_VALUES),
+  subSegment: optionalEnum(SUB_SEGMENT_VALUES),
+  organization: optionalText(120),
+  referredByContactId: z
+    .union([z.literal(""), z.literal("none"), z.uuid()])
+    .optional()
+    .transform((v) => (v && v !== "none" ? v : null)),
+  country: optionalEnum(["FR", "CH"]),
+  currency: z.enum(["EUR", "CHF"]).optional(),
+  stake: optionalText(60),
+  /** Date only (YYYY-MM-DD), stored at noon UTC so it never shifts to the day before. */
+  keyMomentAt: z
+    .union([z.literal(""), z.iso.date("Date invalide")])
+    .optional()
+    .transform((v) => (v ? new Date(`${v}T12:00:00Z`) : null)),
 });
 
 export type ContactInput = z.input<typeof contactSchema>;

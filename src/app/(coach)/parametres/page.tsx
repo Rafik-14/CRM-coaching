@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageHeader } from "@/components/page-header";
 import { getSettingsOverview } from "@/server/queries/settings";
 import { initials } from "@/lib/format";
-import { BusinessForm, NoteTemplateForm, PackagesEditor, StagesEditor } from "./settings-forms";
+import { BookingSettingsForm, BusinessForm, NoteTemplatesEditor, PackagesEditor, StagesEditor } from "./settings-forms";
 
 export const metadata: Metadata = { title: "Paramètres" };
 
@@ -41,8 +41,7 @@ function Row({ label, value }: { label: React.ReactNode; value: React.ReactNode 
 }
 
 async function Settings() {
-  const { user, business, stages, packages, templates } = await getSettingsOverview();
-  const template = templates[0];
+  const { user, business, stages, packages, templates, booking } = await getSettingsOverview();
   const origins = (process.env.SITE_FORM_ORIGINS ?? "").split(",").map((o) => o.trim()).filter(Boolean);
   const endpoint = `${process.env.BETTER_AUTH_URL ?? "https://crm.example.com"}/api/formulaire-site`;
   const snippet = `<form action="${endpoint}" method="post">
@@ -61,8 +60,9 @@ async function Settings() {
       <TabsList>
         <TabsTrigger value="general">Général</TabsTrigger>
         <TabsTrigger value="pipeline">Pipeline</TabsTrigger>
-        <TabsTrigger value="forfaits">Forfaits</TabsTrigger>
-        <TabsTrigger value="notes">Modèle de note</TabsTrigger>
+        <TabsTrigger value="forfaits">Accompagnements</TabsTrigger>
+        <TabsTrigger value="notes">Modèles de note</TabsTrigger>
+        <TabsTrigger value="reservation">Réservation en ligne</TabsTrigger>
       </TabsList>
 
       <TabsContent value="general" className="mt-6 grid gap-6 lg:grid-cols-2">
@@ -82,7 +82,7 @@ async function Settings() {
             value={<span className="text-xs text-muted-foreground">Double authentification : bientôt</span>}
           />
         </Panel>
-        <Panel title="Mon activité" description="Nom affiché et devise des forfaits">
+        <Panel title="Mon activité" description="Nom affiché et devise par défaut">
           <BusinessForm name={business.name} currency={business.currency} />
         </Panel>
         <section className="rounded-2xl border border-border bg-card p-5 lg:col-span-2">
@@ -98,8 +98,8 @@ async function Settings() {
             <span
               className={
                 origins.length
-                  ? "rounded-full bg-success/15 px-2.5 py-1 text-xs font-medium text-success"
-                  : "rounded-full bg-warning/15 px-2.5 py-1 text-xs font-medium text-warning"
+                  ? "rounded-md bg-success/15 px-2.5 py-1 text-xs font-medium text-success"
+                  : "rounded-md bg-warning/15 px-2.5 py-1 text-xs font-medium text-warning"
               }
             >
               {origins.length ? `Actif pour ${origins.join(", ")}` : "À configurer (SITE_FORM_ORIGINS)"}
@@ -113,20 +113,38 @@ async function Settings() {
       </TabsContent>
 
       <TabsContent value="pipeline" className="mt-6">
-        <Panel title="Étapes du pipeline" description="Du premier contact jusqu'au client. L'ordre définit les colonnes du pipeline.">
+        <Panel
+          title="Étapes du pipeline"
+          description="Du premier contact jusqu'au client. L'ordre définit les colonnes. Planifier un échange stratégique fait passer un prospect de la 1re à la 2e étape ; le marquer effectué, de la 2e à la 3e."
+        >
           <StagesEditor stages={stages} />
         </Panel>
       </TabsContent>
 
       <TabsContent value="forfaits" className="mt-6">
-        <Panel title="Forfaits" description="Packs de séances proposés à vos clients. Archivez un forfait pour ne plus le proposer.">
-          <PackagesEditor packages={packages} />
+        <Panel
+          title="Accompagnements"
+          description="Vos offres, avec leur prix en euros et en francs suisses. Archivez une offre pour ne plus la proposer."
+        >
+          <PackagesEditor packages={packages} templates={templates.map((t) => ({ id: t.id, name: t.name }))} />
+        </Panel>
+      </TabsContent>
+
+      <TabsContent value="reservation" className="mt-6">
+        <Panel
+          title="Réservation en ligne de l'échange stratégique"
+          description="Vos disponibilités pour la page « Réserver un échange stratégique » du site. Les créneaux déjà pris par une séance prévue ne sont jamais proposés. Une réservation crée le contact (ou le retrouve par e-mail), la séance, une tâche, et fait passer le prospect à « Échange stratégique planifié »."
+        >
+          <BookingSettingsForm settings={booking} />
         </Panel>
       </TabsContent>
 
       <TabsContent value="notes" className="mt-6">
-        <Panel title="Modèle de note" description="Rubriques remplies après chaque séance">
-          <NoteTemplateForm fields={template?.fields ?? []} />
+        <Panel
+          title="Modèles de note"
+          description="Un modèle par accompagnement ou par type de séance, construit sur la Méthode JG®."
+        >
+          <NoteTemplatesEditor templates={templates} />
         </Panel>
       </TabsContent>
     </Tabs>

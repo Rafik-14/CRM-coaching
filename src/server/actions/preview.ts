@@ -38,6 +38,7 @@ export async function getContactPreview(id: string) {
     stage: contact.stage ? { name: contact.stage.name, color: contact.stage.color } : null,
     stageChangedAt: contact.stageChangedAt,
     estimatedValue: contact.estimatedValue,
+    currency: contact.currency,
     client: contact.client
       ? {
           status: contact.client.status,
@@ -54,7 +55,8 @@ export async function getContactPreview(id: string) {
           name: pkg.package.name,
           used: pkg.sessionsUsed,
           total: pkg.package.sessionsCount,
-          price: pkg.package.price,
+          price: pkg.price ?? pkg.package.price,
+          currency: pkg.currency ?? pkg.package.currency,
           paymentStatus: pkg.paymentStatus,
         }
       : null,

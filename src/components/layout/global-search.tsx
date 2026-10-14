@@ -11,7 +11,7 @@ export function GlobalSearch() {
         type="search"
         placeholder="Rechercher un contact, un e-mail…"
         aria-label="Rechercher un contact"
-        className="h-10 w-full rounded-full border border-transparent bg-muted pr-4 pl-10 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-ring/60"
+        className="h-10 w-full rounded-lg border border-transparent bg-muted pr-4 pl-10 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-ring/60"
       />
     </Form>
   );

@@ -1,8 +1,10 @@
 import "server-only";
-import { and, asc, count, desc, eq, ilike, or, sql, type SQL } from "drizzle-orm";
+import { and, asc, count, desc, eq, ilike, inArray, or, sql, type SQL } from "drizzle-orm";
 import { db } from "@/server/db";
 import { clients, contacts, pipelineStages } from "@/server/db/schema";
 import { requireCoach } from "@/server/dal";
+import { fullName, type MoneyByCurrency } from "@/lib/format";
+import { PARTNER_SEGMENTS } from "@/lib/jg";
 import { buildTimeline } from "./timeline";
 
 export const CONTACTS_PAGE_SIZE = 15;
@@ -12,7 +14,9 @@ export async function getStages() {
   return db.query.pipelineStages.findMany({ orderBy: asc(pipelineStages.position) });
 }
 
-function contactFilters({ q, stage }: { q?: string; stage?: string }) {
+type ContactFilter = { q?: string; stage?: string; segment?: string };
+
+function contactFilters({ q, stage, segment }: ContactFilter) {
   const filters: SQL[] = [];
   const term = q?.trim();
   if (term) {
@@ -23,10 +27,13 @@ function contactFilters({ q, stage }: { q?: string; stage?: string }) {
         ilike(contacts.lastName, like),
         ilike(contacts.email, like),
         ilike(contacts.phone, like),
+        ilike(contacts.organization, like),
       )!,
     );
   }
   if (stage) filters.push(eq(contacts.stageId, stage));
+  if (segment === "aucun") filters.push(sql`${contacts.segment} is null`);
+  else if (segment) filters.push(eq(contacts.segment, segment));
   return filters.length ? and(...filters) : undefined;
 }
 
@@ -45,9 +52,9 @@ const lastActivityMs = sql`(extract(epoch from greatest(
 const nextTaskDueMs = sql`(select extract(epoch from min(t.due_at)) * 1000 from tasks t
   where t.contact_id = ${contacts.id} and t.done = false)`;
 
-export async function listContacts({ q, stage, page = 1 }: { q?: string; stage?: string; page?: number }) {
+export async function listContacts({ q, stage, segment, page = 1 }: ContactFilter & { page?: number }) {
   await requireCoach();
-  const where = contactFilters({ q, stage });
+  const where = contactFilters({ q, stage, segment });
   const offset = (Math.max(1, page) - 1) * CONTACTS_PAGE_SIZE;
 
   const [rows, [{ total }]] = await Promise.all([
@@ -60,8 +67,12 @@ export async function listContacts({ q, stage, page = 1 }: { q?: string; stage?:
         phone: contacts.phone,
         source: contacts.source,
         tags: contacts.tags,
+        segment: contacts.segment,
+        organization: contacts.organization,
+        stake: contacts.stake,
         createdAt: contacts.createdAt,
         estimatedValue: contacts.estimatedValue,
+        currency: contacts.currency,
         stageId: contacts.stageId,
         stageName: pipelineStages.name,
         stageColor: pipelineStages.color,
@@ -83,29 +94,32 @@ export async function listContacts({ q, stage, page = 1 }: { q?: string; stage?:
 /** KPI cards above the contacts list. */
 export async function getContactStats() {
   await requireCoach();
-  const [[open], [all], [won]] = await Promise.all([
+  const [open, [all], [won]] = await Promise.all([
+    // Grouped by currency: EUR and CHF deals are never summed together.
     db
       .select({
+        currency: contacts.currency,
         value: sql<string>`coalesce(sum(${contacts.estimatedValue}), 0)`,
         avg: sql<string>`coalesce(avg(${contacts.estimatedValue}), 0)`,
         n: count(),
       })
       .from(contacts)
       .leftJoin(pipelineStages, eq(contacts.stageId, pipelineStages.id))
-      .where(sql`coalesce(${pipelineStages.isClient}, false) = false`),
+      .where(sql`coalesce(${pipelineStages.isClient}, false) = false`)
+      .groupBy(contacts.currency),
     db.select({ n: count() }).from(contacts),
     db.select({ n: count() }).from(clients),
   ]);
   return {
-    openPipelineValue: Number(open.value),
-    averageValue: Number(open.avg),
-    openCount: open.n,
+    openPipelineValue: Object.fromEntries(open.map((r) => [r.currency, Number(r.value)])) as MoneyByCurrency,
+    averageValue: Object.fromEntries(open.map((r) => [r.currency, Number(r.avg)])) as MoneyByCurrency,
+    openCount: open.reduce((n, r) => n + r.n, 0),
     conversionRate: all.n ? won.n / all.n : 0,
   };
 }
 
 /** All contacts matching the filters, for CSV export. */
-export async function exportContacts(filters: { q?: string; stage?: string }) {
+export async function exportContacts(filters: ContactFilter) {
   await requireCoach();
   return db
     .select({
@@ -115,7 +129,14 @@ export async function exportContacts(filters: { q?: string; stage?: string }) {
       phone: contacts.phone,
       stageName: pipelineStages.name,
       source: contacts.source,
+      segment: contacts.segment,
+      subSegment: contacts.subSegment,
+      organization: contacts.organization,
+      country: contacts.country,
+      stake: contacts.stake,
+      keyMomentAt: contacts.keyMomentAt,
       estimatedValue: contacts.estimatedValue,
+        currency: contacts.currency,
       tags: contacts.tags,
       createdAt: contacts.createdAt,
     })
@@ -131,6 +152,12 @@ export async function getContact(id: string) {
     where: eq(contacts.id, id),
     with: {
       stage: true,
+      referredBy: { columns: { id: true, firstName: true, lastName: true, organization: true } },
+      referrals: {
+        columns: { id: true, firstName: true, lastName: true, stake: true },
+        with: { stage: { columns: { name: true, color: true, isClient: true } } },
+        orderBy: (c, { desc }) => desc(c.createdAt),
+      },
       tasks: { orderBy: (t, { asc }) => asc(t.dueAt) },
       sessions: {
         orderBy: (s, { desc }) => desc(s.startsAt),
@@ -165,6 +192,7 @@ export async function getPipeline() {
         stageId: contacts.stageId,
         stageChangedAt: contacts.stageChangedAt,
         estimatedValue: contacts.estimatedValue,
+        currency: contacts.currency,
         tags: contacts.tags,
         nextTaskDue: nextTaskDueMs.mapWith(toDate),
       })
@@ -177,3 +205,39 @@ export async function getPipeline() {
 export type PipelineContact = Awaited<ReturnType<typeof getPipeline>>["contacts"][number];
 export type Stage = Awaited<ReturnType<typeof getStages>>[number];
 export type ContactRow = Awaited<ReturnType<typeof listContacts>>["rows"][number];
+
+/** Organisations that can refer contacts (HR firms, schools, companies), for « Recommandé par ». */
+export async function listPartnerOptions() {
+  await requireCoach();
+  const rows = await db.query.contacts.findMany({
+    where: inArray(contacts.segment, [...PARTNER_SEGMENTS]),
+    columns: { id: true, firstName: true, lastName: true, organization: true },
+    orderBy: (c, { asc }) => [asc(c.organization), asc(c.firstName)],
+  });
+  return rows.map((r) => ({ id: r.id, name: r.organization ? `${r.organization} (${fullName(r)})` : fullName(r) }));
+}
+
+/**
+ * People who can be booked from the calendar: clients with an active coaching, and prospects in the pipeline
+ * (prospects can only book an échange stratégique). Closed coachings and partners are left out.
+ */
+export async function listScheduleOptions() {
+  await requireCoach();
+  const rows = await db
+    .select({
+      id: contacts.id,
+      firstName: contacts.firstName,
+      lastName: contacts.lastName,
+      clientStatus: clients.status,
+    })
+    .from(contacts)
+    .leftJoin(clients, eq(clients.contactId, contacts.id))
+    .where(
+      or(
+        eq(clients.status, "active"),
+        and(sql`${clients.id} is null`, sql`${contacts.stageId} is not null`),
+      ),
+    )
+    .orderBy(asc(contacts.firstName), asc(contacts.lastName));
+  return rows.map((r) => ({ id: r.id, name: fullName(r), prospect: r.clientStatus == null }));
+}

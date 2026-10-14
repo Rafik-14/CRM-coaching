@@ -1,35 +1,37 @@
 import type { Metadata } from "next";
-import { Inter, Geist_Mono } from "next/font/google";
-import { Toaster } from "@/components/ui/sonner";
+import { Lato, Montserrat } from "next/font/google";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { ThemeProvider } from "@/components/theme-provider";
+import { SITE_INDEXABLE, SITE_URL } from "@/lib/site";
 import "./globals.css";
 
-const inter = Inter({
-  variable: "--font-sans",
+// JG® brand typefaces: Montserrat for headings and buttons, Lato for text (no third typeface).
+const montserrat = Montserrat({
+  variable: "--font-montserrat",
   subsets: ["latin"],
+  weight: ["500", "600"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const lato = Lato({
+  variable: "--font-lato",
   subsets: ["latin"],
+  weight: ["400", "700"],
 });
 
 export const metadata: Metadata = {
-  title: { default: "CRM Coaching", template: "%s · CRM Coaching" },
-  description: "Gestion des contacts, clients et séances de coaching",
-  robots: { index: false, follow: false },
+  metadataBase: new URL(SITE_URL),
+  title: { default: "Jérémy Galéa · Méthode JG®", template: "%s · Jérémy Galéa" },
+  description:
+    "Coaching en stratégie professionnelle et identité. Je vous aide à rendre votre valeur claire, crédible et évidente — au moment où une décision se prend.",
+  openGraph: { type: "website", locale: "fr_FR", siteName: "Jérémy Galéa · Méthode JG®" },
+  robots: SITE_INDEXABLE ? undefined : { index: false, follow: false },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    // suppressHydrationWarning: next-themes sets the `dark` class before React hydrates.
-    <html lang="fr" suppressHydrationWarning className={`${inter.variable} ${geistMono.variable} h-full antialiased`}>
+    // suppressHydrationWarning: in the CRM, next-themes sets the `dark` class before React hydrates.
+    <html lang="fr" suppressHydrationWarning className={`${montserrat.variable} ${lato.variable} h-full antialiased`}>
       <body className="min-h-full bg-background text-foreground">
-        <ThemeProvider>
-          <TooltipProvider>{children}</TooltipProvider>
-          <Toaster richColors position="top-right" />
-        </ThemeProvider>
+        <TooltipProvider>{children}</TooltipProvider>
       </body>
     </html>
   );

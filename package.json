@@ -13,7 +13,8 @@
     "db:studio": "drizzle-kit studio",
     "db:reset": "node -e \"require('fs').rmSync('.data/pglite',{recursive:true,force:true})\" && concurrently -k -s first -n db,setup \"npm:db:server\" \"wait-on -t 30000 tcp:127.0.0.1:54320 && npm run db:migrate && npm run db:seed\"",
     "typecheck": "tsc --noEmit",
-    "db:server": "node scripts/db-server.mjs"
+    "db:server": "node scripts/db-server.mjs",
+    "test": "tsx --test \"src/**/*.test.ts\""
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

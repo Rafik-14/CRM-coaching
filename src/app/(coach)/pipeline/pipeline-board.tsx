@@ -19,7 +19,7 @@ import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { daysSince, formatMoney, fullName, initials } from "@/lib/format";
+import { daysSince, formatMoney, fullName, initials, addMoney, formatMoneyTotals, type MoneyByCurrency } from "@/lib/format";
 import { stageDot } from "@/components/stage-badge";
 import { FollowUpBadge } from "@/components/follow-up-badge";
 import { ContactQuickView } from "@/components/contact-quick-view";
@@ -132,7 +132,7 @@ export function PipelineBoard({
         <div className="-mx-4 flex gap-4 overflow-x-auto px-4 pb-4 md:-mx-8 md:px-8">
           {stages.map((stage) => {
             const items = visible.filter((c) => c.stageId === stage.id);
-            const value = items.reduce((n, c) => n + Number(c.estimatedValue ?? 0), 0);
+            const value = items.reduce<MoneyByCurrency>((t, c) => addMoney(t, c.estimatedValue, c.currency), {});
             return (
               <Column key={stage.id} stage={stage} count={items.length} value={value}>
                 {items.map((c) => (
@@ -142,7 +142,7 @@ export function PipelineBoard({
             );
           })}
         </div>
-        <DragOverlay>{active && <CardBody contact={active} className="rotate-2 shadow-2xl" />}</DragOverlay>
+        <DragOverlay>{active && <CardBody contact={active} className="rotate-1 shadow-lg" />}</DragOverlay>
       </DndContext>
 
       <ContactQuickView contactId={openId} onClose={() => setOpenId(null)} />
@@ -158,7 +158,7 @@ function Column({
 }: {
   stage: Stage;
   count: number;
-  value: number;
+  value: MoneyByCurrency;
   children: React.ReactNode;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: stage.id });
@@ -177,7 +177,7 @@ function Column({
         <span className="rounded-md bg-secondary px-1.5 text-[11px] font-semibold text-muted-foreground tabular-nums">
           {count}
         </span>
-        <span className="ml-auto text-xs text-muted-foreground tabular-nums">{value ? formatMoney(value) : ""}</span>
+        <span className="ml-auto text-xs text-muted-foreground tabular-nums">{Object.values(value).some(Boolean) ? formatMoneyTotals(value) : ""}</span>
       </header>
       <div className="grid gap-2.5 overflow-y-auto px-2.5 pb-2.5">{children}</div>
     </section>
@@ -227,7 +227,7 @@ function CardBody({ contact, className }: { contact: PipelineContact; className?
         </span>
       </div>
       <p className="mt-1.5 text-lg font-bold text-primary tabular-nums">
-        {contact.estimatedValue ? formatMoney(contact.estimatedValue) : "—"}
+        {contact.estimatedValue ? formatMoney(contact.estimatedValue, contact.currency) : "—"}
       </p>
       <div className="mt-2 flex items-center justify-between gap-2">
         <span className="flex min-w-0 items-center gap-2 text-xs text-muted-foreground">

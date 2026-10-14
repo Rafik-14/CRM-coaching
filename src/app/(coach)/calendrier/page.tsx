@@ -7,14 +7,19 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/page-header";
 import { getCalendarSessions, type CalendarSession } from "@/server/queries/calendar";
+import { listScheduleOptions } from "@/server/queries/contacts";
+import { ScheduleSessionDialog } from "@/components/coaching/schedule-session-dialog";
 import { cn } from "@/lib/utils";
+import { APP_TIME_ZONE } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Calendrier" };
 
 const WEEKDAYS = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
-const monthFmt = new Intl.DateTimeFormat("fr-FR", { month: "long", year: "numeric" });
-const timeFmt = new Intl.DateTimeFormat("fr-FR", { hour: "2-digit", minute: "2-digit" });
-const dayFmt = new Intl.DateTimeFormat("fr-FR", { weekday: "long", day: "numeric", month: "long" });
+const monthFmt = new Intl.DateTimeFormat("fr-FR", { month: "long", year: "numeric", timeZone: APP_TIME_ZONE });
+const timeFmt = new Intl.DateTimeFormat("fr-FR", { hour: "2-digit", minute: "2-digit", timeZone: APP_TIME_ZONE });
+const dayFmt = new Intl.DateTimeFormat("fr-FR", { weekday: "long", day: "numeric", month: "long", timeZone: APP_TIME_ZONE });
+// Calendar day of a date in the coach's time zone (the server may run in UTC).
+const dayKeyFmt = new Intl.DateTimeFormat("en-CA", { year: "numeric", month: "2-digit", day: "2-digit", timeZone: APP_TIME_ZONE });
 
 const chip: Record<CalendarSession["status"], string> = {
   planned: "bg-primary/12 text-primary hover:bg-primary/20",
@@ -26,7 +31,11 @@ const chip: Record<CalendarSession["status"], string> = {
 export default function CalendarPage({ searchParams }: PageProps<"/calendrier">) {
   return (
     <>
-      <PageHeader title="Calendrier" description="Toutes vos séances et appels découverte" />
+      <PageHeader title="Calendrier" description="Toutes vos séances et échanges stratégiques">
+        <Suspense fallback={<Skeleton className="h-9 w-52" />}>
+          <PlanButton />
+        </Suspense>
+      </PageHeader>
       <Suspense fallback={<Skeleton className="h-[36rem] rounded-2xl" />}>
         <Calendar searchParams={searchParams} />
       </Suspense>
@@ -34,7 +43,13 @@ export default function CalendarPage({ searchParams }: PageProps<"/calendrier">)
   );
 }
 
-const key = (d: Date) => `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+/** « Planifier un rendez-vous »: the coach picks the client or prospect inside the dialog. */
+async function PlanButton() {
+  const contacts = await listScheduleOptions();
+  return <ScheduleSessionDialog contacts={contacts} triggerLabel="Planifier un rendez-vous" />;
+}
+
+const key = (d: Date) => dayKeyFmt.format(d);
 const monthParam = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 
 async function Calendar({ searchParams }: { searchParams: PageProps<"/calendrier">["searchParams"] }) {
@@ -122,7 +137,7 @@ async function Calendar({ searchParams }: { searchParams: PageProps<"/calendrier
                       title={`${timeFmt.format(s.startsAt)} · ${s.contact.firstName} ${s.contact.lastName} · ${s.type}`}
                     >
                       <span className="font-medium tabular-nums">{timeFmt.format(s.startsAt)}</span> {s.contact.firstName}
-                      {s.type === "Appel découverte" && " · découverte"}
+                      {s.type === "Échange stratégique" && " · échange"}
                     </Link>
                   ))}
                   {list.length > 3 && <span className="px-1.5 text-[11px] text-muted-foreground">+{list.length - 3} autres</span>}
