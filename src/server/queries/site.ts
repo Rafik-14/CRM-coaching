@@ -67,7 +67,7 @@ export async function getPublicCaseStudies(): Promise<PublicCaseStudy[]> {
     where: and(eq(clients.status, "finished"), eq(clients.testimonialConsent, true), isNotNull(clients.caseStudy)),
     with: { contact: { columns: { firstName: true, stake: true } } },
     orderBy: desc(clients.closedAt),
-    limit: 6,
+    limit: 4,
   });
   return rows
     .map((c) => ({
