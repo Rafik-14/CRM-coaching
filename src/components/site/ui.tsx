@@ -92,7 +92,7 @@ export function ArrowLink({ className, children, ...props }: React.ComponentProp
   return (
     <Link
       className={cn(
-        "group inline-block max-w-full py-2.5 font-heading text-[15px] leading-snug font-semibold text-navy transition-colors duration-200 [.jg-on-navy_&]:text-white",
+        "group inline-block min-h-11 max-w-full py-2.5 font-heading text-[15px] leading-snug font-semibold text-navy transition-colors duration-200 [.jg-on-navy_&]:text-white",
         className,
       )}
       {...props}

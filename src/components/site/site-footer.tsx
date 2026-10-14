@@ -4,7 +4,7 @@ import { BookingButton, Container, DotList, GoldLine } from "./ui";
 import { LEGAL_NAV, SITE_NAV } from "./nav";
 
 const footerLink =
-  "inline-flex min-h-11 items-center text-white/80 md:min-h-9 transition-colors duration-200 hover:text-white hover:underline hover:decoration-gold hover:underline-offset-4";
+  "inline-flex min-h-11 items-center text-white/80 [@media(pointer:fine)]:min-h-9 transition-colors duration-200 hover:text-white hover:underline hover:decoration-gold hover:underline-offset-4";
 
 export function SiteFooter() {
   return (

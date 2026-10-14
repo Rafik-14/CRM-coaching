@@ -12,6 +12,7 @@ import schemaValeur from "@/assets/site/schema-valeur.webp";
 import etapeClarifier from "@/assets/site/etape-clarifier.webp";
 import etapeReveler from "@/assets/site/etape-reveler.webp";
 import etapeIncarner from "@/assets/site/etape-incarner.webp";
+import { SITE_URL } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: { absolute: "Jérémy Galéa · Méthode JG® — Révéler votre potentiel" },
@@ -71,9 +72,23 @@ const OFFERS = [
   },
 ] as const;
 
+/** Structured data for search engines: who Jérémy is and what he offers. */
+const JSON_LD = {
+  "@context": "https://schema.org",
+  "@type": "ProfessionalService",
+  name: "Jérémy Galéa — Méthode JG®",
+  slogan: "Révéler votre potentiel",
+  url: SITE_URL,
+  image: `${SITE_URL}/opengraph-image`,
+  areaServed: ["FR", "CH"],
+  founder: { "@type": "Person", name: "Jérémy Galéa", jobTitle: "Coach & formateur, créateur de la Méthode JG®" },
+  knowsAbout: [...DOMAINS],
+};
+
 export default function HomePage() {
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }} />
       {/* 1 — Hero: text left, portrait right */}
       <Section className="pt-10 md:pt-16 lg:pt-20">
         <Container className="grid items-center gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16">
