@@ -6,6 +6,9 @@ name: Lockfile (Linux)
 
 on:
   workflow_dispatch:
+  # Also runs by itself when dependencies change (and before the workflow exists on main).
+  push:
+    paths: ["package.json", ".github/workflows/lockfile.yml"]
 
 permissions:
   contents: read
