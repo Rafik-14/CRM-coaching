@@ -680,18 +680,8 @@ export function BookingSettingsForm({ settings }: { settings: BookingSettings })
 
 // ------------------------------------------------------------------ e-mails
 
-export function EmailNotifyForm({
-  notifyTo,
-  fallback,
-  reminder24h,
-  reminder1h,
-}: {
-  notifyTo: string | null;
-  fallback: string | null;
-  reminder24h: boolean;
-  reminder1h: boolean;
-}) {
-  const [state, formAction, pending] = useSave(saveEmailSettings, "Réglages enregistrés");
+export function EmailNotifyForm({ notifyTo, fallback }: { notifyTo: string | null; fallback: string | null }) {
+  const [state, formAction, pending] = useSave(saveEmailSettings, "Adresse enregistrée");
   return (
     <form action={formAction} className="grid gap-4">
       <FormField
@@ -702,20 +692,6 @@ export function EmailNotifyForm({
       >
         <Input id="notifyTo" name="notifyTo" type="email" defaultValue={notifyTo ?? ""} placeholder={fallback ?? ""} />
       </FormField>
-      <fieldset className="grid gap-2">
-        <legend className="mb-1 text-sm font-medium">Rappels de rendez-vous</legend>
-        <p className="-mt-1 mb-1 text-xs text-muted-foreground">
-          Envoyés automatiquement à la personne pour chaque séance prévue, avec un lien pour déplacer ou annuler.
-        </p>
-        <label className="flex items-center gap-3 text-sm">
-          <input type="checkbox" name="reminder24h" defaultChecked={reminder24h} className="size-4 accent-primary" />
-          Rappel la veille (24 h avant)
-        </label>
-        <label className="flex items-center gap-3 text-sm">
-          <input type="checkbox" name="reminder1h" defaultChecked={reminder1h} className="size-4 accent-primary" />
-          Rappel 1 h avant
-        </label>
-      </fieldset>
       <Button type="submit" disabled={pending} className="justify-self-start">
         {pending && <Loader2 className="animate-spin" />}
         Enregistrer

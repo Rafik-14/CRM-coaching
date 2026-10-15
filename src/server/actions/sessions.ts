@@ -7,6 +7,7 @@ import { db } from "@/server/db";
 import { activityLog, clientPackages, coachingSessions, packages, sessionNotes, tasks } from "@/server/db/schema";
 import { requireCoach } from "@/server/dal";
 import { extendManageTokens } from "@/server/access-tokens";
+import { onDiscoveryDone, onSessionCounted } from "@/server/sequences";
 import { advanceProspectAfterEchange } from "@/server/pipeline-automation";
 import { DISCOVERY_TYPE } from "@/lib/validations/coaching";
 import { parseNoteForm, rescheduleSchema, SESSION_STATUSES } from "@/lib/validations/phase1";
@@ -57,7 +58,9 @@ export async function setSessionStatus(
 
   let clientPackageId = session.clientPackageId;
   if (next === "done") {
-    clientPackageId = (await countAgainstPackage(session)) ?? session.clientPackageId;
+    const counted = await countAgainstPackage(session);
+    if (counted) await onSessionCounted(session.contactId, counted);
+    clientPackageId = counted ?? session.clientPackageId;
   } else if (session.status === "done") {
     await uncount(session);
     clientPackageId = null;
@@ -72,6 +75,7 @@ export async function setSessionStatus(
   });
   if (next === "done" && !session.clientId && session.type === DISCOVERY_TYPE) {
     await advanceProspectAfterEchange(session.contactId, user.id, "done");
+    await onDiscoveryDone(session.contactId, session.id);
   }
   refresh();
   return { ok: true, counted: next === "done" ? !!clientPackageId : undefined };

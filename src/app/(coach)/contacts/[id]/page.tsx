@@ -20,6 +20,9 @@ import { PackagesPanel } from "@/components/coaching/packages-panel";
 import { DocumentsPanel } from "@/components/coaching/documents-panel";
 import { DeleteTaskButton, TaskDialog } from "@/components/coaching/task-dialog";
 import { ClientBookingLink } from "@/components/coaching/client-booking-link";
+import { ScheduledEmailsList, SendEmailDialog } from "@/components/coaching/send-email-dialog";
+import { getPendingEmails } from "@/server/queries/scheduled-emails";
+import { TEMPLATE_DEFS, TEMPLATE_KEYS, type TemplateKey } from "@/lib/email-templates";
 import { getClientBookingLink } from "@/server/client-booking";
 import { getContact, getContactTimeline, getStages, listPartnerOptions } from "@/server/queries/contacts";
 import { getBusinessSettings } from "@/server/business";
@@ -58,7 +61,7 @@ async function ContactDetail({
 }) {
   const [{ id }, sp] = await Promise.all([params, searchParams]);
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
-  const [contact, stages, timeline, templates, packageOptions, partners, business, bookingLink] = await Promise.all([
+  const [contact, stages, timeline, templates, packageOptions, partners, business, bookingLink, pendingEmails] = await Promise.all([
     getContact(id),
     getStages(),
     getContactTimeline(id),
@@ -67,6 +70,7 @@ async function ContactDetail({
     listPartnerOptions(),
     getBusinessSettings(),
     getClientBookingLink(id),
+    getPendingEmails(id),
   ]);
   if (!contact) notFound();
   const tab = TABS.find((t) => t === sp.onglet) ?? "apercu";
@@ -106,6 +110,11 @@ async function ContactDetail({
         </div>
         <div className="flex flex-wrap gap-2">
           <ContactFormDialog stages={stages} partners={partners} defaultCurrency={business.currency} contact={contact} />
+          <SendEmailDialog
+            contactId={contact.id}
+            email={contact.email}
+            templates={TEMPLATE_KEYS.filter((k) => TEMPLATE_DEFS[k].manual).map((k) => ({ key: k, label: TEMPLATE_DEFS[k].label }))}
+          />
           {client && (
             <CloseCoachingDialog
               contactId={contact.id}
@@ -310,6 +319,25 @@ async function ContactDetail({
                     currency={contact.currency}
                     clientPackages={client.packages}
                     options={packageOptions}
+                  />
+                </CardContent>
+              </Card>
+            )}
+            {pendingEmails.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>E-mails automatiques prévus</CardTitle>
+                  <CardDescription>
+                    {contact.emailOptOut ? "Ne reçoit plus les e-mails facultatifs" : "Annulez-en un s’il ne convient plus"}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ScheduledEmailsList
+                    items={pendingEmails.map((m) => ({
+                      id: m.id,
+                      label: TEMPLATE_DEFS[m.templateKey as TemplateKey]?.label ?? m.templateKey,
+                      when: m.due ? "Dans quelques minutes" : formatDayTime(m.sendAt),
+                    }))}
                   />
                 </CardContent>
               </Card>

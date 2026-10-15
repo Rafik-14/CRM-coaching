@@ -29,14 +29,20 @@ export type EmailContent = {
   note?: string;
   /** Sign-off; defaults to Jérémy's. */
   signature?: string[];
+  /** Non-essential e-mails: link to stop receiving them. */
+  unsubscribeUrl?: string;
 };
+
+/** Escapes the text and turns the web addresses it contains into links. */
+const withLinks = (s: string) =>
+  esc(s).replace(/https?:\/\/[^\s<]+[^\s<.,;:!?)]/g, (url) => `<a href="${url}" style="color:${NAVY};font-weight:600;">${url}</a>`);
 
 const DEFAULT_SIGNATURE = ["Jérémy Galéa", "Coach & formateur · Créateur de la Méthode JG®"];
 
 export function renderEmail(c: EmailContent): { html: string; text: string } {
   const signature = c.signature ?? DEFAULT_SIGNATURE;
   const p = (s: string) =>
-    `<p style="margin:0 0 16px;font-family:${FONT};font-size:16px;line-height:1.6;color:${TEXT};">${esc(s).replace(/\n/g, "<br>")}</p>`;
+    `<p style="margin:0 0 16px;font-family:${FONT};font-size:16px;line-height:1.6;color:${TEXT};">${withLinks(s).replace(/\n/g, "<br>")}</p>`;
   const details = c.details?.length
     ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:8px 0 24px;background:${IVORY};border-radius:10px;">
         ${c.details
@@ -84,7 +90,11 @@ export function renderEmail(c: EmailContent): { html: string; text: string } {
           .join("<br>")}</p>
       </td></tr>
       <tr><td style="border-top:1px solid ${LINE};padding:16px 32px;font-family:${FONT};font-size:12px;color:${TEXT};">
-        Méthode JG® · France • Suisse
+        Méthode JG® · France • Suisse${
+          c.unsubscribeUrl
+            ? ` · <a href="${esc(c.unsubscribeUrl)}" style="color:${TEXT};">Ne plus recevoir ces e-mails</a>`
+            : ""
+        }
       </td></tr>
     </table>
   </td></tr>
@@ -103,6 +113,7 @@ export function renderEmail(c: EmailContent): { html: string; text: string } {
     ...signature,
     "",
     "Méthode JG® · France • Suisse",
+    ...(c.unsubscribeUrl ? [`Ne plus recevoir ces e-mails : ${c.unsubscribeUrl}`] : []),
   ].join("\n");
 
   return { html, text };

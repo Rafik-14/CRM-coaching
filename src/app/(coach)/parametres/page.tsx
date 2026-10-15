@@ -11,6 +11,8 @@ import { getEmailOverview } from "@/server/queries/email";
 import { getCalendarFeed } from "@/server/queries/calendar-feed";
 import { CalendarFeedPanel } from "./calendar-feed-panel";
 import { AvailabilityExceptions } from "./availability-exceptions";
+import { EmailTemplates } from "./email-templates";
+import { listTemplates } from "@/server/email/templates";
 import { formatDayTime } from "@/lib/format";
 import {
   BookingSettingsForm,
@@ -60,6 +62,7 @@ async function Settings() {
     getEmailOverview(),
     getCalendarFeed(),
   ]);
+  const emailTemplates = await listTemplates();
   const origins = (process.env.SITE_FORM_ORIGINS ?? "").split(",").map((o) => o.trim()).filter(Boolean);
   const endpoint = `${process.env.BETTER_AUTH_URL ?? "https://crm.example.com"}/api/formulaire-site`;
   const snippet = `<form action="${endpoint}" method="post">
@@ -191,17 +194,20 @@ async function Settings() {
             <p className="mt-3 text-xs text-muted-foreground">À compléter dans .env : {email.config.missing.join(", ")}</p>
           )}
         </Panel>
-        <Panel title="Notifications, rappels et test">
+        <Panel title="Notifications et test">
           <div className="grid gap-6">
-            <EmailNotifyForm
-              notifyTo={email.notifyTo}
-              fallback={email.coachEmail}
-              reminder24h={email.reminder24h}
-              reminder1h={email.reminder1h}
-            />
+            <EmailNotifyForm notifyTo={email.notifyTo} fallback={email.coachEmail} />
             <TestEmailForm defaultTo={email.config.redirectTo ?? email.notifyTo ?? email.coachEmail} />
           </div>
         </Panel>
+        <section className="rounded-2xl border border-border bg-card p-5 lg:col-span-2">
+          <h2 className="font-semibold">E-mails automatiques</h2>
+          <p className="mt-0.5 mb-2 text-sm text-muted-foreground">
+            Envoyés tout seuls au bon moment. Activez ou désactivez chacun, et modifiez son texte avec un aperçu. Les e-mails
+            « facultatifs » ne partent pas aux contacts qui ont choisi de ne plus les recevoir.
+          </p>
+          <EmailTemplates templates={emailTemplates} />
+        </section>
         <section className="rounded-2xl border border-border bg-card p-5 lg:col-span-2">
           <h2 className="font-semibold">Derniers e-mails</h2>
           {email.recent.length === 0 ? (

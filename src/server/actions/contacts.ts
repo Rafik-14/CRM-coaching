@@ -10,6 +10,7 @@ import { activityLog, clients, contacts, pipelineStages, tasks } from "@/server/
 import { requireCoach } from "@/server/dal";
 import { contactSchema } from "@/lib/validations/contact";
 import { currencyFor } from "@/server/business";
+import { onBecameClient } from "@/server/sequences";
 
 export type FormState = { ok?: boolean; error?: string; fieldErrors?: Record<string, string[]> };
 
@@ -18,7 +19,12 @@ async function syncClientForStage(contactId: string, stageId: string | null | un
   if (!stageId) return;
   const stage = await db.query.pipelineStages.findFirst({ where: eq(pipelineStages.id, stageId) });
   if (!stage?.isClient) return;
-  await db.insert(clients).values({ contactId }).onConflictDoNothing({ target: clients.contactId });
+  const created = await db
+    .insert(clients)
+    .values({ contactId })
+    .onConflictDoNothing({ target: clients.contactId })
+    .returning({ id: clients.id });
+  if (created.length) await onBecameClient(contactId);
 }
 
 export async function createContact(_prev: FormState, formData: FormData): Promise<FormState> {

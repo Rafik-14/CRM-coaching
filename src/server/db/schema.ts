@@ -134,6 +134,8 @@ export const contacts = pgTable(
     stake: text("stake"),
     /** Date of the decisive moment (interview, pitch…), for reminders. */
     keyMomentAt: timestamp("key_moment_at", { withTimezone: true }),
+    /** No non-essential e-mails (follow-ups, thank-you…); reminders and confirmations still go out. */
+    emailOptOut: boolean("email_opt_out").notNull().default(false),
     ...timestamps,
   },
   (t) => [
@@ -376,6 +378,46 @@ export const emailLog = pgTable(
   (t) => [index("email_log_contact_idx").on(t.contactId), index("email_log_created_idx").on(t.createdAt)],
 );
 
+/** The coach's wording of an automatic e-mail; no row = the default text in src/lib/email-templates.ts. */
+export const emailTemplates = pgTable("email_templates", {
+  key: text("key").primaryKey(),
+  subject: text("subject").notNull(),
+  heading: text("heading").notNull(),
+  body: text("body").notNull(),
+  enabled: boolean("enabled").notNull().default(true),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow()
+    .$onUpdate(() => new Date()),
+});
+
+/**
+ * E-mails to send later (sequences: follow-up, welcome, last session, thank-you). `dedupe_key` is unique,
+ * so one event never schedules the same e-mail twice; the cron job sends them when due.
+ */
+export const scheduledEmails = pgTable(
+  "scheduled_emails",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    contactId: uuid("contact_id")
+      .notNull()
+      .references(() => contacts.id, { onDelete: "cascade" }),
+    templateKey: text("template_key").notNull(),
+    sendAt: timestamp("send_at", { withTimezone: true }).notNull(),
+    /** pending → sending → sent · skipped (no longer relevant) · cancelled (by the coach) · failed */
+    status: text("status").notNull().default("pending"),
+    dedupeKey: text("dedupe_key").notNull().unique(),
+    payload: jsonb("payload").$type<Record<string, string>>().notNull().default({}),
+    attempts: integer("attempts").notNull().default(0),
+    claimedAt: timestamp("claimed_at", { withTimezone: true }),
+    sentAt: timestamp("sent_at", { withTimezone: true }),
+    /** Why it was skipped or failed. */
+    note: text("note"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("scheduled_emails_due_idx").on(t.status, t.sendAt), index("scheduled_emails_contact_idx").on(t.contactId)],
+);
+
 /**
  * One-off changes to the weekly availability, added whenever plans change (Paramètres › Réservation en ligne):
  * days off / blocked hours, or extra opening hours. Dates are calendar days in the coach's time zone.
@@ -408,7 +450,7 @@ export const accessTokens = pgTable(
   "access_tokens",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    /** manage · calendar_feed · client_booking */
+    /** manage · calendar_feed · client_booking · unsubscribe · questionnaire */
     purpose: text("purpose").notNull(),
     tokenHash: text("token_hash").notNull().unique(),
     sessionId: uuid("session_id").references(() => coachingSessions.id, { onDelete: "cascade" }),

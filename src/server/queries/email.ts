@@ -31,8 +31,6 @@ export async function getEmailOverview() {
       missing: c.missing,
     },
     notifyTo: prefs.notifyTo,
-    reminder24h: prefs.reminder24h,
-    reminder1h: prefs.reminder1h,
     coachEmail: coach?.email ?? null,
     recent,
   };

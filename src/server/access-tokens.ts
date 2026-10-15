@@ -9,7 +9,7 @@ import type { AnyDb } from "@/server/db/types";
  * a link again, a copy of the database alone opens nothing, and « Régénérer » revokes the row.
  * No "server-only" import here so the tests can run it against PGlite; only server code imports it.
  */
-export type TokenPurpose = "manage" | "calendar_feed" | "client_booking";
+export type TokenPurpose = "manage" | "calendar_feed" | "client_booking" | "unsubscribe" | "questionnaire";
 export type AccessToken = typeof accessTokens.$inferSelect;
 
 /** Booking links stay valid until 30 days after the appointment. */

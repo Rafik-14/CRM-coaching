@@ -7,6 +7,7 @@ import { db } from "@/server/db";
 import { SITE_CASES_TAG } from "@/server/queries/site";
 import { activityLog, clients, coachingSessions, contacts, pipelineStages } from "@/server/db/schema";
 import { requireCoach } from "@/server/dal";
+import { onCoachingFinished } from "@/server/sequences";
 import { advanceProspectAfterEchange } from "@/server/pipeline-automation";
 import { DISCOVERY_TYPE, caseStudySchema, closeCoachingSchema, scheduleSessionSchema } from "@/lib/validations/coaching";
 
@@ -121,6 +122,7 @@ export async function closeCoaching(_prev: ActionState, formData: FormData): Pro
     entityId: v.contactId,
     action: `coaching_${v.outcome}`,
   });
+  if (v.outcome === "finished") await onCoachingFinished(v.contactId, client.id);
   updateTag(SITE_CASES_TAG);
   refresh();
   return { ok: true };

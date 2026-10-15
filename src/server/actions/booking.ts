@@ -18,6 +18,7 @@ import { DISCOVERY_TYPE } from "@/lib/validations/coaching";
 import { APP_TIME_ZONE, formatDayTime } from "@/lib/format";
 import { sendEmail } from "@/server/email/send";
 import { appUrl } from "@/server/email/config";
+import { getTemplate } from "@/server/email/templates";
 import { manageToken } from "@/server/access-tokens";
 import { bookingConfirmation, coachNewBooking, coachNotificationAddress } from "@/server/email/messages";
 import type { ActionState } from "./coaching";
@@ -94,16 +95,22 @@ export async function bookEchange(_prev: SiteFormState, formData: FormData): Pro
   const token = bookingToken(sessionId);
   const manage = await manageToken(db, sessionId, startsAt);
   after(async () => {
-    const confirmation = bookingConfirmation({
-      sessionId,
-      firstName: v.firstName,
-      startsAt,
-      durationMin: config.slotMinutes,
-      location: config.location,
-      manageUrl: `${appUrl()}/rdv/${manage}`,
-      cancellationHours: config.cancellationHours,
-    });
-    await sendEmail({ ...confirmation, to: v.email, contactId, templateKey: "booking_confirmation" });
+    const tpl = await getTemplate("booking_confirmation");
+    if (tpl.enabled) {
+      const confirmation = bookingConfirmation(
+        {
+          sessionId,
+          firstName: v.firstName,
+          startsAt,
+          durationMin: config.slotMinutes,
+          location: config.location,
+          manageUrl: `${appUrl()}/rdv/${manage}`,
+          cancellationHours: config.cancellationHours,
+        },
+        tpl.text,
+      );
+      await sendEmail({ ...confirmation, to: v.email, contactId, templateKey: "booking_confirmation" });
+    }
     const coach = await coachNotificationAddress();
     if (coach) {
       const notice = coachNewBooking({

@@ -72,6 +72,11 @@ export const contactSchema = z.object({
     .union([z.literal(""), z.iso.date("Date invalide")])
     .optional()
     .transform((v) => (v ? new Date(`${v}T12:00:00Z`) : null)),
+  /** Checkbox: no follow-up / thank-you e-mails (confirmations and reminders still go out). */
+  emailOptOut: z
+    .union([z.literal("on"), z.literal("")])
+    .optional()
+    .transform((v) => v === "on"),
 });
 
 export type ContactInput = z.input<typeof contactSchema>;

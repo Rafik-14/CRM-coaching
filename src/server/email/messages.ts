@@ -7,6 +7,9 @@ import { icsEvent } from "@/lib/ics";
 import { segmentLabel } from "@/lib/jg";
 import { appUrl } from "./config";
 import type { EmailContent } from "./layout";
+import { fillTemplateText, type TemplateText } from "@/lib/email-templates";
+
+export const COACH_NAME = "Jérémy Galéa";
 
 /**
  * The e-mails of M1, in French. Wording is fixed for now; Phase 2 · M4 makes it editable in Paramètres.
@@ -14,13 +17,12 @@ import type { EmailContent } from "./layout";
 
 export const EMAIL_SETTINGS_KEY = "email";
 
-/** Settings row « email » (Paramètres › E-mails). Reminders are on unless the coach turns them off. */
-export type EmailSettings = { notifyTo: string | null; reminder24h: boolean; reminder1h: boolean };
+/** Settings row « email » (Paramètres › E-mails). Turning automatic e-mails on / off lives in email_templates. */
+export type EmailSettings = { notifyTo: string | null };
 
 export async function getEmailSettings(): Promise<EmailSettings> {
   const row = await db.query.settings.findFirst({ where: eq(settings.key, EMAIL_SETTINGS_KEY) });
-  const v = (row?.value ?? {}) as Partial<EmailSettings>;
-  return { notifyTo: v.notifyTo ?? null, reminder24h: v.reminder24h ?? true, reminder1h: v.reminder1h ?? true };
+  return { notifyTo: (row?.value as Partial<EmailSettings> | undefined)?.notifyTo ?? null };
 }
 
 /** Where the coach receives notifications: Paramètres › E-mails, else the coach account's address. */
@@ -60,18 +62,22 @@ export function bookingConfirmation(b: {
   /** /rdv/<token>: move or cancel. */
   manageUrl: string;
   cancellationHours: number;
-}): Mail {
+}, tpl: TemplateText): Mail {
   const when = capitalize(dateFmt.format(b.startsAt));
   const time = timeFmt.format(b.startsAt);
+  const text = fillTemplateText(tpl, {
+    prenom: b.firstName,
+    date: dateFmt.format(b.startsAt),
+    heure: time,
+    suite: NEXT_STEP[b.location ?? ""] ?? "Je vous confirme les détails avant notre échange.",
+    nom_coach: COACH_NAME,
+  });
   return {
-    subject: `Votre échange stratégique du ${dateFmt.format(b.startsAt)} à ${time}`,
+    subject: text.subject,
     content: {
       preheader: `C’est réservé : ${when} à ${time}.`,
-      heading: `Merci ${b.firstName}, c’est réservé.`,
-      paragraphs: [
-        "Votre échange stratégique est bien enregistré. Ces 20 minutes nous permettront de comprendre votre situation, ce que vous cherchez à faire évoluer, et de voir ensemble quel point de départ est le plus pertinent.",
-        `${NEXT_STEP[b.location ?? ""] ?? "Je vous confirme les détails avant notre échange."} Le rendez-vous est joint à cet e-mail pour l’ajouter à votre agenda.`,
-      ],
+      heading: text.heading,
+      paragraphs: text.paragraphs,
       details: [
         ["Date", when],
         ["Heure (Paris / Genève)", time],
@@ -153,39 +159,37 @@ function relativeDay(startsAt: Date, now: Date) {
   return `le ${new Intl.DateTimeFormat("fr-FR", { timeZone: APP_TIME_ZONE, weekday: "long", day: "numeric", month: "long" }).format(startsAt)}`;
 }
 
-const LOCATION_LINE: Record<string, string> = {
-  Visio: "Nous nous retrouvons en visio.",
-  Téléphone: "Je vous appelle au numéro que vous m’avez indiqué.",
-  Cabinet: "Nous nous retrouvons au cabinet.",
-};
-
-export function sessionReminder(r: {
-  kind: "24h" | "1h";
-  firstName: string;
-  startsAt: Date;
-  durationMin: number;
-  type: string;
-  location: string | null;
-  manageUrl: string;
-  cancellationHours: number;
-  now: Date;
-}): Mail {
-  const name = appointmentName(r.type);
+export function sessionReminder(
+  r: {
+    kind: "24h" | "1h";
+    firstName: string;
+    startsAt: Date;
+    durationMin: number;
+    type: string;
+    location: string | null;
+    manageUrl: string;
+    cancellationHours: number;
+    now: Date;
+  },
+  tpl: TemplateText,
+): Mail {
   const time = timeFmt.format(r.startsAt);
   const day = relativeDay(r.startsAt, r.now);
   const canStillChange = r.startsAt.getTime() - r.now.getTime() > r.cancellationHours * 3_600_000;
-  const soon = r.kind === "1h";
+  const text = fillTemplateText(tpl, {
+    prenom: r.firstName,
+    rendez_vous: appointmentName(r.type).your,
+    jour: day,
+    date: dateFmt.format(r.startsAt),
+    heure: time,
+    nom_coach: COACH_NAME,
+  });
   return {
-    subject: soon ? `${capitalize(name.your)} commence à ${time}` : `Rappel : ${name.your} ${day} à ${time}`,
+    subject: text.subject,
     content: {
-      preheader: soon ? `Rendez-vous à ${time}.` : `${capitalize(day)} à ${time} · ${r.durationMin} minutes.`,
-      heading: soon ? `À tout à l’heure, ${r.firstName}.` : `Bonjour ${r.firstName},`,
-      paragraphs: [
-        soon
-          ? `Petit rappel : ${name.the} commence à ${time}.`
-          : `Petit rappel : nous avons rendez-vous ${day} à ${time} pour ${name.your}.`,
-        ...(r.location && LOCATION_LINE[r.location] ? [LOCATION_LINE[r.location]] : []),
-      ],
+      preheader: r.kind === "1h" ? `Rendez-vous à ${time}.` : `${capitalize(day)} à ${time} · ${r.durationMin} minutes.`,
+      heading: text.heading,
+      paragraphs: text.paragraphs,
       details: [
         ["Date", capitalize(dateFmt.format(r.startsAt))],
         ["Heure (Paris / Genève)", time],
