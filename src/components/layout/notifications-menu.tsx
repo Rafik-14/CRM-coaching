@@ -1,8 +1,7 @@
 import Link from "next/link";
-import { Bell, CalendarClock, CircleAlert, Target } from "lucide-react";
+import { Bell, CalendarClock, CalendarX, CircleAlert, Globe, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
-  DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
@@ -10,21 +9,22 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { getNotifications } from "@/server/queries/notifications";
-import { APP_TIME_ZONE, formatDate, fullName } from "@/lib/format";
+import { APP_TIME_ZONE, formatDate, formatDayTime, fullName } from "@/lib/format";
+import { NotificationsDropdown } from "./notifications-dropdown";
 
 const timeFmt = new Intl.DateTimeFormat("fr-FR", { hour: "2-digit", minute: "2-digit", timeZone: APP_TIME_ZONE });
 
 export async function NotificationsMenu() {
-  const { overdue, today, keyMoments, count } = await getNotifications();
+  const { overdue, today, keyMoments, online, count } = await getNotifications();
 
   return (
-    <DropdownMenu>
+    <NotificationsDropdown hasOnline={online.length > 0}>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" className="relative" aria-label={`Notifications (${count})`}>
           <Bell />
           {count > 0 && (
-            <span className="absolute top-1 right-1 flex size-4 items-center justify-center rounded-full bg-primary text-[10px] font-semibold text-primary-foreground">
-              {count}
+            <span className="absolute top-0.5 right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground tabular-nums">
+              {count > 9 ? "9+" : count}
             </span>
           )}
         </Button>
@@ -35,6 +35,23 @@ export async function NotificationsMenu() {
         {count === 0 && (
           <p className="px-2 py-6 text-center text-sm text-muted-foreground">Tout est à jour.</p>
         )}
+        {online.map((e) => (
+          <DropdownMenuItem key={e.id} asChild>
+            <Link href={`/contacts/${e.contact.id}?onglet=seances`} className="items-start gap-3">
+              {e.action === "booking_cancelled_online" ? (
+                <CalendarX className="mt-0.5 text-destructive" />
+              ) : (
+                <Globe className="mt-0.5 text-info" />
+              )}
+              <span className="grid">
+                <span className="text-sm">
+                  {e.label} · {fullName(e.contact)}
+                </span>
+                <span className="text-xs text-muted-foreground first-letter:uppercase">{formatDayTime(e.createdAt)}</span>
+              </span>
+            </Link>
+          </DropdownMenuItem>
+        ))}
         {today.map((s) => (
           <DropdownMenuItem key={s.id} asChild>
             <Link href={`/contacts/${s.contact.id}`} className="items-start gap-3">
@@ -73,6 +90,6 @@ export async function NotificationsMenu() {
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>
-    </DropdownMenu>
+    </NotificationsDropdown>
   );
 }

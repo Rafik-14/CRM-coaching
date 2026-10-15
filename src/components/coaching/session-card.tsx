@@ -4,6 +4,7 @@ import { useActionState, useState, useTransition } from "react";
 import {
   CalendarClock,
   CircleCheck,
+  Globe,
   CircleSlash,
   Loader2,
   MapPin,
@@ -58,6 +59,8 @@ export type SessionCardData = {
   status: Status;
   location: string | null;
   agenda: string | null;
+  /** online = booked by the person (website or client link). */
+  bookedVia?: string;
   note: {
     content: string | null;
     templateData: Record<string, string> | null;
@@ -122,6 +125,11 @@ export function SessionCard({
               {session.location && (
                 <span className="inline-flex items-center gap-1">
                   <MapPin className="size-3" /> {session.location}
+                </span>
+              )}
+              {session.bookedVia === "online" && (
+                <span className="inline-flex items-center gap-1 rounded-md bg-info/10 px-1.5 py-0.5 font-medium text-info">
+                  <Globe className="size-3" /> Réservé en ligne
                 </span>
               )}
             </p>
