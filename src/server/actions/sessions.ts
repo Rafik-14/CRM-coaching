@@ -6,6 +6,7 @@ import { z } from "zod";
 import { db } from "@/server/db";
 import { activityLog, clientPackages, coachingSessions, packages, sessionNotes, tasks } from "@/server/db/schema";
 import { requireCoach } from "@/server/dal";
+import { extendManageTokens } from "@/server/access-tokens";
 import { advanceProspectAfterEchange } from "@/server/pipeline-automation";
 import { DISCOVERY_TYPE } from "@/lib/validations/coaching";
 import { parseNoteForm, rescheduleSchema, SESSION_STATUSES } from "@/lib/validations/phase1";
@@ -89,10 +90,13 @@ export async function rescheduleSession(_prev: ActionState, formData: FormData):
   const startsAt = new Date(Date.UTC(y, m - 1, d, hh, mm) + v.tzOffset * 60_000);
 
   if (session.status === "done") await uncount(session);
+  const moved = startsAt.getTime() !== session.startsAt.getTime();
   await db
     .update(coachingSessions)
-    .set({ startsAt, status: "planned", clientPackageId: null })
+    // A new date gets its own reminders.
+    .set({ startsAt, status: "planned", clientPackageId: null, ...(moved && { reminder24hSentAt: null, reminder1hSentAt: null }) })
     .where(eq(coachingSessions.id, session.id));
+  if (moved) await extendManageTokens(db, session.id, startsAt);
   await db
     .insert(activityLog)
     .values({ actorId: user.id, entity: "contact", entityId: session.contactId, action: "session_rescheduled" });

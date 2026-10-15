@@ -1,17 +1,17 @@
 import "server-only";
 import { asc, desc, eq } from "drizzle-orm";
 import { db } from "@/server/db";
-import { emailLog, settings, user } from "@/server/db/schema";
+import { emailLog, user } from "@/server/db/schema";
 import { requireCoach } from "@/server/dal";
 import { mailConfig } from "@/server/email/config";
-import { EMAIL_SETTINGS_KEY } from "@/server/email/messages";
+import { getEmailSettings } from "@/server/email/messages";
 
 /** Paramètres › E-mails: configuration status (never the password), notification address, last e-mails. */
 export async function getEmailOverview() {
   await requireCoach();
   const c = mailConfig();
-  const [row, coach, recent] = await Promise.all([
-    db.query.settings.findFirst({ where: eq(settings.key, EMAIL_SETTINGS_KEY) }),
+  const [prefs, coach, recent] = await Promise.all([
+    getEmailSettings(),
     db.query.user.findFirst({ where: eq(user.role, "coach"), orderBy: asc(user.createdAt), columns: { email: true } }),
     db.query.emailLog.findMany({
       orderBy: desc(emailLog.createdAt),
@@ -30,7 +30,9 @@ export async function getEmailOverview() {
       redirectTo: c.redirectTo,
       missing: c.missing,
     },
-    notifyTo: (row?.value as { notifyTo?: string | null } | undefined)?.notifyTo ?? null,
+    notifyTo: prefs.notifyTo,
+    reminder24h: prefs.reminder24h,
+    reminder1h: prefs.reminder1h,
     coachEmail: coach?.email ?? null,
     recent,
   };

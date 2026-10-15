@@ -196,6 +196,9 @@ export const coachingSessions = pgTable(
     location: text("location"),
     /** Agenda / preparation notes entered when scheduling. */
     agenda: text("agenda"),
+    /** Reminder e-mails already sent for the current date (cleared when the session moves). */
+    reminder24hSentAt: timestamp("reminder_24h_sent_at", { withTimezone: true }),
+    reminder1hSentAt: timestamp("reminder_1h_sent_at", { withTimezone: true }),
     ...timestamps,
   },
   (t) => [
@@ -369,6 +372,28 @@ export const emailLog = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index("email_log_contact_idx").on(t.contactId), index("email_log_created_idx").on(t.createdAt)],
+);
+
+/**
+ * Private links (no login): manage a booking (/rdv/…), the coach's calendar feed, a client's booking link.
+ * Only the SHA-256 of the token is stored; the token itself is an HMAC of the row id with the server secret,
+ * so the CRM can show a link again but a copy of the database alone opens nothing.
+ */
+export const accessTokens = pgTable(
+  "access_tokens",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    /** manage · calendar_feed · client_booking */
+    purpose: text("purpose").notNull(),
+    tokenHash: text("token_hash").notNull().unique(),
+    sessionId: uuid("session_id").references(() => coachingSessions.id, { onDelete: "cascade" }),
+    contactId: uuid("contact_id").references(() => contacts.id, { onDelete: "cascade" }),
+    expiresAt: timestamp("expires_at", { withTimezone: true }),
+    revokedAt: timestamp("revoked_at", { withTimezone: true }),
+    lastUsedAt: timestamp("last_used_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("access_tokens_session_idx").on(t.sessionId), index("access_tokens_contact_idx").on(t.contactId)],
 );
 
 export const settings = pgTable("settings", {

@@ -14,10 +14,18 @@ import type { EmailContent } from "./layout";
 
 export const EMAIL_SETTINGS_KEY = "email";
 
+/** Settings row « email » (Paramètres › E-mails). Reminders are on unless the coach turns them off. */
+export type EmailSettings = { notifyTo: string | null; reminder24h: boolean; reminder1h: boolean };
+
+export async function getEmailSettings(): Promise<EmailSettings> {
+  const row = await db.query.settings.findFirst({ where: eq(settings.key, EMAIL_SETTINGS_KEY) });
+  const v = (row?.value ?? {}) as Partial<EmailSettings>;
+  return { notifyTo: v.notifyTo ?? null, reminder24h: v.reminder24h ?? true, reminder1h: v.reminder1h ?? true };
+}
+
 /** Where the coach receives notifications: Paramètres › E-mails, else the coach account's address. */
 export async function coachNotificationAddress(): Promise<string | null> {
-  const row = await db.query.settings.findFirst({ where: eq(settings.key, EMAIL_SETTINGS_KEY) });
-  const notifyTo = (row?.value as { notifyTo?: string } | undefined)?.notifyTo;
+  const { notifyTo } = await getEmailSettings();
   if (notifyTo) return notifyTo;
   const coach = await db.query.user.findFirst({ where: eq(user.role, "coach"), orderBy: asc(user.createdAt) });
   return coach?.email ?? null;
@@ -120,6 +128,72 @@ export function coachNewBooking(b: {
       ],
       cta: { label: "Ouvrir la fiche", url: `${appUrl()}/contacts/${b.contactId}` },
       signature: ["CRM · Méthode JG®"],
+    },
+  };
+}
+
+// ------------------------------------------------------------------ session reminders
+
+/** « l’échange stratégique » / « la séance » / « le bilan »… for sentences about the appointment. */
+function appointmentName(type: string) {
+  if (type === "Échange stratégique") return { the: "l’échange stratégique", your: "votre échange stratégique" };
+  if (type === "Bilan") return { the: "le bilan", your: "votre bilan" };
+  if (type === "Intervention") return { the: "l’intervention", your: "votre intervention" };
+  return { the: "la séance", your: "votre séance" };
+}
+
+const dayKey = (d: Date) => new Intl.DateTimeFormat("en-CA", { timeZone: APP_TIME_ZONE }).format(d);
+
+/** « aujourd’hui », « demain » or « le jeudi 16 octobre » (coach's time zone). */
+function relativeDay(startsAt: Date, now: Date) {
+  if (dayKey(startsAt) === dayKey(now)) return "aujourd’hui";
+  if (dayKey(startsAt) === dayKey(new Date(now.getTime() + 86_400_000))) return "demain";
+  return `le ${new Intl.DateTimeFormat("fr-FR", { timeZone: APP_TIME_ZONE, weekday: "long", day: "numeric", month: "long" }).format(startsAt)}`;
+}
+
+const LOCATION_LINE: Record<string, string> = {
+  Visio: "Nous nous retrouvons en visio.",
+  Téléphone: "Je vous appelle au numéro que vous m’avez indiqué.",
+  Cabinet: "Nous nous retrouvons au cabinet.",
+};
+
+export function sessionReminder(r: {
+  kind: "24h" | "1h";
+  firstName: string;
+  startsAt: Date;
+  durationMin: number;
+  type: string;
+  location: string | null;
+  manageUrl: string;
+  cancellationHours: number;
+  now: Date;
+}): Mail {
+  const name = appointmentName(r.type);
+  const time = timeFmt.format(r.startsAt);
+  const day = relativeDay(r.startsAt, r.now);
+  const canStillChange = r.startsAt.getTime() - r.now.getTime() > r.cancellationHours * 3_600_000;
+  const soon = r.kind === "1h";
+  return {
+    subject: soon ? `${capitalize(name.your)} commence à ${time}` : `Rappel : ${name.your} ${day} à ${time}`,
+    content: {
+      preheader: soon ? `Rendez-vous à ${time}.` : `${capitalize(day)} à ${time} · ${r.durationMin} minutes.`,
+      heading: soon ? `À tout à l’heure, ${r.firstName}.` : `Bonjour ${r.firstName},`,
+      paragraphs: [
+        soon
+          ? `Petit rappel : ${name.the} commence à ${time}.`
+          : `Petit rappel : nous avons rendez-vous ${day} à ${time} pour ${name.your}.`,
+        ...(r.location && LOCATION_LINE[r.location] ? [LOCATION_LINE[r.location]] : []),
+      ],
+      details: [
+        ["Date", capitalize(dateFmt.format(r.startsAt))],
+        ["Heure (Paris / Genève)", time],
+        ["Durée", `${r.durationMin} minutes`],
+        ...(r.location ? ([["Lieu", r.location]] as [string, string][]) : []),
+      ],
+      cta: { label: canStillChange ? "Déplacer ou annuler" : "Voir mon rendez-vous", url: r.manageUrl },
+      note: canStillChange
+        ? `Un empêchement ? Vous pouvez déplacer ou annuler depuis ce lien jusqu’à ${r.cancellationHours} h avant le rendez-vous.`
+        : "Un imprévu ? Répondez simplement à cet e-mail pour me prévenir.",
     },
   };
 }

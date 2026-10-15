@@ -20,6 +20,8 @@ export type BookingSettings = {
   /** How far ahead visitors can book. */
   horizonDays: number;
   location: (typeof SESSION_LOCATIONS)[number];
+  /** Visitors can cancel or move from the /rdv link until this many hours before the appointment. */
+  cancellationHours: number;
 };
 
 const WORKDAY: TimeRange[] = [
@@ -35,6 +37,7 @@ export const DEFAULT_BOOKING: BookingSettings = {
   minNoticeHours: 24,
   horizonDays: 30,
   location: "Visio",
+  cancellationHours: 12,
 };
 
 /** Monday first, as in France / Switzerland. */
@@ -107,6 +110,10 @@ export const bookingSettingsSchema = z
     minNoticeHours: z.coerce.number().int("Nombre entier").min(0).max(24 * 14, "14 jours maximum"),
     horizonDays: z.coerce.number().int("Nombre entier").min(1, "Au moins 1 jour").max(120, "120 jours maximum"),
     location: z.enum(SESSION_LOCATIONS),
+    cancellationHours: z.preprocess(
+      (v) => (v === undefined || v === "" ? DEFAULT_BOOKING.cancellationHours : v),
+      z.coerce.number().int("Nombre entier").min(0).max(24 * 7, "7 jours maximum"),
+    ),
   })
   .transform(({ day0, day1, day2, day3, day4, day5, day6, ...rest }) => ({
     ...rest,
@@ -128,6 +135,7 @@ export function normalizeBookingSettings(value: unknown): BookingSettings {
     minNoticeHours: v.minNoticeHours ?? DEFAULT_BOOKING.minNoticeHours,
     horizonDays: v.horizonDays ?? DEFAULT_BOOKING.horizonDays,
     location: (SESSION_LOCATIONS as readonly string[]).includes(v.location ?? "") ? v.location! : DEFAULT_BOOKING.location,
+    cancellationHours: v.cancellationHours ?? DEFAULT_BOOKING.cancellationHours,
   };
 }
 

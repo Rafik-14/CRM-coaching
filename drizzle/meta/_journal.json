@@ -50,6 +50,13 @@
       "when": 1792009850733,
       "tag": "0006_document_scanner",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1792063688808,
+      "tag": "0007_session_reminders",
+      "breakpoints": true
     }
   ]
 }

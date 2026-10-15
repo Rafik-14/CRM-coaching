@@ -180,9 +180,14 @@ async function Settings() {
             <p className="mt-3 text-xs text-muted-foreground">À compléter dans .env : {email.config.missing.join(", ")}</p>
           )}
         </Panel>
-        <Panel title="Notifications et test">
+        <Panel title="Notifications, rappels et test">
           <div className="grid gap-6">
-            <EmailNotifyForm notifyTo={email.notifyTo} fallback={email.coachEmail} />
+            <EmailNotifyForm
+              notifyTo={email.notifyTo}
+              fallback={email.coachEmail}
+              reminder24h={email.reminder24h}
+              reminder1h={email.reminder1h}
+            />
             <TestEmailForm defaultTo={email.config.redirectTo ?? email.notifyTo ?? email.coachEmail} />
           </div>
         </Panel>

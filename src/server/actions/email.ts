@@ -16,9 +16,11 @@ const emailSettingsSchema = z.object({
     .union([z.literal(""), z.email("Adresse e-mail invalide.").trim().toLowerCase().max(200)])
     .optional()
     .transform((v) => v || null),
+  reminder24h: z.literal("on").optional().transform((v) => v === "on"),
+  reminder1h: z.literal("on").optional().transform((v) => v === "on"),
 });
 
-/** Where the coach receives « nouvelle réservation » / « nouveau message » notifications. */
+/** Where the coach receives « nouvelle réservation » / « nouveau message » notifications, and which reminders go out. */
 export async function saveEmailSettings(_prev: ActionState, formData: FormData): Promise<ActionState> {
   await requireCoach();
   const parsed = emailSettingsSchema.safeParse(Object.fromEntries(formData));
