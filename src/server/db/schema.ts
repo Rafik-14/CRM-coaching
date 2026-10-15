@@ -419,6 +419,28 @@ export const scheduledEmails = pgTable(
 );
 
 /**
+ * Intake questionnaire sent to a contact (link /questionnaire/<token>) and their answers. One row per link;
+ * answers keep a copy of each question so later edits of the questionnaire never change them.
+ */
+export const intakeResponses = pgTable(
+  "intake_responses",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    contactId: uuid("contact_id")
+      .notNull()
+      .references(() => contacts.id, { onDelete: "cascade" }),
+    /** The access_tokens row of the link. */
+    tokenId: uuid("token_id").references(() => accessTokens.id, { onDelete: "set null" }),
+    answers: jsonb("answers").$type<{ id: string; label: string; type: string; value: string | string[] }[]>(),
+    sentAt: timestamp("sent_at", { withTimezone: true }).notNull().defaultNow(),
+    submittedAt: timestamp("submitted_at", { withTimezone: true }),
+    /** When the person accepted that their answers are kept (privacy policy). */
+    consentAt: timestamp("consent_at", { withTimezone: true }),
+  },
+  (t) => [index("intake_responses_contact_idx").on(t.contactId)],
+);
+
+/**
  * One-off changes to the weekly availability, added whenever plans change (Paramètres › Réservation en ligne):
  * days off / blocked hours, or extra opening hours. Dates are calendar days in the coach's time zone.
  */

@@ -9,6 +9,7 @@ import { requireCoach } from "@/server/dal";
 import { sendEmail } from "@/server/email/send";
 import { getTemplate } from "@/server/email/templates";
 import { templateVars } from "@/server/sequences";
+import { questionnaireUrl } from "@/server/questionnaire";
 import { TEMPLATE_DEFS, TEMPLATE_KEYS, fillTemplateText, type TemplateKey } from "@/lib/email-templates";
 import type { ActionState } from "./coaching";
 
@@ -27,7 +28,8 @@ export async function getEmailDraft(contactId: string, key: TemplateKey | "libre
   if (!contact) return null;
   if (key === "libre") return { subject: "", heading: `Bonjour ${contact.firstName},`, body: "" };
   const k = z.enum(TEMPLATE_KEYS).parse(key);
-  const [{ text }, vars] = await Promise.all([getTemplate(k), templateVars(contact)]);
+  const extra = TEMPLATE_DEFS[k].variables.includes("lien_questionnaire") ? { lien_questionnaire: await questionnaireUrl(contact.id) } : {};
+  const [{ text }, vars] = await Promise.all([getTemplate(k), templateVars(contact, extra)]);
   const filled = fillTemplateText(text, vars);
   return { subject: filled.subject, heading: filled.heading, body: filled.paragraphs.join("\n\n") };
 }

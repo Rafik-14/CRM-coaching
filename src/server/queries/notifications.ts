@@ -44,12 +44,13 @@ export async function getNotifications() {
   return { overdue, today, keyMoments, online, count: overdue.length + today.length + keyMoments.length + online.length };
 }
 
-/** What people did online themselves (booked, moved, cancelled), shown in the bell until the coach opens it. */
+/** What people did online themselves (booked, moved, cancelled, answered the questionnaire), shown in the bell until the coach has seen it. */
 export const ONLINE_ACTIONS = {
   echange_booked_online: "Échange réservé en ligne",
   session_booked_online: "Séance réservée en ligne",
   booking_moved_online: "Rendez-vous déplacé en ligne",
   booking_cancelled_online: "Rendez-vous annulé en ligne",
+  questionnaire_submitted: "Questionnaire rempli",
 } as const;
 export const NOTIFICATIONS_SEEN_KEY = "notifications_seen";
 

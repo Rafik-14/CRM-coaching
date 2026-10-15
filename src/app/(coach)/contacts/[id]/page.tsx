@@ -22,6 +22,9 @@ import { DeleteTaskButton, TaskDialog } from "@/components/coaching/task-dialog"
 import { ClientBookingLink } from "@/components/coaching/client-booking-link";
 import { ScheduledEmailsList, SendEmailDialog } from "@/components/coaching/send-email-dialog";
 import { getPendingEmails } from "@/server/queries/scheduled-emails";
+import { QuestionnairePanel } from "@/components/coaching/questionnaire-panel";
+import { getContactQuestionnaire } from "@/server/questionnaire";
+import { formatAnswer, type Answer } from "@/lib/questionnaire";
 import { TEMPLATE_DEFS, TEMPLATE_KEYS, type TemplateKey } from "@/lib/email-templates";
 import { getClientBookingLink } from "@/server/client-booking";
 import { getContact, getContactTimeline, getStages, listPartnerOptions } from "@/server/queries/contacts";
@@ -33,7 +36,7 @@ import { cn } from "@/lib/utils";
 import { ContactFormDialog } from "../contact-form-dialog";
 import { DeleteContactButton } from "./delete-contact-button";
 
-const TABS = ["apercu", "seances", "objectifs", "taches", "documents", "historique"] as const;
+const TABS = ["apercu", "seances", "objectifs", "taches", "documents", "questionnaire", "historique"] as const;
 const clientStatusLabel = { active: "Actif", paused: "En pause", finished: "Terminé", stopped: "Arrêté" } as const;
 
 export default function ContactPage({ params, searchParams }: PageProps<"/contacts/[id]">) {
@@ -61,7 +64,7 @@ async function ContactDetail({
 }) {
   const [{ id }, sp] = await Promise.all([params, searchParams]);
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
-  const [contact, stages, timeline, templates, packageOptions, partners, business, bookingLink, pendingEmails] = await Promise.all([
+  const [contact, stages, timeline, templates, packageOptions, partners, business, bookingLink, pendingEmails, intake] = await Promise.all([
     getContact(id),
     getStages(),
     getContactTimeline(id),
@@ -71,6 +74,7 @@ async function ContactDetail({
     getBusinessSettings(),
     getClientBookingLink(id),
     getPendingEmails(id),
+    getContactQuestionnaire(id),
   ]);
   if (!contact) notFound();
   const tab = TABS.find((t) => t === sp.onglet) ?? "apercu";
@@ -177,6 +181,11 @@ async function ContactDetail({
           {client && (
             <TabsTrigger value="documents">
               Documents <Count n={client.documents.length} />
+            </TabsTrigger>
+          )}
+          {(client || intake.latest) && (
+            <TabsTrigger value="questionnaire">
+              Questionnaire {intake.answered && <span className="ml-1 size-1.5 rounded-full bg-success" aria-label="rempli" />}
             </TabsTrigger>
           )}
           <TabsTrigger value="historique">Historique</TabsTrigger>
@@ -468,6 +477,31 @@ async function ContactDetail({
         )}
 
         {/* ------------------------------------------------ Historique */}
+        {(client || intake.latest) && (
+          <TabsContent value="questionnaire" className="mt-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Questionnaire de départ</CardTitle>
+                <CardDescription>Ce que {contact.firstName} a partagé avant de commencer</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <QuestionnairePanel
+                  contactId={contact.id}
+                  hasEmail={!!contact.email}
+                  status={
+                    intake.answered
+                      ? `Rempli le ${formatDayTime(intake.answered.submittedAt!)}`
+                      : intake.latest
+                        ? `Lien créé le ${formatDayTime(intake.latest.sentAt)} · pas encore rempli`
+                        : null
+                  }
+                  answers={intake.answered?.answers?.map((a) => ({ label: a.label, value: formatAnswer(a as Answer) })) ?? null}
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
+
         <TabsContent value="historique" className="mt-4">
           <Card>
             <CardContent>

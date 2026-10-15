@@ -9,6 +9,7 @@ import { appUrl } from "@/server/email/config";
 import { COACH_NAME } from "@/server/email/messages";
 import { sendEmail } from "@/server/email/send";
 import { getTemplate } from "@/server/email/templates";
+import { questionnaireUrl } from "@/server/questionnaire";
 import type { EmailContent } from "@/server/email/layout";
 import { scheduleEmail, sendDueEmails, type DeliveryResult, type ScheduledEmail } from "@/server/scheduled-emails";
 import {
@@ -169,6 +170,7 @@ async function deliver(email: ScheduledEmail): Promise<DeliveryResult> {
     extra.accompagnement = cp.package.name;
   }
 
+  if (TEMPLATE_DEFS[key].variables.includes("lien_questionnaire")) extra.lien_questionnaire = await questionnaireUrl(contact.id);
   const vars = await templateVars(contact, extra);
   const mail = templateContent(tpl.text, vars, essential ? undefined : await unsubscribeUrl(contact.id));
   const result = await sendEmail({ ...mail, to: contact.email, contactId: contact.id, templateKey: key });

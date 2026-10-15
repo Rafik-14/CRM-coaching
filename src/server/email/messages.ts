@@ -385,6 +385,22 @@ export function coachBookingChanged(b: {
   };
 }
 
+// ------------------------------------------------------------------ questionnaire
+
+export function coachQuestionnaireSubmitted(q: { contactId: string; name: string; answers: [string, string][] }): Mail {
+  return {
+    subject: `Questionnaire rempli : ${q.name}`,
+    content: {
+      preheader: `${q.name} a répondu au questionnaire de départ.`,
+      heading: "Un questionnaire vient d’être rempli",
+      paragraphs: [`${q.name} a répondu au questionnaire de départ. Ses réponses sont dans sa fiche, onglet « Questionnaire ».`],
+      details: q.answers,
+      cta: { label: "Ouvrir la fiche", url: `${appUrl()}/contacts/${q.contactId}?onglet=questionnaire` },
+      signature: ["CRM · Méthode JG®"],
+    },
+  };
+}
+
 // ------------------------------------------------------------------ contact form
 
 export function contactAck(c: { firstName: string }): Mail {

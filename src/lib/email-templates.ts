@@ -13,6 +13,7 @@ export const TEMPLATE_KEYS = [
   "welcome_client",
   "package_last_session",
   "coaching_finished",
+  "questionnaire_invite",
 ] as const;
 export type TemplateKey = (typeof TEMPLATE_KEYS)[number];
 
@@ -96,13 +97,14 @@ export const TEMPLATE_DEFS: Record<TemplateKey, TemplateDef> = {
   welcome_client: {
     label: "Bienvenue au nouveau client",
     trigger: "Dès qu’un contact devient client.",
-    variables: ["prenom", "lien_reservation", "nom_coach"],
+    variables: ["prenom", "lien_reservation", "lien_questionnaire", "nom_coach"],
     essential: true,
     manual: true,
     subject: "Bienvenue dans votre accompagnement",
     heading: "Bienvenue {{prenom}} !",
     body: [
       "Je suis heureux de commencer cet accompagnement avec vous.",
+      "Pour préparer notre première séance, prenez quelques minutes pour répondre à ce court questionnaire : {{lien_questionnaire}}",
       "Vous pouvez réserver vos séances directement dans mon agenda, au créneau qui vous convient : {{lien_reservation}}",
       "À très vite,",
     ].join("\n\n"),
@@ -133,6 +135,19 @@ export const TEMPLATE_DEFS: Record<TemplateKey, TemplateDef> = {
       "Notre accompagnement est terminé, et je tenais à vous remercier pour votre confiance et votre engagement.",
       "Votre retour me serait précieux : en quelques lignes, qu’est-ce qui vous a amené, et qu’est-ce qui a changé pour vous ? Répondez simplement à cet e-mail. Avec votre accord, je pourrai le partager de façon anonyme.",
       "Je vous souhaite le meilleur pour la suite.",
+    ].join("\n\n"),
+  },
+  questionnaire_invite: {
+    label: "Questionnaire de départ",
+    trigger: "Quand vous l’envoyez depuis la fiche client (il est aussi inclus dans l’e-mail de bienvenue).",
+    variables: ["prenom", "lien_questionnaire", "nom_coach"],
+    essential: true,
+    manual: true,
+    subject: "Quelques questions avant notre première séance",
+    heading: "Bonjour {{prenom}},",
+    body: [
+      "Pour que notre première séance soit la plus utile possible, prenez quelques minutes pour répondre à ce court questionnaire : {{lien_questionnaire}}",
+      "Le lien reste valable 30 jours. Vos réponses ne sont lues que par moi.",
     ].join("\n\n"),
   },
 };

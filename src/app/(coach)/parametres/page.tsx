@@ -12,6 +12,8 @@ import { getCalendarFeed } from "@/server/queries/calendar-feed";
 import { CalendarFeedPanel } from "./calendar-feed-panel";
 import { AvailabilityExceptions } from "./availability-exceptions";
 import { EmailTemplates } from "./email-templates";
+import { QuestionnaireEditor } from "./questionnaire-editor";
+import { getQuestionnaire } from "@/server/questionnaire";
 import { listTemplates } from "@/server/email/templates";
 import { formatDayTime } from "@/lib/format";
 import {
@@ -62,7 +64,7 @@ async function Settings() {
     getEmailOverview(),
     getCalendarFeed(),
   ]);
-  const emailTemplates = await listTemplates();
+  const [emailTemplates, questionnaire] = await Promise.all([listTemplates(), getQuestionnaire()]);
   const origins = (process.env.SITE_FORM_ORIGINS ?? "").split(",").map((o) => o.trim()).filter(Boolean);
   const endpoint = `${process.env.BETTER_AUTH_URL ?? "https://crm.example.com"}/api/formulaire-site`;
   const snippet = `<form action="${endpoint}" method="post">
@@ -85,6 +87,7 @@ async function Settings() {
         <TabsTrigger value="notes">Modèles de note</TabsTrigger>
         <TabsTrigger value="reservation">Réservation en ligne</TabsTrigger>
         <TabsTrigger value="emails">E-mails</TabsTrigger>
+        <TabsTrigger value="questionnaire">Questionnaire</TabsTrigger>
         <TabsTrigger value="agenda">Agenda</TabsTrigger>
       </TabsList>
 
@@ -247,6 +250,15 @@ async function Settings() {
             </ul>
           )}
         </section>
+      </TabsContent>
+
+      <TabsContent value="questionnaire" className="mt-6">
+        <Panel
+          title="Questionnaire de départ"
+          description="Envoyé au nouveau client dans l’e-mail de bienvenue, ou depuis sa fiche. Ses réponses arrivent dans sa fiche, onglet « Questionnaire », et vous êtes prévenu."
+        >
+          <QuestionnaireEditor questionnaire={questionnaire} />
+        </Panel>
       </TabsContent>
 
       <TabsContent value="agenda" className="mt-6 grid gap-6 lg:grid-cols-2">
