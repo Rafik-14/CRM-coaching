@@ -8,6 +8,8 @@ import { PageHeader } from "@/components/page-header";
 import { getSettingsOverview } from "@/server/queries/settings";
 import { initials } from "@/lib/format";
 import { getEmailOverview } from "@/server/queries/email";
+import { getCalendarFeed } from "@/server/queries/calendar-feed";
+import { CalendarFeedPanel } from "./calendar-feed-panel";
 import { formatDayTime } from "@/lib/format";
 import {
   BookingSettingsForm,
@@ -52,9 +54,10 @@ function Row({ label, value }: { label: React.ReactNode; value: React.ReactNode 
 }
 
 async function Settings() {
-  const [{ user, business, stages, packages, templates, booking }, email] = await Promise.all([
+  const [{ user, business, stages, packages, templates, booking }, email, feed] = await Promise.all([
     getSettingsOverview(),
     getEmailOverview(),
+    getCalendarFeed(),
   ]);
   const origins = (process.env.SITE_FORM_ORIGINS ?? "").split(",").map((o) => o.trim()).filter(Boolean);
   const endpoint = `${process.env.BETTER_AUTH_URL ?? "https://crm.example.com"}/api/formulaire-site`;
@@ -78,6 +81,7 @@ async function Settings() {
         <TabsTrigger value="notes">Modèles de note</TabsTrigger>
         <TabsTrigger value="reservation">Réservation en ligne</TabsTrigger>
         <TabsTrigger value="emails">E-mails</TabsTrigger>
+        <TabsTrigger value="agenda">Agenda</TabsTrigger>
       </TabsList>
 
       <TabsContent value="general" className="mt-6 grid gap-6 lg:grid-cols-2">
@@ -230,6 +234,53 @@ async function Settings() {
             </ul>
           )}
         </section>
+      </TabsContent>
+
+      <TabsContent value="agenda" className="mt-6 grid gap-6 lg:grid-cols-2">
+        <Panel
+          title="Vos séances dans votre agenda"
+          description="Un lien privé, en lecture seule, pour voir les séances du CRM dans Google Agenda, sur iPhone ou dans Outlook. Les séances sont ajoutées, déplacées ou retirées automatiquement."
+        >
+          <CalendarFeedPanel
+            feed={
+              feed && {
+                url: feed.url,
+                webcalUrl: feed.webcalUrl,
+                createdLabel: formatDayTime(feed.createdAt),
+                lastUsedLabel: feed.lastUsedAt ? formatDayTime(feed.lastUsedAt) : null,
+              }
+            }
+          />
+        </Panel>
+        <Panel title="Ajouter le lien à votre agenda" description="Une seule fois, sur l’appareil de votre choix : il se synchronise ensuite partout.">
+          <ol className="grid gap-4 text-sm">
+            <li>
+              <p className="font-medium">Google Agenda (ordinateur)</p>
+              <p className="text-muted-foreground">
+                Autres agendas, bouton « + » › « À partir de l’URL » › collez le lien › « Ajouter un agenda ». Il apparaît aussi
+                sur votre téléphone Android.
+              </p>
+            </li>
+            <li>
+              <p className="font-medium">iPhone</p>
+              <p className="text-muted-foreground">
+                Réglages › Calendrier › Comptes › Ajouter un compte › Autre › « Ajouter un calendrier avec abonnement » › collez le
+                lien.
+              </p>
+            </li>
+            <li>
+              <p className="font-medium">Outlook</p>
+              <p className="text-muted-foreground">
+                Calendrier › « Ajouter un calendrier » › « S’abonner à partir du web » › collez le lien.
+              </p>
+            </li>
+          </ol>
+          <p className="mt-4 rounded-xl bg-muted p-3 text-xs text-muted-foreground">
+            Les agendas relisent le lien à leur rythme : quelques minutes sur iPhone, jusqu’à plusieurs heures pour Google
+            Agenda. Le CRM reste la référence. Gardez ce lien pour vous : il montre vos rendez-vous (prénom et initiale,
+            horaire, lieu), jamais vos notes. En cas de doute, « Régénérer » le désactive aussitôt.
+          </p>
+        </Panel>
       </TabsContent>
 
       <TabsContent value="notes" className="mt-6">
