@@ -410,7 +410,13 @@ async function ContactDetail({
         {/* ------------------------------------------------ Documents */}
         {client && (
           <TabsContent value="documents" className="mt-4">
-            <DocumentsPanel contactId={contact.id} documents={client.documents} />
+            <DocumentsPanel
+              contactId={contact.id}
+              documents={client.documents}
+              sessions={contact.sessions
+                .filter((s) => s.status !== "cancelled")
+                .map((s) => ({ id: s.id, label: `${s.type} · ${formatDayTime(s.startsAt)}`, startsAt: s.startsAt.toISOString() }))}
+            />
           </TabsContent>
         )}
 

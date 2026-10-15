@@ -28,6 +28,11 @@ function contactFilters({ q, stage, segment }: ContactFilter) {
         ilike(contacts.email, like),
         ilike(contacts.phone, like),
         ilike(contacts.organization, like),
+        // Clients with a document (e.g. scanned notes) whose title or keywords match.
+        sql`${contacts.id} in (
+          select c.contact_id from documents d join clients c on c.id = d.client_id
+          where d.title ilike ${like} or array_to_string(d.keywords, ' ') ilike ${like}
+        )`,
       )!,
     );
   }

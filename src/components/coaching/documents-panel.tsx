@@ -1,7 +1,8 @@
 "use client";
 
 import { useActionState, useRef } from "react";
-import { Download, Eye, FileText, ImageIcon, Loader2, Lock, Trash2, Upload } from "lucide-react";
+import { Download, Eye, FileText, ImageIcon, Loader2, Lock, ScanLine, Trash2, Upload } from "lucide-react";
+import { ScanNotesDialog, type SessionOption } from "./scan-notes-dialog";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,12 +12,31 @@ import { ACCEPT_ATTRIBUTE, MAX_DOCUMENT_BYTES } from "@/lib/validations/document
 import { deleteDocument, uploadDocument } from "@/server/actions/documents";
 import type { ActionState } from "@/server/actions/coaching";
 
-type Doc = { id: string; fileName: string; mimeType: string; size: number; createdAt: Date };
+type Doc = {
+  id: string;
+  fileName: string;
+  mimeType: string;
+  size: number;
+  createdAt: Date;
+  title: string | null;
+  keywords: string[];
+  sessionId: string | null;
+  source: string;
+};
 
 const formatSize = (bytes: number) =>
   bytes < 1024 * 1024 ? `${Math.max(1, Math.round(bytes / 1024))} Ko` : `${(bytes / 1024 / 1024).toFixed(1)} Mo`;
 
-export function DocumentsPanel({ contactId, documents }: { contactId: string; documents: Doc[] }) {
+export function DocumentsPanel({
+  contactId,
+  documents,
+  sessions = [],
+}: {
+  contactId: string;
+  documents: Doc[];
+  sessions?: SessionOption[];
+}) {
+  const sessionLabel = new Map(sessions.map((s) => [s.id, s.label]));
   const formRef = useRef<HTMLFormElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [, formAction, pending] = useActionState<ActionState, FormData>(async (prev, fd) => {
@@ -36,9 +56,11 @@ export function DocumentsPanel({ contactId, documents }: { contactId: string; do
               <Lock className="size-4 text-muted-foreground" /> Documents privés
             </p>
             <p className="text-sm text-muted-foreground">
-              PDF, images, Word ou texte · {MAX_DOCUMENT_BYTES / 1024 / 1024} Mo maximum. Visibles par vous seul.
+              PDF, images, Word ou texte · {MAX_DOCUMENT_BYTES / 1024 / 1024} Mo maximum, ou vos notes manuscrites scannées. Visibles par vous seul.
             </p>
           </div>
+          <div className="flex flex-wrap gap-2">
+          <ScanNotesDialog contactId={contactId} sessions={sessions} />
           <form ref={formRef} action={formAction}>
             <input
               ref={inputRef}
@@ -62,6 +84,7 @@ export function DocumentsPanel({ contactId, documents }: { contactId: string; do
               {pending ? "Envoi…" : "Ajouter un document"}
             </Button>
           </form>
+          </div>
         </CardContent>
       </Card>
 
@@ -83,10 +106,27 @@ export function DocumentsPanel({ contactId, documents }: { contactId: string; do
                       <Icon className="size-4" />
                     </span>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium">{d.fileName}</p>
+                      <p className="flex items-center gap-2 truncate text-sm font-medium">
+                        {d.title ?? d.fileName}
+                        {d.source === "scan" && (
+                          <span className="inline-flex shrink-0 items-center gap-1 rounded-md bg-gold/15 px-1.5 py-0.5 text-[11px] font-medium text-foreground">
+                            <ScanLine className="size-3" /> Notes scannées
+                          </span>
+                        )}
+                      </p>
                       <p className="text-xs text-muted-foreground">
                         {formatSize(d.size)} · ajouté le {formatDate(d.createdAt)}
+                        {d.sessionId && sessionLabel.get(d.sessionId) ? ` · ${sessionLabel.get(d.sessionId)}` : ""}
                       </p>
+                      {d.keywords.length > 0 && (
+                        <p className="mt-1 flex flex-wrap gap-1">
+                          {d.keywords.map((k) => (
+                            <span key={k} className="rounded-md bg-muted px-1.5 py-0.5 text-[11px] text-muted-foreground">
+                              {k}
+                            </span>
+                          ))}
+                        </p>
+                      )}
                     </div>
                     {canPreview && (
                       <Button variant="ghost" size="icon" className="size-8" asChild>

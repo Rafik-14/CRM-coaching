@@ -46,6 +46,7 @@
 | 7 | Intake questionnaire | Editable form, public token link, answers in client file | Conditional logic |
 | 8 | Invoices & payments | PDF invoices, numbering, Stripe Checkout (card + TWINT), Swiss QR-bill, payment reminders | Accounting exports (bexio), subscriptions |
 | 9 | Dashboard additions | Revenue forecast, unpaid amounts, no-show trend, booking sources | — |
+| 10 | Handwritten notes scanner | Photos → straightened, cleaned pages → branded PDF in the client file (title, keywords, session) | Handwriting → typed text (OCR) |
 | — | Two-way calendar sync | Optional stretch (§14) | — |
 
 ---
@@ -332,6 +333,26 @@ Optional DB guard against double booking: a PostgreSQL exclusion constraint on `
 
 ---
 
+## 13 bis. Feature 10 — Handwritten notes scanner (« Scanner des notes »)
+
+**Goal:** Jérémy photographs his handwritten session notes; the CRM turns them into a clean, branded PDF in the client file.
+
+- **Capture:** « Scanner des notes » in the client file (Documents) — phone camera or photos from the gallery, several pages,
+  reorder / remove before sending. Photos are reduced in the browser (≈ 2 000 px) so a 12-page scan stays under the upload limit.
+- **Processing on the server only** (nothing sent to a third party): OpenCV (WebAssembly build, no native compilation)
+  finds the sheet's edges and straightens it (perspective); background evened out to white (shadows removed), ink kept sharp,
+  cropped and compressed with sharp.
+- **PDF** (pdf-lib): cover header with the JG® logo, client name, date and linked session, then the cleaned pages.
+  Stored as a private document with a title and keywords (« Séance 3 – posture »), linked to the session if chosen.
+- **Not included:** handwriting recognition (the PDF shows the handwriting, cleaned up).
+- **Data model:** `documents` gets `title`, `keywords`, `session_id`, `source` (`upload` / `scan`).
+
+**Acceptance criteria**
+- A photo taken at an angle comes out straight and cropped to the sheet; a shadowed page comes out on a white background.
+- A few seconds per page on the server, no GPU; the PDF opens from the client file and is found by its title / keywords.
+
+---
+
 ## 14. Optional — Two-way calendar sync
 
 Only if Jérémie wants the booking page to respect his **personal** calendar.
@@ -406,6 +427,7 @@ SMS_PROVIDER_API_KEY=           # optional SMS reminders
 | **M5 — Intake questionnaire** | Feature 7 | 2–3 days | Client fills the form, answers in the file |
 | **M6 — Invoices & payments** | Feature 8 | 5–8 days | Invoice PDF + Stripe test payment marks it paid |
 | **M7 — Dashboard & polish** | Feature 9, tests, docs | 2–3 days | New dashboard widgets, test suite green |
+| **Scanner** (done after M1, needs nothing from the client) | Feature 10 | 2–3 days | Photos of notes → clean PDF in the client file |
 | **Total** | | **≈ 3 to 5 weeks** | |
 
 Each milestone: migration + feature + tests → staging deploy → short demo / feedback.

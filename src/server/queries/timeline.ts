@@ -26,6 +26,7 @@ const actionLabels: Record<string, { title: string; kind: TimelineEvent["kind"] 
   case_study_saved: { title: "Étude de cas mise à jour", kind: "update" },
   goal_created: { title: "Objectif ajouté", kind: "update" },
   document_added: { title: "Document ajouté", kind: "update" },
+  notes_scanned: { title: "Notes manuscrites scannées", kind: "update" },
   created_from_site: { title: "Contact créé via le formulaire du site", kind: "created" },
   site_form_message: { title: "Nouveau message via le site", kind: "update" },
   echange_booked_online: { title: "Échange stratégique réservé en ligne", kind: "session_planned" },

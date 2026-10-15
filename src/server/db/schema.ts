@@ -321,9 +321,17 @@ export const documents = pgTable(
     mimeType: text("mime_type").notNull(),
     size: integer("size").notNull(),
     uploadedBy: text("uploaded_by").references(() => user.id, { onDelete: "set null" }),
+    /** Display name chosen by the coach (« Séance 3 – posture »); falls back to fileName. */
+    title: text("title"),
+    /** Search words (« posture », « pitch »). */
+    keywords: text("keywords").array().notNull().default([]),
+    /** Session the notes belong to (scanned notes). */
+    sessionId: uuid("session_id").references(() => coachingSessions.id, { onDelete: "set null" }),
+    /** upload = file added as is · scan = notes photographed and cleaned by the scanner. */
+    source: text("source").notNull().default("upload"),
     ...timestamps,
   },
-  (t) => [index("documents_client_idx").on(t.clientId)],
+  (t) => [index("documents_client_idx").on(t.clientId), index("documents_session_idx").on(t.sessionId)],
 );
 
 export const activityLog = pgTable(
@@ -433,6 +441,7 @@ export const clientPackagesRelations = relations(clientPackages, ({ one }) => ({
 
 export const documentsRelations = relations(documents, ({ one }) => ({
   client: one(clients, { fields: [documents.clientId], references: [clients.id] }),
+  session: one(coachingSessions, { fields: [documents.sessionId], references: [coachingSessions.id] }),
 }));
 
 export const packagesRelations = relations(packages, ({ one }) => ({
