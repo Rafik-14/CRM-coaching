@@ -22,6 +22,8 @@ export type BookingSettings = {
   location: (typeof SESSION_LOCATIONS)[number];
   /** Visitors can cancel or move from the /rdv link until this many hours before the appointment. */
   cancellationHours: number;
+  /** Length of a coaching session booked by a client from their personal link. */
+  sessionMinutes: number;
 };
 
 const WORKDAY: TimeRange[] = [
@@ -38,6 +40,7 @@ export const DEFAULT_BOOKING: BookingSettings = {
   horizonDays: 30,
   location: "Visio",
   cancellationHours: 12,
+  sessionMinutes: 60,
 };
 
 /** Monday first, as in France / Switzerland. */
@@ -53,6 +56,7 @@ export const WEEKDAYS = [
 
 export const SLOT_LENGTHS = [20, 30, 45, 60] as const;
 export const BUFFERS = [0, 5, 10, 15, 30] as const;
+export const SESSION_LENGTHS = [45, 60, 90] as const;
 
 const toMinutes = (hhmm: string) => {
   const [h, m] = hhmm.split(":").map(Number);
@@ -114,6 +118,10 @@ export const bookingSettingsSchema = z
       (v) => (v === undefined || v === "" ? DEFAULT_BOOKING.cancellationHours : v),
       z.coerce.number().int("Nombre entier").min(0).max(24 * 7, "7 jours maximum"),
     ),
+    sessionMinutes: z.preprocess(
+      (v) => (v === undefined || v === "" ? DEFAULT_BOOKING.sessionMinutes : v),
+      z.coerce.number().refine((n) => (SESSION_LENGTHS as readonly number[]).includes(n), "Durée invalide"),
+    ),
   })
   .transform(({ day0, day1, day2, day3, day4, day5, day6, ...rest }) => ({
     ...rest,
@@ -136,6 +144,7 @@ export function normalizeBookingSettings(value: unknown): BookingSettings {
     horizonDays: v.horizonDays ?? DEFAULT_BOOKING.horizonDays,
     location: (SESSION_LOCATIONS as readonly string[]).includes(v.location ?? "") ? v.location! : DEFAULT_BOOKING.location,
     cancellationHours: v.cancellationHours ?? DEFAULT_BOOKING.cancellationHours,
+    sessionMinutes: v.sessionMinutes ?? DEFAULT_BOOKING.sessionMinutes,
   };
 }
 

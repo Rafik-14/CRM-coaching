@@ -23,21 +23,28 @@ const whenFmt = new Intl.DateTimeFormat("fr-FR", {
 const timeFmt = new Intl.DateTimeFormat("fr-FR", { timeZone: APP_TIME_ZONE, hour: "2-digit", minute: "2-digit" });
 
 /** Private page linked from the confirmation and reminder e-mails: see, move or cancel one appointment. */
-export default function ManageBookingPage({ params }: PageProps<"/rdv/[token]">) {
+export default function ManageBookingPage({ params, searchParams }: PageProps<"/rdv/[token]">) {
   return (
     <Section className="pt-10 md:pt-16 lg:pt-20">
       <Container className="max-w-[860px]">
         <Suspense fallback={<div className="h-80 animate-pulse rounded-[12px] bg-ivory" />}>
-          <Manage params={params} />
+          <Manage params={params} searchParams={searchParams} />
         </Suspense>
       </Container>
     </Section>
   );
 }
 
-async function Manage({ params }: { params: PageProps<"/rdv/[token]">["params"] }) {
+async function Manage({
+  params,
+  searchParams,
+}: {
+  params: PageProps<"/rdv/[token]">["params"];
+  searchParams: PageProps<"/rdv/[token]">["searchParams"];
+}) {
   await connection();
-  const { token } = await params;
+  const [{ token }, sp] = await Promise.all([params, searchParams]);
+  const justBooked = sp.nouveau === "1";
   const booking = await getManagedBooking(token);
 
   if (!booking) {
@@ -65,9 +72,19 @@ async function Manage({ params }: { params: PageProps<"/rdv/[token]">["params"] 
       <Eyebrow>{session.type}</Eyebrow>
       <GoldLine className="mt-4" />
       <h1 className="jg-h1 mt-6">
-        {cancelled ? "Ce rendez-vous est annulé." : isPast ? "Ce rendez-vous est passé." : `Bonjour ${session.contact.firstName},`}
+        {cancelled
+          ? "Ce rendez-vous est annulé."
+          : isPast
+            ? "Ce rendez-vous est passé."
+            : justBooked
+              ? `Merci ${session.contact.firstName}, c’est réservé.`
+              : `Bonjour ${session.contact.firstName},`}
       </h1>
-      {!cancelled && !isPast && <p className="mt-4 font-heading text-[1.25rem] leading-snug font-medium text-navy">Voici votre rendez-vous.</p>}
+      {!cancelled && !isPast && (
+        <p className="mt-4 font-heading text-[1.25rem] leading-snug font-medium text-navy">
+          {justBooked ? "Vous recevez une confirmation par e-mail, avec le rendez-vous pour votre agenda." : "Voici votre rendez-vous."}
+        </p>
+      )}
 
       <dl
         className={`mt-8 grid gap-4 rounded-[12px] border border-[var(--jg-light-gray)] bg-ivory p-7 md:grid-cols-3 md:p-9 ${cancelled ? "opacity-60" : ""}`}

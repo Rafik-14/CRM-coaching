@@ -199,6 +199,8 @@ export const coachingSessions = pgTable(
     /** Reminder e-mails already sent for the current date (cleared when the session moves). */
     reminder24hSentAt: timestamp("reminder_24h_sent_at", { withTimezone: true }),
     reminder1hSentAt: timestamp("reminder_1h_sent_at", { withTimezone: true }),
+    /** coach = planned in the CRM · online = booked by the person (site, client link). */
+    bookedVia: text("booked_via").notNull().default("coach"),
     ...timestamps,
   },
   (t) => [

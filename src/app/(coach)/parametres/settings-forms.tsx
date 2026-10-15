@@ -23,7 +23,7 @@ import { cn } from "@/lib/utils";
 import { formatMoney } from "@/lib/format";
 import { STAGE_COLORS } from "@/lib/validations/phase1";
 import { SESSION_LOCATIONS, SESSION_TYPES } from "@/lib/validations/coaching";
-import { BUFFERS, SLOT_LENGTHS, WEEKDAYS, formatRanges, type BookingSettings } from "@/lib/booking";
+import { BUFFERS, SESSION_LENGTHS, SLOT_LENGTHS, WEEKDAYS, formatRanges, type BookingSettings } from "@/lib/booking";
 import { saveBookingSettings } from "@/server/actions/booking";
 import { saveEmailSettings, sendTestEmail } from "@/server/actions/email";
 import {
@@ -560,7 +560,7 @@ export function BookingSettingsForm({ settings }: { settings: BookingSettings })
     <form action={formAction} className="grid gap-6">
       <label className="flex items-center gap-3 text-sm font-medium">
         <input type="checkbox" name="enabled" defaultChecked={settings.enabled} className="size-4 accent-primary" />
-        Réservation en ligne ouverte sur le site
+        Réservation en ligne ouverte (site et liens clients)
       </label>
 
       <fieldset className="grid gap-3">
@@ -595,6 +595,20 @@ export function BookingSettingsForm({ settings }: { settings: BookingSettings })
             </SelectTrigger>
             <SelectContent>
               {SLOT_LENGTHS.map((n) => (
+                <SelectItem key={n} value={String(n)}>
+                  {n} minutes
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </FormField>
+        <FormField label="Durée d'une séance client" htmlFor="sessionMinutes" hint="Séances réservées par vos clients depuis leur lien personnel.">
+          <Select name="sessionMinutes" defaultValue={String(settings.sessionMinutes)}>
+            <SelectTrigger id="sessionMinutes" className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {SESSION_LENGTHS.map((n) => (
                 <SelectItem key={n} value={String(n)}>
                   {n} minutes
                 </SelectItem>

@@ -200,6 +200,89 @@ export function sessionReminder(r: {
   };
 }
 
+// ------------------------------------------------------------------ client booking link
+
+export function clientBookingLink(c: { firstName: string; url: string; sessionMinutes: number }): Mail {
+  return {
+    subject: "Votre lien pour réserver vos séances",
+    content: {
+      preheader: "Choisissez vous-même le créneau de votre prochaine séance.",
+      heading: `Bonjour ${c.firstName},`,
+      paragraphs: [
+        `Voici votre lien personnel pour réserver vos prochaines séances (${c.sessionMinutes} minutes) au créneau qui vous convient, directement dans mon agenda.`,
+        "Gardez-le précieusement : il vous est réservé. Vous recevrez une confirmation et un rappel avant chaque séance.",
+      ],
+      cta: { label: "Réserver une séance", url: c.url },
+    },
+  };
+}
+
+export function clientSessionConfirmation(b: {
+  sessionId: string;
+  firstName: string;
+  startsAt: Date;
+  durationMin: number;
+  location: string | null;
+  manageUrl: string;
+  cancellationHours: number;
+}): Mail {
+  const when = capitalize(dateFmt.format(b.startsAt));
+  const time = timeFmt.format(b.startsAt);
+  return {
+    subject: `Votre séance du ${dateFmt.format(b.startsAt)} à ${time}`,
+    content: {
+      preheader: `C’est réservé : ${when} à ${time}.`,
+      heading: `Merci ${b.firstName}, c’est réservé.`,
+      paragraphs: ["Votre séance est bien enregistrée. Le rendez-vous est joint à cet e-mail pour l’ajouter à votre agenda."],
+      details: [
+        ["Date", when],
+        ["Heure (Paris / Genève)", time],
+        ["Durée", `${b.durationMin} minutes`],
+        ...(b.location ? ([["Lieu", b.location]] as [string, string][]) : []),
+      ],
+      cta: { label: "Déplacer ou annuler", url: b.manageUrl },
+      note: `Un empêchement ? Vous pouvez déplacer ou annuler depuis ce lien jusqu’à ${b.cancellationHours} h avant la séance.`,
+    },
+    attachments: [
+      {
+        filename: "seance.ics",
+        contentType: "text/calendar; charset=utf-8; method=PUBLISH",
+        content: icsEvent({
+          uid: `${b.sessionId}@jeremygalea`,
+          start: b.startsAt,
+          durationMin: b.durationMin,
+          summary: "Séance avec Jérémy Galéa",
+          location: b.location,
+        }),
+      },
+    ],
+  };
+}
+
+export function coachNewClientBooking(b: {
+  contactId: string;
+  name: string;
+  startsAt: Date;
+  durationMin: number;
+  message: string | null;
+}): Mail {
+  const when = `${capitalize(dateFmt.format(b.startsAt))} à ${timeFmt.format(b.startsAt)}`;
+  return {
+    subject: `Séance réservée en ligne : ${b.name} — ${when}`,
+    content: {
+      preheader: `${b.name} a réservé une séance pour le ${when}.`,
+      heading: "Une séance a été réservée en ligne",
+      paragraphs: [
+        `${b.name} a réservé une séance depuis son lien personnel. Elle est dans le calendrier du CRM.`,
+        ...(b.message ? [`Son message : ${b.message}`] : []),
+      ],
+      details: [["Séance", `${when} · ${b.durationMin} min`]],
+      cta: { label: "Ouvrir la fiche", url: `${appUrl()}/contacts/${b.contactId}` },
+      signature: ["CRM · Méthode JG®"],
+    },
+  };
+}
+
 // ------------------------------------------------------------------ moved / cancelled from /rdv
 
 export function bookingMoved(b: {

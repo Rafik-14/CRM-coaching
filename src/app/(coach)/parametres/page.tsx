@@ -152,8 +152,8 @@ async function Settings() {
 
       <TabsContent value="reservation" className="mt-6 grid gap-6">
         <Panel
-          title="Réservation en ligne de l'échange stratégique"
-          description="Vos disponibilités pour la page « Réserver un échange stratégique » du site. Les créneaux déjà pris par une séance prévue ne sont jamais proposés. Une réservation crée le contact (ou le retrouve par e-mail), la séance, une tâche, et fait passer le prospect à « Échange stratégique planifié »."
+          title="Réservation en ligne"
+          description="Vos disponibilités pour la page « Réserver un échange stratégique » du site et pour les liens personnels de vos clients (fiche client › Réservation en ligne). Les créneaux déjà pris par une séance prévue ne sont jamais proposés. Une réservation d'échange crée le contact (ou le retrouve par e-mail), la séance, une tâche, et fait passer le prospect à « Échange stratégique planifié »."
         >
           <BookingSettingsForm settings={booking} />
         </Panel>

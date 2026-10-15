@@ -19,6 +19,8 @@ import { GoalsPanel } from "@/components/coaching/goals-panel";
 import { PackagesPanel } from "@/components/coaching/packages-panel";
 import { DocumentsPanel } from "@/components/coaching/documents-panel";
 import { DeleteTaskButton, TaskDialog } from "@/components/coaching/task-dialog";
+import { ClientBookingLink } from "@/components/coaching/client-booking-link";
+import { getClientBookingLink } from "@/server/client-booking";
 import { getContact, getContactTimeline, getStages, listPartnerOptions } from "@/server/queries/contacts";
 import { getBusinessSettings } from "@/server/business";
 import { countryLabel, segmentLabel, subSegmentLabel } from "@/lib/jg";
@@ -56,7 +58,7 @@ async function ContactDetail({
 }) {
   const [{ id }, sp] = await Promise.all([params, searchParams]);
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
-  const [contact, stages, timeline, templates, packageOptions, partners, business] = await Promise.all([
+  const [contact, stages, timeline, templates, packageOptions, partners, business, bookingLink] = await Promise.all([
     getContact(id),
     getStages(),
     getContactTimeline(id),
@@ -64,6 +66,7 @@ async function ContactDetail({
     getActivePackages(),
     listPartnerOptions(),
     getBusinessSettings(),
+    getClientBookingLink(id),
   ]);
   if (!contact) notFound();
   const tab = TABS.find((t) => t === sp.onglet) ?? "apercu";
@@ -307,6 +310,22 @@ async function ContactDetail({
                     currency={contact.currency}
                     clientPackages={client.packages}
                     options={packageOptions}
+                  />
+                </CardContent>
+              </Card>
+            )}
+            {active && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Réservation en ligne</CardTitle>
+                  <CardDescription>Lien personnel pour réserver ses séances</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ClientBookingLink
+                    contactId={contact.id}
+                    firstName={contact.firstName}
+                    hasEmail={!!contact.email}
+                    link={bookingLink && { url: bookingLink.url, lastUsedLabel: bookingLink.lastUsedAt ? formatDayTime(bookingLink.lastUsedAt) : null }}
                   />
                 </CardContent>
               </Card>

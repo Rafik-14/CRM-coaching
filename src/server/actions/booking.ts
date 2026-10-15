@@ -71,6 +71,7 @@ export async function bookEchange(_prev: SiteFormState, formData: FormData): Pro
         durationMin: config.slotMinutes,
         type: DISCOVERY_TYPE,
         status: "planned",
+        bookedVia: "online",
         location: config.location,
         agenda: ["Réservé en ligne depuis le site.", extra].filter(Boolean).join("\n"),
       })
