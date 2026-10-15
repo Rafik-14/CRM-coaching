@@ -3,7 +3,7 @@ import { asc, desc, eq } from "drizzle-orm";
 import { db } from "@/server/db";
 import { noteTemplates, packages, pipelineStages, settings, tasks } from "@/server/db/schema";
 import { requireCoach } from "@/server/dal";
-import { getBookingSettings } from "@/server/booking";
+import { getBookingSettings, getUpcomingExceptions, todayKey } from "@/server/booking";
 
 export async function listTasks() {
   await requireCoach();
@@ -15,7 +15,7 @@ export async function listTasks() {
 
 export async function getSettingsOverview() {
   const user = await requireCoach();
-  const [stages, pkgs, templates, business, booking] = await Promise.all([
+  const [stages, pkgs, templates, business, booking, exceptions] = await Promise.all([
     db.query.pipelineStages.findMany({ orderBy: asc(pipelineStages.position) }),
     db.query.packages.findMany({
       orderBy: [desc(packages.active), asc(packages.position), asc(packages.sessionsCount)],
@@ -23,6 +23,7 @@ export async function getSettingsOverview() {
     db.query.noteTemplates.findMany({ orderBy: [desc(noteTemplates.isDefault), asc(noteTemplates.name)] }),
     db.query.settings.findFirst({ where: eq(settings.key, "business") }),
     getBookingSettings(),
+    getUpcomingExceptions(),
   ]);
   const biz = (business?.value ?? {}) as { name?: string; currency?: string };
   return {
@@ -32,6 +33,8 @@ export async function getSettingsOverview() {
     packages: pkgs,
     templates,
     booking,
+    exceptions,
+    today: todayKey(),
   };
 }
 

@@ -10,6 +10,7 @@ import { initials } from "@/lib/format";
 import { getEmailOverview } from "@/server/queries/email";
 import { getCalendarFeed } from "@/server/queries/calendar-feed";
 import { CalendarFeedPanel } from "./calendar-feed-panel";
+import { AvailabilityExceptions } from "./availability-exceptions";
 import { formatDayTime } from "@/lib/format";
 import {
   BookingSettingsForm,
@@ -54,7 +55,7 @@ function Row({ label, value }: { label: React.ReactNode; value: React.ReactNode 
 }
 
 async function Settings() {
-  const [{ user, business, stages, packages, templates, booking }, email, feed] = await Promise.all([
+  const [{ user, business, stages, packages, templates, booking, exceptions, today }, email, feed] = await Promise.all([
     getSettingsOverview(),
     getEmailOverview(),
     getCalendarFeed(),
@@ -149,12 +150,18 @@ async function Settings() {
         </Panel>
       </TabsContent>
 
-      <TabsContent value="reservation" className="mt-6">
+      <TabsContent value="reservation" className="mt-6 grid gap-6">
         <Panel
           title="Réservation en ligne de l'échange stratégique"
           description="Vos disponibilités pour la page « Réserver un échange stratégique » du site. Les créneaux déjà pris par une séance prévue ne sont jamais proposés. Une réservation crée le contact (ou le retrouve par e-mail), la séance, une tâche, et fait passer le prospect à « Échange stratégique planifié »."
         >
           <BookingSettingsForm settings={booking} />
+        </Panel>
+        <Panel
+          title="Absences et horaires exceptionnels"
+          description="Vos disponibilités changent selon les situations : bloquez une journée, quelques jours ou quelques heures, ou ouvrez des horaires en plus. Modifiable à tout moment, le site se met à jour aussitôt. Les séances déjà prévues ne sont jamais annulées automatiquement."
+        >
+          <AvailabilityExceptions exceptions={exceptions} today={today} />
         </Panel>
       </TabsContent>
 

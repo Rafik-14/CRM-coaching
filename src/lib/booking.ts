@@ -174,34 +174,121 @@ export function zonedTimeToUtc(year: number, month: number, day: number, minutes
 export type Interval = { start: Date; end: Date };
 export type AvailableDay = { date: string; slots: string[] };
 
+/** One-off change to the weekly hours: days off / blocked hours, or extra opening hours (dates inclusive). */
+export type AvailabilityException = {
+  kind: "blocked" | "extra";
+  startsOn: string;
+  endsOn: string;
+  /** Both null = the whole day. */
+  startTime: string | null;
+  endTime: string | null;
+};
+
+/** Longer appointments (client sessions) start every 30 minutes; short ones keep « length + pause ». */
+const MAX_STEP = 30;
+
 /**
- * Free slots from the weekly pattern, minus busy time (planned sessions widened by the buffer),
- * minus the minimum notice, up to the horizon. Days and times are in `timeZone`; slots are ISO instants.
+ * Free slots from the weekly pattern plus extra hours, minus days off / blocked hours, minus busy time
+ * (planned sessions widened by the buffer), minus the minimum notice, up to the horizon.
+ * Days and times are in `timeZone`; slots are ISO instants.
  */
-export function computeAvailability(settings: BookingSettings, busy: Interval[], now: Date, timeZone: string): AvailableDay[] {
+export function computeAvailability(
+  settings: BookingSettings,
+  busy: Interval[],
+  now: Date,
+  timeZone: string,
+  exceptions: AvailabilityException[] = [],
+): AvailableDay[] {
   if (!settings.enabled) return [];
   const earliest = now.getTime() + settings.minNoticeHours * 3_600_000;
   const buffer = settings.bufferMinutes * 60_000;
   const length = settings.slotMinutes * 60_000;
-  const step = settings.slotMinutes + settings.bufferMinutes;
-  const blocked = busy.map((b) => ({ start: b.start.getTime() - buffer, end: b.end.getTime() + buffer }));
+  const step = Math.min(settings.slotMinutes + settings.bufferMinutes, MAX_STEP);
+  const taken = busy.map((b) => ({ start: b.start.getTime() - buffer, end: b.end.getTime() + buffer }));
 
   const today = zonedParts(now.getTime(), timeZone);
   const days: AvailableDay[] = [];
   for (let offset = 0; offset <= settings.horizonDays; offset++) {
     const date = new Date(Date.UTC(today.year, today.month - 1, today.day + offset));
     const [y, m, d] = [date.getUTCFullYear(), date.getUTCMonth() + 1, date.getUTCDate()];
-    const slots: string[] = [];
-    for (const range of settings.weekly[date.getUTCDay()] ?? []) {
+    const key = `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+    const todays = exceptions.filter((e) => e.startsOn <= key && key <= e.endsOn);
+    if (todays.some((e) => e.kind === "blocked" && !e.startTime)) continue; // day off
+
+    const at = (hhmm: string) => zonedTimeToUtc(y, m, d, toMinutes(hhmm), timeZone).getTime();
+    const blocked = [
+      ...taken,
+      ...todays
+        .filter((e) => e.kind === "blocked" && e.startTime && e.endTime)
+        .map((e) => ({ start: at(e.startTime!), end: at(e.endTime!) })),
+    ];
+    const ranges = [
+      ...(settings.weekly[date.getUTCDay()] ?? []),
+      ...todays.filter((e) => e.kind === "extra" && e.startTime && e.endTime).map((e) => ({ start: e.startTime!, end: e.endTime! })),
+    ];
+
+    const slots = new Set<number>();
+    for (const range of ranges) {
       for (let t = toMinutes(range.start); t + settings.slotMinutes <= toMinutes(range.end); t += step) {
         const start = zonedTimeToUtc(y, m, d, t, timeZone).getTime();
         if (start < earliest) continue;
         const end = start + length;
         if (blocked.some((b) => start < b.end && end > b.start)) continue;
-        slots.push(new Date(start).toISOString());
+        slots.add(start);
       }
     }
-    if (slots.length) days.push({ date: `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`, slots });
+    if (slots.size) days.push({ date: key, slots: [...slots].sort((a, b) => a - b).map((t) => new Date(t).toISOString()) });
   }
   return days;
 }
+
+// ------------------------------------------------------------------ days off / extra hours (Paramètres)
+
+const hhmm = z.union([z.literal(""), z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Heure invalide")]).optional();
+
+/** « Ajouter une absence ou des horaires en plus »: dates inclusive, whole day or a time range. */
+export const exceptionFormSchema = z
+  .object({
+    kind: z.enum(["blocked", "extra"]),
+    startsOn: z.iso.date("Choisissez une date."),
+    endsOn: z.union([z.literal(""), z.iso.date("Date invalide")]).optional(),
+    allDay: checkbox,
+    startTime: hhmm,
+    endTime: hhmm,
+    note: z
+      .string()
+      .trim()
+      .max(120, "120 caractères maximum")
+      .optional()
+      .transform((v) => v || null),
+  })
+  .transform((v, ctx) => {
+    const endsOn = v.endsOn || v.startsOn;
+    if (endsOn < v.startsOn) {
+      ctx.addIssue({ code: "custom", path: ["endsOn"], message: "La date de fin doit suivre la date de début." });
+      return z.NEVER;
+    }
+    if (Date.parse(endsOn) - Date.parse(v.startsOn) > 366 * 86_400_000) {
+      ctx.addIssue({ code: "custom", path: ["endsOn"], message: "Un an maximum." });
+      return z.NEVER;
+    }
+    const wholeDay = v.kind === "blocked" && v.allDay;
+    if (!wholeDay) {
+      if (!v.startTime || !v.endTime) {
+        ctx.addIssue({ code: "custom", path: ["startTime"], message: "Indiquez l’heure de début et de fin." });
+        return z.NEVER;
+      }
+      if (toMinutes(v.endTime) <= toMinutes(v.startTime)) {
+        ctx.addIssue({ code: "custom", path: ["endTime"], message: "L’heure de fin doit suivre l’heure de début." });
+        return z.NEVER;
+      }
+    }
+    return {
+      kind: v.kind,
+      startsOn: v.startsOn,
+      endsOn,
+      startTime: wholeDay ? null : v.startTime!,
+      endTime: wholeDay ? null : v.endTime!,
+      note: v.note,
+    };
+  });

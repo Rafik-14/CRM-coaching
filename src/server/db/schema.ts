@@ -375,6 +375,29 @@ export const emailLog = pgTable(
 );
 
 /**
+ * One-off changes to the weekly availability, added whenever plans change (Paramètres › Réservation en ligne):
+ * days off / blocked hours, or extra opening hours. Dates are calendar days in the coach's time zone.
+ */
+export const availabilityExceptions = pgTable(
+  "availability_exceptions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    /** blocked = not available · extra = available on top of the weekly hours */
+    kind: text("kind").notNull().default("blocked"),
+    /** YYYY-MM-DD, inclusive. */
+    startsOn: text("starts_on").notNull(),
+    endsOn: text("ends_on").notNull(),
+    /** HH:MM; both empty = the whole day (blocked only). */
+    startTime: text("start_time"),
+    endTime: text("end_time"),
+    /** Private note (« Vacances », « Formation »…), never shown on the site. */
+    note: text("note"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("availability_exceptions_ends_idx").on(t.endsOn)],
+);
+
+/**
  * Private links (no login): manage a booking (/rdv/…), the coach's calendar feed, a client's booking link.
  * Only the SHA-256 of the token is stored; the token itself is an HMAC of the row id with the server secret,
  * so the CRM can show a link again but a copy of the database alone opens nothing.

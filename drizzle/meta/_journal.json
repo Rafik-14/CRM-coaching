@@ -57,6 +57,13 @@
       "when": 1792063688808,
       "tag": "0007_session_reminders",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1792065372716,
+      "tag": "0008_availability_exceptions",
+      "breakpoints": true
     }
   ]
 }

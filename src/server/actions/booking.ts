@@ -3,19 +3,19 @@
 import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
 import { after } from "next/server";
-import { sql } from "drizzle-orm";
+import { and, eq, gte, lt, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/server/db";
-import { activityLog, coachingSessions, settings, tasks } from "@/server/db/schema";
+import { activityLog, availabilityExceptions, coachingSessions, settings, tasks } from "@/server/db/schema";
 import { requireCoach } from "@/server/dal";
 import { advanceProspectAfterEchange } from "@/server/pipeline-automation";
 import { clientIp, rateLimited } from "@/server/rate-limit";
 import { findOrCreateSiteContact } from "@/server/site-leads";
 import { BOOKING_SETTINGS_KEY, bookingToken, getAvailability, getBusyIntervals } from "@/server/booking";
-import { bookingSettingsSchema } from "@/lib/booking";
+import { bookingSettingsSchema, exceptionFormSchema, zonedTimeToUtc } from "@/lib/booking";
 import { bookingFormSchema, formValues, type SiteFormState } from "@/lib/validations/site";
 import { DISCOVERY_TYPE } from "@/lib/validations/coaching";
-import { formatDayTime } from "@/lib/format";
+import { APP_TIME_ZONE, formatDayTime } from "@/lib/format";
 import { sendEmail } from "@/server/email/send";
 import { bookingConfirmation, coachNewBooking, coachNotificationAddress } from "@/server/email/messages";
 import type { ActionState } from "./coaching";
@@ -141,4 +141,64 @@ export async function saveBookingSettings(_prev: ActionState, formData: FormData
     .onConflictDoUpdate({ target: settings.key, set: { value: sql`excluded.value` } });
   refresh();
   return { ok: true };
+}
+
+/** Days off / blocked hours or extra opening hours, added whenever plans change. */
+export async function addAvailabilityException(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const user = await requireCoach();
+  const parsed = exceptionFormSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) {
+    return { fieldErrors: z.flattenError(parsed.error).fieldErrors as Record<string, string[]> };
+  }
+  const v = parsed.data;
+  await db.insert(availabilityExceptions).values(v);
+  await db.insert(activityLog).values({ actorId: user.id, entity: "settings", entityId: "booking", action: `availability_${v.kind}_added` });
+  refresh();
+
+  if (v.kind === "extra") return { ok: true, message: "Horaires ajoutés : ils sont proposés sur le site." };
+  // Sessions already planned in that period stay as they are: tell the coach so he can move them.
+  const conflicts = await plannedSessionsDuring(v);
+  return {
+    ok: true,
+    message: conflicts
+      ? `Absence enregistrée. Attention : ${conflicts} séance${conflicts > 1 ? "s" : ""} déjà prévue${conflicts > 1 ? "s" : ""} pendant cette période (à déplacer depuis le calendrier).`
+      : "Absence enregistrée : plus aucun créneau proposé pendant cette période.",
+  };
+}
+
+export async function deleteAvailabilityException(id: string): Promise<ActionState> {
+  await requireCoach();
+  await db.delete(availabilityExceptions).where(eq(availabilityExceptions.id, z.uuid().parse(id)));
+  refresh();
+  return { ok: true };
+}
+
+/** Planned sessions overlapping a blocked period (every day from startsOn to endsOn, whole day or the hours). */
+async function plannedSessionsDuring(v: { startsOn: string; endsOn: string; startTime: string | null; endTime: string | null }) {
+  const [y1, m1, d1] = v.startsOn.split("-").map(Number);
+  const [y2, m2, d2] = v.endsOn.split("-").map(Number);
+  const minutes = (t: string) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5));
+  const windows: { start: number; end: number }[] = [];
+  for (let day = new Date(Date.UTC(y1, m1 - 1, d1)); day <= new Date(Date.UTC(y2, m2 - 1, d2)); day = new Date(day.getTime() + 86_400_000)) {
+    const [y, m, d] = [day.getUTCFullYear(), day.getUTCMonth() + 1, day.getUTCDate()];
+    windows.push({
+      start: zonedTimeToUtc(y, m, d, v.startTime ? minutes(v.startTime) : 0, APP_TIME_ZONE).getTime(),
+      end: zonedTimeToUtc(y, m, d, v.endTime ? minutes(v.endTime) : 24 * 60, APP_TIME_ZONE).getTime(),
+    });
+  }
+  const sessions = await db
+    .select({ startsAt: coachingSessions.startsAt, durationMin: coachingSessions.durationMin })
+    .from(coachingSessions)
+    .where(
+      and(
+        eq(coachingSessions.status, "planned"),
+        gte(coachingSessions.startsAt, new Date(windows[0].start - 24 * 3_600_000)),
+        lt(coachingSessions.startsAt, new Date(windows[windows.length - 1].end)),
+      ),
+    );
+  return sessions.filter((s) => {
+    const start = s.startsAt.getTime();
+    const end = start + s.durationMin * 60_000;
+    return windows.some((w) => start < w.end && end > w.start);
+  }).length;
 }
