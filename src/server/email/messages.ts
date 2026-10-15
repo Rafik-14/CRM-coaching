@@ -57,7 +57,9 @@ export function bookingConfirmation(b: {
   startsAt: Date;
   durationMin: number;
   location: string | null;
-  token: string;
+  /** /rdv/<token>: move or cancel. */
+  manageUrl: string;
+  cancellationHours: number;
 }): Mail {
   const when = capitalize(dateFmt.format(b.startsAt));
   const time = timeFmt.format(b.startsAt);
@@ -76,8 +78,8 @@ export function bookingConfirmation(b: {
         ["Durée", `${b.durationMin} minutes`],
         ...(b.location ? ([["Lieu", b.location]] as [string, string][]) : []),
       ],
-      cta: { label: "Voir ma réservation", url: `${appUrl()}/reserver/confirmation?r=${encodeURIComponent(b.token)}` },
-      note: "Un empêchement ? Répondez simplement à cet e-mail.",
+      cta: { label: "Déplacer ou annuler", url: b.manageUrl },
+      note: `Un empêchement ? Vous pouvez déplacer ou annuler depuis ce lien jusqu’à ${b.cancellationHours} h avant le rendez-vous, ou simplement répondre à cet e-mail.`,
     },
     attachments: [
       {
@@ -134,12 +136,12 @@ export function coachNewBooking(b: {
 
 // ------------------------------------------------------------------ session reminders
 
-/** « l’échange stratégique » / « la séance » / « le bilan »… for sentences about the appointment. */
+/** « l’échange stratégique » / « la séance » / « le bilan »… for sentences about the appointment (`e`: feminine ending). */
 function appointmentName(type: string) {
-  if (type === "Échange stratégique") return { the: "l’échange stratégique", your: "votre échange stratégique" };
-  if (type === "Bilan") return { the: "le bilan", your: "votre bilan" };
-  if (type === "Intervention") return { the: "l’intervention", your: "votre intervention" };
-  return { the: "la séance", your: "votre séance" };
+  if (type === "Échange stratégique") return { the: "l’échange stratégique", your: "votre échange stratégique", e: "" };
+  if (type === "Bilan") return { the: "le bilan", your: "votre bilan", e: "" };
+  if (type === "Intervention") return { the: "l’intervention", your: "votre intervention", e: "e" };
+  return { the: "la séance", your: "votre séance", e: "e" };
 }
 
 const dayKey = (d: Date) => new Intl.DateTimeFormat("en-CA", { timeZone: APP_TIME_ZONE }).format(d);
@@ -192,8 +194,106 @@ export function sessionReminder(r: {
       ],
       cta: { label: canStillChange ? "Déplacer ou annuler" : "Voir mon rendez-vous", url: r.manageUrl },
       note: canStillChange
-        ? `Un empêchement ? Vous pouvez déplacer ou annuler depuis ce lien jusqu’à ${r.cancellationHours} h avant le rendez-vous.`
+        ? `Un empêchement ? Vous pouvez déplacer ou annuler depuis ce lien jusqu’à ${r.cancellationHours} h avant le rendez-vous.`
         : "Un imprévu ? Répondez simplement à cet e-mail pour me prévenir.",
+    },
+  };
+}
+
+// ------------------------------------------------------------------ moved / cancelled from /rdv
+
+export function bookingMoved(b: {
+  sessionId: string;
+  firstName: string;
+  type: string;
+  startsAt: Date;
+  durationMin: number;
+  location: string | null;
+  manageUrl: string;
+}): Mail {
+  const name = appointmentName(b.type);
+  const when = capitalize(dateFmt.format(b.startsAt));
+  const time = timeFmt.format(b.startsAt);
+  return {
+    subject: `Nouvel horaire : ${name.your} le ${dateFmt.format(b.startsAt)} à ${time}`,
+    content: {
+      preheader: `C’est noté : ${when} à ${time}.`,
+      heading: `C’est noté, ${b.firstName}.`,
+      paragraphs: [
+        `${capitalize(name.your)} est déplacé${name.e} au nouvel horaire ci-dessous. Le rendez-vous mis à jour est joint à cet e-mail pour votre agenda.`,
+      ],
+      details: [
+        ["Date", when],
+        ["Heure (Paris / Genève)", time],
+        ["Durée", `${b.durationMin} minutes`],
+        ...(b.location ? ([["Lieu", b.location]] as [string, string][]) : []),
+      ],
+      cta: { label: "Gérer mon rendez-vous", url: b.manageUrl },
+    },
+    attachments: [
+      {
+        filename: "rendez-vous.ics",
+        contentType: "text/calendar; charset=utf-8; method=PUBLISH",
+        content: icsEvent({
+          uid: `${b.sessionId}@jeremygalea`,
+          start: b.startsAt,
+          durationMin: b.durationMin,
+          summary: `${b.type} avec Jérémy Galéa`,
+          location: b.location,
+          updatedAt: new Date(),
+        }),
+      },
+    ],
+  };
+}
+
+export function bookingCancelled(b: { firstName: string; type: string; startsAt: Date }): Mail {
+  const name = appointmentName(b.type);
+  const when = `${dateFmt.format(b.startsAt)} à ${timeFmt.format(b.startsAt)}`;
+  return {
+    subject: `Annulation confirmée : ${name.your} du ${when}`,
+    content: {
+      preheader: "Votre rendez-vous est bien annulé.",
+      heading: `C’est annulé, ${b.firstName}.`,
+      paragraphs: [
+        `${capitalize(name.your)} du ${when} est bien annulé${name.e}. Pensez à le retirer de votre agenda.`,
+        "Quand vous le souhaitez, vous pouvez réserver un nouveau rendez-vous en ligne.",
+      ],
+      cta: { label: "Réserver un nouveau rendez-vous", url: `${appUrl()}/reserver?source=email-annulation` },
+    },
+  };
+}
+
+export function coachBookingChanged(b: {
+  contactId: string;
+  name: string;
+  type: string;
+  change: "moved" | "cancelled";
+  oldStartsAt: Date;
+  newStartsAt?: Date;
+  reason?: string | null;
+}): Mail {
+  const fmt = (d: Date) => `${capitalize(dateFmt.format(d))} à ${timeFmt.format(d)}`;
+  const moved = b.change === "moved";
+  return {
+    subject: moved ? `Rendez-vous déplacé : ${b.name} — ${fmt(b.newStartsAt!)}` : `Rendez-vous annulé : ${b.name} — ${fmt(b.oldStartsAt)}`,
+    content: {
+      preheader: moved ? `${b.name} a déplacé son rendez-vous.` : `${b.name} a annulé son rendez-vous.`,
+      heading: moved ? "Un rendez-vous a été déplacé en ligne" : "Un rendez-vous a été annulé en ligne",
+      paragraphs: [
+        moved
+          ? `${b.name} a déplacé ${appointmentName(b.type).the} depuis le lien de ses e-mails. Le calendrier du CRM est à jour.`
+          : `${b.name} a annulé ${appointmentName(b.type).the} depuis le lien de ses e-mails. Le créneau est de nouveau libre sur le site.`,
+        ...(b.reason ? [`Son message : ${b.reason}`] : []),
+      ],
+      details: moved
+        ? [
+            ["Ancien horaire", fmt(b.oldStartsAt)],
+            ["Nouvel horaire", fmt(b.newStartsAt!)],
+          ]
+        : [["Horaire annulé", fmt(b.oldStartsAt)]],
+      cta: { label: "Ouvrir la fiche", url: `${appUrl()}/contacts/${b.contactId}` },
+      signature: ["CRM · Méthode JG®"],
     },
   };
 }

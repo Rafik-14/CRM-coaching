@@ -3,28 +3,15 @@
 import { useActionState, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { CalendarCheck, ChevronDown } from "lucide-react";
+import { CalendarCheck } from "lucide-react";
 import { bookEchange } from "@/server/actions/booking";
 import type { SiteFormState } from "@/lib/validations/site";
 import type { AvailableDay } from "@/lib/booking";
 import { STAKES } from "@/lib/jg";
-import { APP_TIME_ZONE } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { siteButton } from "./button";
+import { SlotPicker, describeSlot } from "./slot-picker";
 import { ConsentCheckbox, Field, Honeypot, SegmentSelect, SubSegmentSelect, controlProps, inputClass } from "./form";
-
-const dayFmt = new Intl.DateTimeFormat("fr-FR", { timeZone: "UTC", weekday: "short", day: "numeric", month: "short" });
-const longDayFmt = new Intl.DateTimeFormat("fr-FR", { timeZone: "UTC", weekday: "long", day: "numeric", month: "long" });
-const timeFmt = new Intl.DateTimeFormat("fr-FR", { timeZone: APP_TIME_ZONE, hour: "2-digit", minute: "2-digit" });
-/** « 2026-10-15 » is a calendar day: format it as such (noon UTC avoids any day shift). */
-const asDay = (date: string) => new Date(`${date}T12:00:00Z`);
-/** « Jeu 15 oct. » */
-const shortDay = (date: string) => {
-  const text = dayFmt.format(asDay(date)).replace(".", "");
-  return text.charAt(0).toUpperCase() + text.slice(1);
-};
-
-const FIRST_DAYS = 15;
 
 export function BookingWidget({
   days,
@@ -46,9 +33,7 @@ export function BookingWidget({
     if (result.error) router.refresh();
     return result;
   }, {});
-  const [day, setDay] = useState(days[0]?.date ?? "");
   const [slot, setSlot] = useState(state.values?.slot ?? "");
-  const [showAll, setShowAll] = useState(false);
   const [segment, setSegment] = useState(profil);
   const e = state.fieldErrors;
   const val = (name: string) => state.values?.[name] ?? "";
@@ -68,100 +53,20 @@ export function BookingWidget({
     );
   }
 
-  const visibleDays = showAll ? days : days.slice(0, FIRST_DAYS);
-  const current = days.find((d) => d.date === day) ?? days[0];
-
   return (
     <form action={action} noValidate className="relative grid gap-10">
       <Honeypot />
       <input type="hidden" name="source" value={source} />
       <input type="hidden" name="slot" value={slot} />
 
-      {/* 1 — day */}
-      <fieldset>
-        <legend className="font-heading text-[1.125rem] font-semibold text-navy">
-          <span className="text-gold" aria-hidden>
-            01 —{" "}
-          </span>
-          Choisissez un jour
-        </legend>
-        <ul className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5">
-          {visibleDays.map((d) => {
-            const selected = d.date === current.date;
-            return (
-              <li key={d.date}>
-                <button
-                  type="button"
-                  aria-pressed={selected}
-                  aria-label={`${longDayFmt.format(asDay(d.date))}, ${d.slots.length} créneau${d.slots.length > 1 ? "x" : ""}`}
-                  onClick={() => {
-                    setDay(d.date);
-                    setSlot("");
-                  }}
-                  className={cn(
-                    "flex min-h-14 w-full flex-col items-center justify-center rounded-[7px] border px-2 py-2 font-heading text-[14px] font-semibold transition-colors",
-                    selected
-                      ? "border-navy bg-navy text-white"
-                      : "border-[var(--jg-light-gray)] bg-white text-navy hover:border-navy",
-                  )}
-                >
-                  {shortDay(d.date)}
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-        {days.length > FIRST_DAYS && (
-          <button
-            type="button"
-            onClick={() => setShowAll((s) => !s)}
-            className="mt-3 inline-flex min-h-11 items-center gap-2 font-heading text-[14px] font-semibold text-navy underline decoration-gold decoration-2 underline-offset-4"
-          >
-            {showAll ? "Moins de dates" : "Plus de dates"}
-            <ChevronDown aria-hidden className={cn("size-4 transition-transform", showAll && "rotate-180")} />
-          </button>
-        )}
-      </fieldset>
-
-      {/* 2 — time */}
-      <fieldset>
-        <legend className="font-heading text-[1.125rem] font-semibold text-navy">
-          <span className="text-gold" aria-hidden>
-            02 —{" "}
-          </span>
-          Choisissez un horaire <span className="font-sans text-[15px] font-normal">({longDayFmt.format(asDay(current.date))})</span>
-        </legend>
-        <ul className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6">
-          {current.slots.map((s) => {
-            const selected = s === slot;
-            return (
-              <li key={s}>
-                <button
-                  type="button"
-                  aria-pressed={selected}
-                  onClick={() => setSlot(s)}
-                  className={cn(
-                    "flex min-h-12 w-full items-center justify-center rounded-[7px] border font-heading text-[15px] font-semibold tabular-nums transition-colors",
-                    selected
-                      ? "border-navy bg-navy text-white"
-                      : "border-[var(--jg-light-gray)] bg-white text-navy hover:border-navy",
-                  )}
-                >
-                  {timeFmt.format(new Date(s))}
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-        <p className="jg-small mt-3">
-          Heure de Paris / Genève · {slotMinutes} minutes · {location}
-        </p>
-        {e?.slot && (
-          <p className="jg-small mt-2 font-semibold text-[#b42318]" role="alert">
-            {e.slot[0]}
-          </p>
-        )}
-      </fieldset>
+      <SlotPicker
+        days={days}
+        slot={slot}
+        onSlotChange={setSlot}
+        info={`Heure de Paris / Genève · ${slotMinutes} minutes · ${location}`}
+        error={e?.slot?.[0]}
+        numbers={["01", "02"]}
+      />
 
       {/* 3 — details */}
       <fieldset className="grid gap-6">
@@ -229,9 +134,7 @@ export function BookingWidget({
           {pending ? "Réservation en cours…" : "Confirmer mon échange stratégique"}
         </button>
         <p className="jg-small" aria-live="polite">
-          {slot
-            ? `${longDayFmt.format(asDay(current.date))} à ${timeFmt.format(new Date(slot))}`
-            : "Choisissez d’abord un horaire."}
+          {slot ? describeSlot(days, slot) : "Choisissez d’abord un horaire."}
         </p>
       </div>
     </form>

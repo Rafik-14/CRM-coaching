@@ -1,6 +1,6 @@
 import "server-only";
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { and, asc, eq, gte, lte, ne } from "drizzle-orm";
+import { and, asc, eq, gte, lte, ne, sql } from "drizzle-orm";
 import { db } from "@/server/db";
 import { availabilityExceptions, coachingSessions, settings } from "@/server/db/schema";
 import { APP_TIME_ZONE } from "@/lib/format";
@@ -70,6 +70,28 @@ export async function getAvailability(now = new Date(), options: { durationMin?:
     config,
     days: computeAvailability(config, busy, now, APP_TIME_ZONE, exceptions as AvailabilityException[]),
   };
+}
+
+// ------------------------------------------------------------------ booking a slot safely
+
+/** Any number; only used to serialise bookings so two visitors never get the same slot. */
+const BOOKING_LOCK = 20_260_314;
+
+type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
+/**
+ * Inside a transaction: waits for other bookings in progress, then says whether the slot is still free
+ * (no planned session within the buffer). Insert / update in the same transaction right after.
+ */
+export async function lockAndCheckSlot(
+  tx: Tx,
+  slot: { startsAt: Date; durationMin: number; bufferMinutes: number; excludeSessionId?: string },
+) {
+  await tx.execute(sql`select pg_advisory_xact_lock(${BOOKING_LOCK})`);
+  const end = new Date(slot.startsAt.getTime() + slot.durationMin * 60_000);
+  const buffer = slot.bufferMinutes * 60_000;
+  const busy = await getBusyIntervals(slot.startsAt, end, tx, slot.excludeSessionId);
+  return !busy.some((b) => slot.startsAt.getTime() < b.end.getTime() + buffer && end.getTime() > b.start.getTime() - buffer);
 }
 
 // ------------------------------------------------------------------ confirmation link

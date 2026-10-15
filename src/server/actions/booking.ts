@@ -11,17 +11,16 @@ import { requireCoach } from "@/server/dal";
 import { advanceProspectAfterEchange } from "@/server/pipeline-automation";
 import { clientIp, rateLimited } from "@/server/rate-limit";
 import { findOrCreateSiteContact } from "@/server/site-leads";
-import { BOOKING_SETTINGS_KEY, bookingToken, getAvailability, getBusyIntervals } from "@/server/booking";
+import { BOOKING_SETTINGS_KEY, bookingToken, getAvailability, lockAndCheckSlot } from "@/server/booking";
 import { bookingSettingsSchema, exceptionFormSchema, zonedTimeToUtc } from "@/lib/booking";
 import { bookingFormSchema, formValues, type SiteFormState } from "@/lib/validations/site";
 import { DISCOVERY_TYPE } from "@/lib/validations/coaching";
 import { APP_TIME_ZONE, formatDayTime } from "@/lib/format";
 import { sendEmail } from "@/server/email/send";
+import { appUrl } from "@/server/email/config";
+import { manageToken } from "@/server/access-tokens";
 import { bookingConfirmation, coachNewBooking, coachNotificationAddress } from "@/server/email/messages";
 import type { ActionState } from "./coaching";
-
-/** Any number; only used to serialise bookings so two visitors never get the same slot. */
-const BOOKING_LOCK = 20_260_314;
 
 /**
  * Public booking of the « Échange stratégique » (/reserver). The slot is re-checked on the server:
@@ -61,13 +60,9 @@ export async function bookEchange(_prev: SiteFormState, formData: FormData): Pro
     [`Échange stratégique réservé en ligne pour le ${formatDayTime(startsAt)}.`, extra].filter(Boolean).join("\n"),
   );
 
-  const end = new Date(startsAt.getTime() + config.slotMinutes * 60_000);
-  const buffer = config.bufferMinutes * 60_000;
   const sessionId = await db.transaction(async (tx) => {
-    await tx.execute(sql`select pg_advisory_xact_lock(${BOOKING_LOCK})`);
-    const busy = await getBusyIntervals(startsAt, end, tx);
-    const taken = busy.some((b) => startsAt.getTime() < b.end.getTime() + buffer && end.getTime() > b.start.getTime() - buffer);
-    if (taken) return null;
+    const free = await lockAndCheckSlot(tx, { startsAt, durationMin: config.slotMinutes, bufferMinutes: config.bufferMinutes });
+    if (!free) return null;
     const [session] = await tx
       .insert(coachingSessions)
       .values({
@@ -96,6 +91,7 @@ export async function bookEchange(_prev: SiteFormState, formData: FormData): Pro
 
   // E-mails after the response: the visitor never waits for the mail server.
   const token = bookingToken(sessionId);
+  const manage = await manageToken(db, sessionId, startsAt);
   after(async () => {
     const confirmation = bookingConfirmation({
       sessionId,
@@ -103,7 +99,8 @@ export async function bookEchange(_prev: SiteFormState, formData: FormData): Pro
       startsAt,
       durationMin: config.slotMinutes,
       location: config.location,
-      token,
+      manageUrl: `${appUrl()}/rdv/${manage}`,
+      cancellationHours: config.cancellationHours,
     });
     await sendEmail({ ...confirmation, to: v.email, contactId, templateKey: "booking_confirmation" });
     const coach = await coachNotificationAddress();
