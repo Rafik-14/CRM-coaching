@@ -23,6 +23,8 @@ import { ClientBookingLink } from "@/components/coaching/client-booking-link";
 import { ScheduledEmailsList, SendEmailDialog } from "@/components/coaching/send-email-dialog";
 import { getPendingEmails } from "@/server/queries/scheduled-emails";
 import { QuestionnairePanel } from "@/components/coaching/questionnaire-panel";
+import { listInvoices } from "@/server/billing";
+import { INVOICE_STATUS, formatCents } from "@/lib/invoices";
 import { getContactQuestionnaire } from "@/server/questionnaire";
 import { formatAnswer, type Answer } from "@/lib/questionnaire";
 import { TEMPLATE_DEFS, TEMPLATE_KEYS, type TemplateKey } from "@/lib/email-templates";
@@ -64,7 +66,7 @@ async function ContactDetail({
 }) {
   const [{ id }, sp] = await Promise.all([params, searchParams]);
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
-  const [contact, stages, timeline, templates, packageOptions, partners, business, bookingLink, pendingEmails, intake] = await Promise.all([
+  const [contact, stages, timeline, templates, packageOptions, partners, business, bookingLink, pendingEmails, intake, contactInvoices] = await Promise.all([
     getContact(id),
     getStages(),
     getContactTimeline(id),
@@ -75,6 +77,7 @@ async function ContactDetail({
     getClientBookingLink(id),
     getPendingEmails(id),
     getContactQuestionnaire(id),
+    listInvoices({ contactId: id }),
   ]);
   if (!contact) notFound();
   const tab = TABS.find((t) => t === sp.onglet) ?? "apercu";
@@ -329,6 +332,31 @@ async function ContactDetail({
                     clientPackages={client.packages}
                     options={packageOptions}
                   />
+                </CardContent>
+              </Card>
+            )}
+            {contactInvoices.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Factures</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ul className="grid gap-2 text-sm">
+                    {contactInvoices.map((i) => (
+                      <li key={i.id}>
+                        <Link href={`/factures/${i.id}`} className="flex items-center justify-between gap-2 hover:underline">
+                          <span className="font-medium tabular-nums">
+                            {i.kind === "credit_note" ? "Avoir " : ""}
+                            {i.number ?? "Brouillon"}
+                          </span>
+                          <span className="tabular-nums">{formatCents(i.totalCents, i.currency)}</span>
+                          <span className={i.overdue ? "text-xs font-medium text-destructive" : "text-xs text-muted-foreground"}>
+                            {i.overdue ? "En retard" : i.status === "issued" && i.paidCents > 0 ? "Partiel" : INVOICE_STATUS[i.status as keyof typeof INVOICE_STATUS]}
+                          </span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
                 </CardContent>
               </Card>
             )}

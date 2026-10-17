@@ -20,6 +20,7 @@ import { formatMoney, offerPrice } from "@/lib/format";
 import { PAYMENT_STATUSES, paymentLabel } from "@/lib/validations/phase1";
 import { assignPackage, removeClientPackage, setPaymentStatus } from "@/server/actions/client-data";
 import type { ActionState } from "@/server/actions/coaching";
+import { PackageInvoiceButton } from "@/components/invoices/invoice-actions";
 
 type ClientPackage = {
   id: string;
@@ -64,8 +65,9 @@ function PackageRow({ cp }: { cp: ClientPackage }) {
     <div className="grid gap-2 rounded-xl border border-border p-3">
       <div className="flex items-baseline justify-between gap-2">
         <span className="font-medium">{cp.package.name}</span>
-        <span className="text-sm text-muted-foreground">
+        <span className="flex items-center gap-1 text-sm text-muted-foreground">
           {formatMoney(cp.price ?? cp.package.price, cp.currency ?? cp.package.currency)}
+          <PackageInvoiceButton clientPackageId={cp.id} />
         </span>
       </div>
       <div className="h-2 overflow-hidden rounded-full bg-muted">

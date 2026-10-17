@@ -472,11 +472,13 @@ export const accessTokens = pgTable(
   "access_tokens",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    /** manage · calendar_feed · client_booking · unsubscribe · questionnaire */
+    /** manage · calendar_feed · client_booking · unsubscribe · questionnaire · payment */
     purpose: text("purpose").notNull(),
     tokenHash: text("token_hash").notNull().unique(),
     sessionId: uuid("session_id").references(() => coachingSessions.id, { onDelete: "cascade" }),
     contactId: uuid("contact_id").references(() => contacts.id, { onDelete: "cascade" }),
+    /** Payment link of an invoice (/paiement/<token>). */
+    invoiceId: uuid("invoice_id").references((): AnyPgColumn => invoices.id, { onDelete: "cascade" }),
     expiresAt: timestamp("expires_at", { withTimezone: true }),
     revokedAt: timestamp("revoked_at", { withTimezone: true }),
     lastUsedAt: timestamp("last_used_at", { withTimezone: true }),
@@ -484,6 +486,89 @@ export const accessTokens = pgTable(
   },
   (t) => [index("access_tokens_session_idx").on(t.sessionId), index("access_tokens_contact_idx").on(t.contactId)],
 );
+
+// ---------------------------------------------------------------------------
+// Invoicing (Phase 2 · M6) — French rules: continuous numbering, no deletion once issued (credit notes instead).
+// Amounts in cents. Invoices keep a copy of the seller and the client at issue time.
+// ---------------------------------------------------------------------------
+
+export type InvoiceLine = { description: string; quantity: number; unitCents: number };
+export type InvoiceParty = { name: string; company?: string; address?: string; email?: string; vatNumber?: string; reference?: string };
+
+export const invoices = pgTable(
+  "invoices",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    /** invoice · credit_note (« avoir ») */
+    kind: text("kind").notNull().default("invoice"),
+    /** 2026-0001, set when issued (drafts have none). */
+    number: text("number").unique(),
+    /** draft → issued → paid · cancelled (by a credit note) */
+    status: text("status").notNull().default("draft"),
+    /** Kept when the contact is deleted: an issued invoice must stay. */
+    contactId: uuid("contact_id").references(() => contacts.id, { onDelete: "set null" }),
+    clientPackageId: uuid("client_package_id").references(() => clientPackages.id, { onDelete: "set null" }),
+    /** For a credit note: the invoice it cancels. */
+    creditForId: uuid("credit_for_id").references((): AnyPgColumn => invoices.id, { onDelete: "set null" }),
+    currency: text("currency").notNull().default("EUR"),
+    billTo: jsonb("bill_to").$type<InvoiceParty>().notNull(),
+    /** Seller details copied from Paramètres › Facturation when issued. */
+    seller: jsonb("seller").$type<Record<string, unknown>>(),
+    lines: jsonb("lines").$type<InvoiceLine[]>().notNull().default([]),
+    /** VAT in basis points (2000 = 20 %); 0 with vatExempt = « TVA non applicable, art. 293 B du CGI ». */
+    vatRateBps: integer("vat_rate_bps").notNull().default(0),
+    vatExempt: boolean("vat_exempt").notNull().default(true),
+    subtotalCents: integer("subtotal_cents").notNull().default(0),
+    vatCents: integer("vat_cents").notNull().default(0),
+    totalCents: integer("total_cents").notNull().default(0),
+    issuedAt: timestamp("issued_at", { withTimezone: true }),
+    dueAt: timestamp("due_at", { withTimezone: true }),
+    paidAt: timestamp("paid_at", { withTimezone: true }),
+    /** Free text printed on the invoice. */
+    notes: text("notes"),
+    pdfPath: text("pdf_path"),
+    /** Payment reminders already sent (M6b). */
+    remindersSent: integer("reminders_sent").notNull().default(0),
+    lastReminderAt: timestamp("last_reminder_at", { withTimezone: true }),
+    ...timestamps,
+  },
+  (t) => [index("invoices_contact_idx").on(t.contactId), index("invoices_status_idx").on(t.status, t.dueAt)],
+);
+
+/** Last number used per year: numbers are taken in a transaction, so never twice and never skipped. */
+export const invoiceSequences = pgTable("invoice_sequences", {
+  year: integer("year").primaryKey(),
+  lastNumber: integer("last_number").notNull().default(0),
+});
+
+export const payments = pgTable(
+  "payments",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    invoiceId: uuid("invoice_id")
+      .notNull()
+      .references(() => invoices.id, { onDelete: "cascade" }),
+    amountCents: integer("amount_cents").notNull(),
+    /** virement · carte · twint · prelevement · especes · cheque */
+    method: text("method").notNull(),
+    paidAt: timestamp("paid_at", { withTimezone: true }).notNull(),
+    reference: text("reference"),
+    /** Stripe payment intent: one payment per intent, even if Stripe notifies twice. */
+    stripePaymentId: text("stripe_payment_id").unique(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("payments_invoice_idx").on(t.invoiceId)],
+);
+
+/** Every Stripe webhook event, once (the unique id makes replays harmless). */
+export const paymentEvents = pgTable("payment_events", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  stripeEventId: text("stripe_event_id").notNull().unique(),
+  type: text("type").notNull(),
+  invoiceId: uuid("invoice_id").references(() => invoices.id, { onDelete: "set null" }),
+  payload: jsonb("payload").notNull(),
+  receivedAt: timestamp("received_at", { withTimezone: true }).notNull().defaultNow(),
+});
 
 export const settings = pgTable("settings", {
   key: text("key").primaryKey(),
@@ -564,4 +649,14 @@ export const packagesRelations = relations(packages, ({ one }) => ({
 
 export const emailLogRelations = relations(emailLog, ({ one }) => ({
   contact: one(contacts, { fields: [emailLog.contactId], references: [contacts.id] }),
+}));
+
+export const invoicesRelations = relations(invoices, ({ one, many }) => ({
+  contact: one(contacts, { fields: [invoices.contactId], references: [contacts.id] }),
+  clientPackage: one(clientPackages, { fields: [invoices.clientPackageId], references: [clientPackages.id] }),
+  payments: many(payments),
+}));
+
+export const paymentsRelations = relations(payments, ({ one }) => ({
+  invoice: one(invoices, { fields: [payments.invoiceId], references: [invoices.id] }),
 }));

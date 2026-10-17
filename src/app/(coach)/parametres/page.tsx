@@ -13,6 +13,8 @@ import { CalendarFeedPanel } from "./calendar-feed-panel";
 import { AvailabilityExceptions } from "./availability-exceptions";
 import { EmailTemplates } from "./email-templates";
 import { QuestionnaireEditor } from "./questionnaire-editor";
+import { InvoicingSettingsForm } from "./invoicing-settings";
+import { getInvoicingSettings } from "@/server/billing";
 import { getQuestionnaire } from "@/server/questionnaire";
 import { listTemplates } from "@/server/email/templates";
 import { formatDayTime } from "@/lib/format";
@@ -28,12 +30,12 @@ import {
 
 export const metadata: Metadata = { title: "Paramètres" };
 
-export default function SettingsPage() {
+export default function SettingsPage({ searchParams }: PageProps<"/parametres">) {
   return (
     <>
       <PageHeader title="Paramètres" description="Votre compte, votre activité et la configuration du CRM" />
       <Suspense fallback={<Skeleton className="h-96 rounded-2xl" />}>
-        <Settings />
+        <Settings searchParams={searchParams} />
       </Suspense>
     </>
   );
@@ -58,13 +60,17 @@ function Row({ label, value }: { label: React.ReactNode; value: React.ReactNode 
   );
 }
 
-async function Settings() {
+const TABS = ["general", "pipeline", "forfaits", "notes", "reservation", "emails", "questionnaire", "agenda", "facturation"];
+
+async function Settings({ searchParams }: { searchParams: PageProps<"/parametres">["searchParams"] }) {
+  const onglet = (await searchParams).onglet;
+  const initialTab = TABS.find((t) => t === onglet) ?? "general";
   const [{ user, business, stages, packages, templates, booking, exceptions, today }, email, feed] = await Promise.all([
     getSettingsOverview(),
     getEmailOverview(),
     getCalendarFeed(),
   ]);
-  const [emailTemplates, questionnaire] = await Promise.all([listTemplates(), getQuestionnaire()]);
+  const [emailTemplates, questionnaire, invoicing] = await Promise.all([listTemplates(), getQuestionnaire(), getInvoicingSettings()]);
   const origins = (process.env.SITE_FORM_ORIGINS ?? "").split(",").map((o) => o.trim()).filter(Boolean);
   const endpoint = `${process.env.BETTER_AUTH_URL ?? "https://crm.example.com"}/api/formulaire-site`;
   const snippet = `<form action="${endpoint}" method="post">
@@ -79,7 +85,7 @@ async function Settings() {
 </form>`;
 
   return (
-    <Tabs defaultValue="general">
+    <Tabs defaultValue={initialTab}>
       <TabsList>
         <TabsTrigger value="general">Général</TabsTrigger>
         <TabsTrigger value="pipeline">Pipeline</TabsTrigger>
@@ -89,6 +95,7 @@ async function Settings() {
         <TabsTrigger value="emails">E-mails</TabsTrigger>
         <TabsTrigger value="questionnaire">Questionnaire</TabsTrigger>
         <TabsTrigger value="agenda">Agenda</TabsTrigger>
+        <TabsTrigger value="facturation">Facturation</TabsTrigger>
       </TabsList>
 
       <TabsContent value="general" className="mt-6 grid gap-6 lg:grid-cols-2">
@@ -250,6 +257,15 @@ async function Settings() {
             </ul>
           )}
         </section>
+      </TabsContent>
+
+      <TabsContent value="facturation" className="mt-6">
+        <Panel
+          title="Facturation"
+          description="Les informations imprimées sur vos factures, conformes aux règles françaises. Elles sont copiées dans chaque facture au moment de son émission."
+        >
+          <InvoicingSettingsForm settings={invoicing} />
+        </Panel>
       </TabsContent>
 
       <TabsContent value="questionnaire" className="mt-6">

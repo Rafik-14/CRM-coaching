@@ -24,6 +24,8 @@ export const config = {
     "/taches/:path*",
     "/analyses/:path*",
     "/parametres/:path*",
+    "/factures/:path*",
     "/api/fichiers/:path*",
+    "/api/factures/:path*",
   ],
 };
