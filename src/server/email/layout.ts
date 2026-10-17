@@ -35,7 +35,7 @@ export type EmailContent = {
 
 /** Escapes the text and turns the web addresses it contains into links. */
 const withLinks = (s: string) =>
-  esc(s).replace(/https?:\/\/[^\s<]+[^\s<.,;:!?)]/g, (url) => `<a href="${url}" style="color:${NAVY};font-weight:600;">${url}</a>`);
+  esc(s).replace(/https?:\/\/[^\s<]+[^\s<.,;:!?)]/g, (url) => `<a href="${url}" style="color:${NAVY};font-weight:600;word-break:break-all;">${url}</a>`);
 
 const DEFAULT_SIGNATURE = ["Jérémy Galéa", "Coach & formateur · Créateur de la Méthode JG®"];
 
