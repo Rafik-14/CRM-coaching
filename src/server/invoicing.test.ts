@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { eq } from "drizzle-orm";
 import { createTestDb } from "./db/test-db";
 import { clientPackages, clients, contacts, invoices, packages } from "./db/schema";
-import { createCreditNote, createDraft, deleteDraft, issueInvoice, recordPayment, updateDraft } from "./invoicing";
+import { claimDueReminders, createCreditNote, createDraft, deleteDraft, issueInvoice, recordPayment, releaseReminder, updateDraft } from "./invoicing";
 import { DEFAULT_INVOICING } from "@/lib/invoices";
 
 const NOW = new Date("2026-10-17T09:00:00Z");
@@ -103,5 +103,21 @@ describe("invoicing", () => {
 
   it("no credit note on a draft", async () => {
     assert.equal(await createCreditNote(t.db, (await draft()).id), null);
+  });
+
+  it("payment reminders: each one once, at its day, never on a paid invoice", async () => {
+    await t.db.update(invoices).set({ status: "paid" }).where(eq(invoices.status, "issued")); // clear earlier tests
+    const d = await draft();
+    await issueInvoice(t.db, d.id, settings, NOW); // due 1 Nov
+    const day = (n: number) => new Date(Date.UTC(2026, 10, 1 + n, 10));
+    assert.equal((await claimDueReminders(t.db, day(2), [3, 10])).length, 0);
+    assert.deepEqual((await claimDueReminders(t.db, day(4), [3, 10])).map((c) => c.step), [0]);
+    assert.equal((await claimDueReminders(t.db, day(5), [3, 10])).length, 0);
+    const second = await claimDueReminders(t.db, day(11), [3, 10]);
+    assert.deepEqual(second.map((c) => c.step), [1]);
+    await releaseReminder(t.db, d.id, 1); // sending failed
+    assert.equal((await claimDueReminders(t.db, day(12), [3, 10])).length, 1);
+    await recordPayment(t.db, { invoiceId: d.id, amountCents: 150_000, method: "virement", paidAt: day(12) });
+    assert.equal((await claimDueReminders(t.db, day(30), [3, 10, 20])).length, 0);
   });
 });

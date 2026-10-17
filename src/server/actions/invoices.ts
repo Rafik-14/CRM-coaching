@@ -1,6 +1,7 @@
 "use server";
 
 import { refresh } from "next/cache";
+import { after } from "next/server";
 import { redirect } from "next/navigation";
 import { eq, sql } from "drizzle-orm";
 import { z } from "zod";
@@ -8,6 +9,7 @@ import { db } from "@/server/db";
 import { activityLog, clientPackages, contacts, invoices, settings } from "@/server/db/schema";
 import { requireCoach } from "@/server/dal";
 import { forgetPdf, getInvoicingSettings, issueAndStore } from "@/server/billing";
+import { sendInvoiceMail } from "@/server/billing-mail";
 import { createCreditNote, createDraft, deleteDraft, deletePayment, recordPayment, updateDraft } from "@/server/invoicing";
 import { INVOICING_KEY, PAYMENT_METHODS, invoiceFormSchema, invoicingSettingsSchema, parseAmount, vatFor } from "@/lib/invoices";
 import type { ActionState } from "./coaching";
@@ -118,6 +120,8 @@ export async function issueInvoiceAction(id: string): Promise<ActionState> {
   const result = await issueAndStore(z.uuid().parse(id));
   if ("error" in result && result.error) return { error: result.error };
   await log(user.id, result.invoice?.contactId ?? null, result.invoice?.kind === "credit_note" ? "credit_note_issued" : "invoice_issued");
+  const issued = result.invoice;
+  if (issued?.kind === "invoice") after(() => sendInvoiceMail(issued.id, "invoice_issued").then(() => undefined));
   refresh();
   return { ok: true, message: `${result.invoice?.kind === "credit_note" ? "Avoir" : "Facture"} n° ${result.invoice?.number} émis${result.invoice?.kind === "credit_note" ? "" : "e"}.` };
 }
@@ -162,6 +166,8 @@ export async function addPayment(invoiceId: string, _prev: ActionState, formData
     reference: v.reference || null,
   });
   await log(user.id, inv.contactId, "payment_recorded");
+  const now = await db.query.invoices.findFirst({ where: eq(invoices.id, inv.id), columns: { status: true } });
+  if (inv.status === "issued" && now?.status === "paid") after(() => sendInvoiceMail(inv.id, "payment_received").then(() => undefined));
   refresh();
   return { ok: true };
 }

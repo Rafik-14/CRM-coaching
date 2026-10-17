@@ -39,7 +39,7 @@ export type SendEmailInput = {
   contactId?: string | null;
   templateKey: string;
   replyTo?: string | null;
-  attachments?: { filename: string; content: string; contentType: string }[];
+  attachments?: { filename: string; content: string | Buffer; contentType: string }[];
 };
 
 /**

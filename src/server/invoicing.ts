@@ -185,3 +185,35 @@ export async function deletePayment(db: AnyDb, paymentId: string) {
   if (row) await syncPaid(db, row.invoiceId);
   return !!row;
 }
+
+/**
+ * Payment reminders due now (`days` after the due date, e.g. [3, 10]). Each reminder is claimed with one
+ * UPDATE … WHERE reminders_sent = k, so two runs never send the same reminder twice.
+ */
+export async function claimDueReminders(db: AnyDb, now: Date, days: number[]) {
+  const claimed: { id: string; step: number }[] = [];
+  for (const [k, d] of days.entries()) {
+    const rows = await db
+      .update(invoices)
+      .set({ remindersSent: k + 1, lastReminderAt: now })
+      .where(
+        and(
+          eq(invoices.kind, "invoice"),
+          eq(invoices.status, "issued"),
+          eq(invoices.remindersSent, k),
+          sql`${invoices.dueAt} + make_interval(days => ${d}::int) <= ${now.toISOString()}::timestamptz`,
+        ),
+      )
+      .returning({ id: invoices.id });
+    claimed.push(...rows.map((r) => ({ id: r.id, step: k })));
+  }
+  return claimed;
+}
+
+/** A reminder that could not be sent is released for the next run. */
+export async function releaseReminder(db: AnyDb, invoiceId: string, step: number) {
+  await db
+    .update(invoices)
+    .set({ remindersSent: step })
+    .where(and(eq(invoices.id, invoiceId), eq(invoices.remindersSent, step + 1)));
+}

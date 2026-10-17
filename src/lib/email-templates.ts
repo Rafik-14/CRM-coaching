@@ -14,6 +14,9 @@ export const TEMPLATE_KEYS = [
   "package_last_session",
   "coaching_finished",
   "questionnaire_invite",
+  "invoice_issued",
+  "payment_reminder",
+  "payment_received",
 ] as const;
 export type TemplateKey = (typeof TEMPLATE_KEYS)[number];
 
@@ -29,6 +32,10 @@ export const VARIABLES = {
   lien_reservation: "Lien pour réserver (lien personnel pour un client)",
   lien_accompagnements: "Page « Accompagnements » du site",
   lien_questionnaire: "Lien du questionnaire de départ",
+  numero_facture: "Numéro de la facture",
+  montant: "Montant à payer (« 490,00 € »)",
+  echeance: "Date d’échéance",
+  lien_paiement: "Lien pour payer en ligne (vide si le paiement en ligne n’est pas activé)",
 } as const;
 export type VariableName = keyof typeof VARIABLES;
 export type TemplateVars = Partial<Record<VariableName, string>>;
@@ -150,6 +157,44 @@ export const TEMPLATE_DEFS: Record<TemplateKey, TemplateDef> = {
       "Le lien reste valable 30 jours. Vos réponses ne sont lues que par moi.",
     ].join("\n\n"),
   },
+  invoice_issued: {
+    label: "Envoi d’une facture",
+    trigger: "Quand vous émettez une facture (la facture PDF est jointe).",
+    variables: ["prenom", "numero_facture", "montant", "echeance", "lien_paiement", "nom_coach"],
+    essential: true,
+    manual: false,
+    subject: "Votre facture n° {{numero_facture}}",
+    heading: "Bonjour {{prenom}},",
+    body: [
+      "Vous trouverez ci-joint votre facture n° {{numero_facture}}, d’un montant de {{montant}}, à régler avant le {{echeance}}.",
+      "Vous pouvez la régler par virement (coordonnées sur la facture) ou en ligne : {{lien_paiement}}",
+      "Merci pour votre confiance.",
+    ].join("\n\n"),
+  },
+  payment_reminder: {
+    label: "Relance de paiement",
+    trigger: "Après l’échéance d’une facture non réglée, aux jours choisis dans Paramètres › Facturation.",
+    variables: ["prenom", "numero_facture", "montant", "echeance", "lien_paiement", "nom_coach"],
+    essential: true,
+    manual: false,
+    subject: "Rappel : facture n° {{numero_facture}}",
+    heading: "Bonjour {{prenom}},",
+    body: [
+      "Sauf erreur de ma part, la facture n° {{numero_facture}} ({{montant}}), arrivée à échéance le {{echeance}}, n’est pas encore réglée.",
+      "Vous pouvez la régler par virement ou en ligne : {{lien_paiement}}",
+      "Si le paiement est déjà parti, merci de ne pas tenir compte de ce message.",
+    ].join("\n\n"),
+  },
+  payment_received: {
+    label: "Paiement reçu",
+    trigger: "Quand une facture est entièrement réglée.",
+    variables: ["prenom", "numero_facture", "montant", "nom_coach"],
+    essential: true,
+    manual: false,
+    subject: "Paiement reçu · facture n° {{numero_facture}}",
+    heading: "Merci {{prenom}} !",
+    body: "J’ai bien reçu votre paiement de {{montant}} pour la facture n° {{numero_facture}}. Merci beaucoup.",
+  },
 };
 
 /** Example values for the preview in Paramètres. */
@@ -165,6 +210,10 @@ export const SAMPLE_VARS: Required<TemplateVars> = {
   lien_reservation: "https://www.exemple.ch/reserver/seance/…",
   lien_accompagnements: "https://www.exemple.ch/accompagnements",
   lien_questionnaire: "https://www.exemple.ch/questionnaire/…",
+  numero_facture: "2026-0001",
+  montant: "490,00 €",
+  echeance: "1 novembre 2026",
+  lien_paiement: "https://www.exemple.ch/paiement/…",
 };
 
 const VAR_PATTERN = /\{\{\s*([a-z_]+)\s*\}\}/g;
