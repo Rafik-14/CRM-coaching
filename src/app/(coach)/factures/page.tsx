@@ -113,17 +113,17 @@ async function InvoiceList({ searchParams }: { searchParams: PageProps<"/facture
         )}
       </div>
 
-      {Object.keys(forecast.byCurrency).length > 0 && (
-        <p className="text-sm text-muted-foreground">
-          Prévu en {forecast.month} :{" "}
-          <span className="font-medium text-foreground">
-            {Object.entries(forecast.byCurrency)
-              .map(([cur, cents]) => formatCents(cents, cur))
-              .join(" · ")}
-          </span>{" "}
-          (factures arrivant à échéance)
-        </p>
-      )}
+      <p className="text-sm text-muted-foreground">
+        Prévu en {forecast.month} :{" "}
+        <span className="font-medium text-foreground">
+          {Object.keys(forecast.byCurrency).length
+            ? Object.entries(forecast.byCurrency)
+                .map(([cur, cents]) => formatCents(cents, cur))
+                .join(" · ")
+            : "aucune facture à échéance"}
+        </span>
+        {Object.keys(forecast.byCurrency).length > 0 && " (factures arrivant à échéance)"}
+      </p>
 
       <nav className="flex flex-wrap gap-1.5" aria-label="Filtrer">
         {FILTERS.map((f) => (

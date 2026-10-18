@@ -185,8 +185,8 @@ async function Calendar({ searchParams }: { searchParams: PageProps<"/calendrier
 
       <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
         <span>{inMonth.length} rendez-vous ce mois-ci</span>
-        {noShowPct !== null && <span>Absences : {noShowPct} %</span>}
-        {onlinePct !== null && <span>{onlinePct} % réservés en ligne</span>}
+        <span>Absences : {noShowPct === null ? "—" : `${noShowPct} %`}</span>
+        <span>Réservés en ligne : {onlinePct === null ? "—" : `${onlinePct} %`}</span>
         <Legend className="bg-primary/40" label="Prévue" />
         <Legend className="bg-success/50" label="Effectuée" />
         <Legend className="bg-destructive/40" label="Absent" />

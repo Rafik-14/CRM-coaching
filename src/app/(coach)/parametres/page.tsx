@@ -86,7 +86,7 @@ async function Settings({ searchParams }: { searchParams: PageProps<"/parametres
 
   return (
     <Tabs defaultValue={initialTab}>
-      <TabsList>
+      <TabsList className="max-w-full flex-wrap justify-start group-data-horizontal/tabs:h-auto *:flex-none">
         <TabsTrigger value="general">Général</TabsTrigger>
         <TabsTrigger value="pipeline">Pipeline</TabsTrigger>
         <TabsTrigger value="forfaits">Accompagnements</TabsTrigger>
