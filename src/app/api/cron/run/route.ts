@@ -1,5 +1,8 @@
 import { timingSafeEqual } from "node:crypto";
+import { sql } from "drizzle-orm";
 import { runJobs } from "@/server/jobs";
+import { db } from "@/server/db";
+import { settings } from "@/server/db/schema";
 
 /**
  * Scheduled jobs entry point. Called every 5 minutes by the server's cron:
@@ -18,6 +21,11 @@ export async function POST(request: Request) {
   if (!authorized(request)) return Response.json({ ok: false }, { status: 401 });
   const startedAt = new Date();
   const jobs = await runJobs(startedAt);
+  // « Dernière exécution » in Paramètres › E-mails: shows the coach the automation is running.
+  await db
+    .insert(settings)
+    .values({ key: "cron_last_run", value: { at: startedAt.toISOString() } })
+    .onConflictDoUpdate({ target: settings.key, set: { value: sql`excluded.value` } });
   const ok = Object.values(jobs).every((j) => j.ok);
   return Response.json(
     { ok, startedAt: startedAt.toISOString(), ms: Date.now() - startedAt.getTime(), jobs },

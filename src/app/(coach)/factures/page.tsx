@@ -9,7 +9,7 @@ import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/empty-state";
 import { NewInvoiceDialog } from "@/components/invoices/invoice-actions";
 import { requireCoach } from "@/server/dal";
-import { getInvoicingSettings, listInvoices } from "@/server/billing";
+import { forecastNextMonth, getInvoicingSettings, listInvoices } from "@/server/billing";
 import { invoiceContactOptions } from "@/server/actions/invoices";
 import { INVOICE_STATUS, formatCents, vatFor } from "@/lib/invoices";
 import { formatDate } from "@/lib/format";
@@ -70,6 +70,7 @@ async function InvoiceList({ searchParams }: { searchParams: PageProps<"/facture
   const status = FILTERS.find((f) => f.key === sp.statut)?.key ?? "";
   const [all, s] = await Promise.all([listInvoices(), getInvoicingSettings()]);
   const isOverdue = (i: (typeof all)[number]) => i.overdue;
+  const forecast = forecastNextMonth(all);
   const rows = all.filter((i) => (status === "overdue" ? isOverdue(i) : status ? i.status === status : true));
 
   // To collect, per currency (never mixed): issued invoices minus what has been paid.
@@ -111,6 +112,18 @@ async function InvoiceList({ searchParams }: { searchParams: PageProps<"/facture
           ))
         )}
       </div>
+
+      {Object.keys(forecast.byCurrency).length > 0 && (
+        <p className="text-sm text-muted-foreground">
+          Prévu en {forecast.month} :{" "}
+          <span className="font-medium text-foreground">
+            {Object.entries(forecast.byCurrency)
+              .map(([cur, cents]) => formatCents(cents, cur))
+              .join(" · ")}
+          </span>{" "}
+          (factures arrivant à échéance)
+        </p>
+      )}
 
       <nav className="flex flex-wrap gap-1.5" aria-label="Filtrer">
         {FILTERS.map((f) => (

@@ -192,6 +192,16 @@ async function Settings({ searchParams }: { searchParams: PageProps<"/parametres
               )
             }
           />
+          <Row label="30 derniers jours" value={`${email.sent30} envoyé${email.sent30 > 1 ? "s" : ""} · ${email.failed30} échec${email.failed30 > 1 ? "s" : ""}`} />
+          <Row
+            label="Tâches automatiques"
+            value={
+              <span className={email.cronLate ? "text-warning" : undefined}>
+                {email.lastRunAt ? `Dernière exécution : ${formatDayTime(email.lastRunAt)}` : "Jamais exécutées"}
+                {email.cronLate && " · vérifier la tâche planifiée du serveur"}
+              </span>
+            }
+          />
           <Row label="Serveur SMTP" value={email.config.host ? `${email.config.host}:${email.config.port}` : "—"} />
           <Row label="Expéditeur" value={email.config.from} />
           {email.config.redirectTo && (

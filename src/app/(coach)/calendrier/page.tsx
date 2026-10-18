@@ -73,6 +73,10 @@ async function Calendar({ searchParams }: { searchParams: PageProps<"/calendrier
   const next = new Date(month.getFullYear(), month.getMonth() + 1, 1);
   const todayKey = key(now);
   const inMonth = sessions.filter((s) => s.startsAt.getMonth() === month.getMonth());
+  const held = inMonth.filter((s) => s.status === "done" || s.status === "no_show");
+  const noShowPct = held.length ? Math.round((held.filter((s) => s.status === "no_show").length / held.length) * 100) : null;
+  const active = inMonth.filter((s) => s.status !== "cancelled");
+  const onlinePct = active.length ? Math.round((active.filter((s) => s.bookedVia === "online").length / active.length) * 100) : null;
   const monthDays = days.filter((d) => d.getMonth() === month.getMonth() && byDay.has(key(d)));
 
   return (
@@ -181,6 +185,8 @@ async function Calendar({ searchParams }: { searchParams: PageProps<"/calendrier
 
       <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
         <span>{inMonth.length} rendez-vous ce mois-ci</span>
+        {noShowPct !== null && <span>Absences : {noShowPct} %</span>}
+        {onlinePct !== null && <span>{onlinePct} % réservés en ligne</span>}
         <Legend className="bg-primary/40" label="Prévue" />
         <Legend className="bg-success/50" label="Effectuée" />
         <Legend className="bg-destructive/40" label="Absent" />

@@ -112,3 +112,15 @@ export async function getInvoice(id: string) {
     : null;
   return { ...inv, credits, original: original ?? null };
 }
+
+/** Expected next month, per currency: what is left to pay on invoices due that month. */
+export function forecastNextMonth(items: InvoiceListItem[], now = new Date()) {
+  const start = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+  const end = new Date(now.getFullYear(), now.getMonth() + 2, 1);
+  const out: Record<string, number> = {};
+  for (const i of items) {
+    if (i.kind !== "invoice" || i.status !== "issued" || !i.dueAt || i.dueAt < start || i.dueAt >= end) continue;
+    out[i.currency] = (out[i.currency] ?? 0) + Math.max(0, i.totalCents - i.paidCents);
+  }
+  return { month: new Intl.DateTimeFormat("fr-FR", { month: "long" }).format(start), byCurrency: out };
+}
