@@ -22,6 +22,8 @@ export const config = {
     "/pipeline/:path*",
     "/calendrier/:path*",
     "/taches/:path*",
+    "/mes-evenements/:path*",
+    "/api/mes-evenements/:path*",
     "/analyses/:path*",
     "/parametres/:path*",
     "/api/fichiers/:path*",

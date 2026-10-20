@@ -51,6 +51,8 @@ export const ONLINE_ACTIONS = {
   booking_moved_online: "Rendez-vous déplacé en ligne",
   booking_cancelled_online: "Rendez-vous annulé en ligne",
   questionnaire_submitted: "Questionnaire rempli",
+  event_registered_online: "Inscription à un événement",
+  event_cancelled_online: "Inscription à un événement annulée",
 } as const;
 export const NOTIFICATIONS_SEEN_KEY = "notifications_seen";
 

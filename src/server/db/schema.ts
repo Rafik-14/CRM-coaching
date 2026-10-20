@@ -472,11 +472,13 @@ export const accessTokens = pgTable(
   "access_tokens",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    /** manage · calendar_feed · client_booking · unsubscribe · questionnaire */
+    /** manage · calendar_feed · client_booking · unsubscribe · questionnaire · event_registration */
     purpose: text("purpose").notNull(),
     tokenHash: text("token_hash").notNull().unique(),
     sessionId: uuid("session_id").references(() => coachingSessions.id, { onDelete: "cascade" }),
     contactId: uuid("contact_id").references(() => contacts.id, { onDelete: "cascade" }),
+    /** Private link of a seat booked for an event (/inscription/<token>). */
+    registrationId: uuid("registration_id").references((): AnyPgColumn => eventRegistrations.id, { onDelete: "cascade" }),
     expiresAt: timestamp("expires_at", { withTimezone: true }),
     revokedAt: timestamp("revoked_at", { withTimezone: true }),
     lastUsedAt: timestamp("last_used_at", { withTimezone: true }),
@@ -484,6 +486,113 @@ export const accessTokens = pgTable(
   },
   (t) => [index("access_tokens_session_idx").on(t.sessionId), index("access_tokens_contact_idx").on(t.contactId)],
 );
+
+// ---------------------------------------------------------------------------
+// Conferences & workshops (docs/EVENTS-PLAN.md). No payment: the price is only a text shown on the site.
+// ---------------------------------------------------------------------------
+
+export const events = pgTable(
+  "events",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    /** Public address /evenements/<slug>, generated from the title. */
+    slug: text("slug").notNull().unique(),
+    /** conference · workshop */
+    kind: text("kind").notNull().default("conference"),
+    title: text("title").notNull(),
+    summary: text("summary"),
+    description: text("description"),
+    startsAt: timestamp("starts_at", { withTimezone: true }).notNull(),
+    endsAt: timestamp("ends_at", { withTimezone: true }).notNull(),
+    /** Address of the room; empty for an online event. */
+    location: text("location"),
+    /** Video link, sent to registered people only (never shown on the public page). */
+    onlineUrl: text("online_url"),
+    /** Seats available; null = no limit. */
+    capacity: integer("capacity"),
+    maxSeatsPerBooking: integer("max_seats_per_booking").notNull().default(4),
+    /** « Gratuit », « 20 € à régler sur place »… Information only. */
+    priceText: text("price_text"),
+    /** Association, company or school hosting the event (optional, shown when filled). */
+    partner: text("partner"),
+    /** entreprises · ecoles · associations · tous */
+    audience: text("audience"),
+    /** draft · published · cancelled */
+    status: text("status").notNull().default("draft"),
+    registrationOpen: boolean("registration_open").notNull().default(true),
+    waitlistEnabled: boolean("waitlist_enabled").notNull().default(true),
+    /** Past event without online registrations (talks given before the website). */
+    manualHistory: boolean("manual_history").notNull().default(false),
+    /** Recap after the event (« compte rendu »), shown on its page when showRecap is on. */
+    recap: text("recap"),
+    participantsShown: integer("participants_shown"),
+    videoUrl: text("video_url"),
+    showRecap: boolean("show_recap").notNull().default(false),
+    ...timestamps,
+  },
+  (t) => [index("events_starts_idx").on(t.startsAt), index("events_status_idx").on(t.status)],
+);
+
+export const eventRegistrations = pgTable(
+  "event_registrations",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    eventId: uuid("event_id")
+      .notNull()
+      .references(() => events.id, { onDelete: "cascade" }),
+    contactId: uuid("contact_id").references(() => contacts.id, { onDelete: "set null" }),
+    firstName: text("first_name").notNull(),
+    lastName: text("last_name").notNull().default(""),
+    email: text("email").notNull(),
+    phone: text("phone"),
+    company: text("company"),
+    seats: integer("seats").notNull().default(1),
+    /** confirmed · waitlist · cancelled */
+    status: text("status").notNull().default("confirmed"),
+    attended: boolean("attended").notNull().default(false),
+    /** site · manual */
+    source: text("source").notNull().default("site"),
+    reminderSentAt: timestamp("reminder_sent_at", { withTimezone: true }),
+    thanksSentAt: timestamp("thanks_sent_at", { withTimezone: true }),
+    cancelledAt: timestamp("cancelled_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("event_registrations_event_idx").on(t.eventId, t.status),
+    index("event_registrations_contact_idx").on(t.contactId),
+  ],
+);
+
+export const eventPhotos = pgTable(
+  "event_photos",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    eventId: uuid("event_id")
+      .notNull()
+      .references(() => events.id, { onDelete: "cascade" }),
+    /** cover (one per event) · gallery */
+    kind: text("kind").notNull().default("gallery"),
+    storagePath: text("storage_path").notNull(),
+    width: integer("width"),
+    height: integer("height"),
+    caption: text("caption"),
+    position: integer("position").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("event_photos_event_idx").on(t.eventId)],
+);
+
+export const eventQuotes = pgTable("event_quotes", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  eventId: uuid("event_id")
+    .notNull()
+    .references(() => events.id, { onDelete: "cascade" }),
+  text: text("text").notNull(),
+  /** « Participante, atelier du 12 novembre » — never a full name without consent. */
+  author: text("author"),
+  position: integer("position").notNull().default(0),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
 
 export const settings = pgTable("settings", {
   key: text("key").primaryKey(),
@@ -564,4 +673,23 @@ export const packagesRelations = relations(packages, ({ one }) => ({
 
 export const emailLogRelations = relations(emailLog, ({ one }) => ({
   contact: one(contacts, { fields: [emailLog.contactId], references: [contacts.id] }),
+}));
+
+export const eventsRelations = relations(events, ({ many }) => ({
+  registrations: many(eventRegistrations),
+  photos: many(eventPhotos),
+  quotes: many(eventQuotes),
+}));
+
+export const eventRegistrationsRelations = relations(eventRegistrations, ({ one }) => ({
+  event: one(events, { fields: [eventRegistrations.eventId], references: [events.id] }),
+  contact: one(contacts, { fields: [eventRegistrations.contactId], references: [contacts.id] }),
+}));
+
+export const eventPhotosRelations = relations(eventPhotos, ({ one }) => ({
+  event: one(events, { fields: [eventPhotos.eventId], references: [events.id] }),
+}));
+
+export const eventQuotesRelations = relations(eventQuotes, ({ one }) => ({
+  event: one(events, { fields: [eventQuotes.eventId], references: [events.id] }),
 }));

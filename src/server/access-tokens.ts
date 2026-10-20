@@ -9,7 +9,7 @@ import type { AnyDb } from "@/server/db/types";
  * a link again, a copy of the database alone opens nothing, and « Régénérer » revokes the row.
  * No "server-only" import here so the tests can run it against PGlite; only server code imports it.
  */
-export type TokenPurpose = "manage" | "calendar_feed" | "client_booking" | "unsubscribe" | "questionnaire";
+export type TokenPurpose = "manage" | "calendar_feed" | "client_booking" | "unsubscribe" | "questionnaire" | "event_registration";
 export type AccessToken = typeof accessTokens.$inferSelect;
 
 /** Booking links stay valid until 30 days after the appointment. */
@@ -32,7 +32,7 @@ export const looksLikeToken = (token: string | null | undefined): token is strin
 
 export async function issueToken(
   db: AnyDb,
-  input: { purpose: TokenPurpose; sessionId?: string | null; contactId?: string | null; expiresAt?: Date | null },
+  input: { purpose: TokenPurpose; sessionId?: string | null; contactId?: string | null; registrationId?: string | null; expiresAt?: Date | null },
 ) {
   const id = randomUUID();
   const token = tokenFor({ id, purpose: input.purpose });
@@ -44,6 +44,7 @@ export async function issueToken(
       tokenHash: hashToken(token),
       sessionId: input.sessionId ?? null,
       contactId: input.contactId ?? null,
+      registrationId: input.registrationId ?? null,
       expiresAt: input.expiresAt ?? null,
     })
     .returning();
@@ -65,7 +66,7 @@ export async function findToken(db: AnyDb, purpose: TokenPurpose, token: string 
 }
 
 /** Revokes every live token of this purpose for the owner (calendar feed: no owner). */
-export async function revokeTokens(db: AnyDb, purpose: TokenPurpose, owner: { contactId?: string; sessionId?: string } = {}, now = new Date()) {
+export async function revokeTokens(db: AnyDb, purpose: TokenPurpose, owner: { contactId?: string; sessionId?: string; registrationId?: string } = {}, now = new Date()) {
   await db
     .update(accessTokens)
     .set({ revokedAt: now })
@@ -75,12 +76,13 @@ export async function revokeTokens(db: AnyDb, purpose: TokenPurpose, owner: { co
         isNull(accessTokens.revokedAt),
         owner.contactId ? eq(accessTokens.contactId, owner.contactId) : undefined,
         owner.sessionId ? eq(accessTokens.sessionId, owner.sessionId) : undefined,
+        owner.registrationId ? eq(accessTokens.registrationId, owner.registrationId) : undefined,
       ),
     );
 }
 
 /** Latest live token of this purpose for the owner, or null. */
-export async function currentToken(db: AnyDb, purpose: TokenPurpose, owner: { contactId?: string; sessionId?: string } = {}, now = new Date()) {
+export async function currentToken(db: AnyDb, purpose: TokenPurpose, owner: { contactId?: string; sessionId?: string; registrationId?: string } = {}, now = new Date()) {
   const [row] = await db
     .select()
     .from(accessTokens)
@@ -90,6 +92,7 @@ export async function currentToken(db: AnyDb, purpose: TokenPurpose, owner: { co
         usable(now),
         owner.contactId ? eq(accessTokens.contactId, owner.contactId) : undefined,
         owner.sessionId ? eq(accessTokens.sessionId, owner.sessionId) : undefined,
+        owner.registrationId ? eq(accessTokens.registrationId, owner.registrationId) : undefined,
       ),
     )
     .orderBy(desc(accessTokens.createdAt))

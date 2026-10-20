@@ -99,6 +99,13 @@
       "when": 1792519705948,
       "tag": "0013_remove_billing",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1792522523151,
+      "tag": "0014_events",
+      "breakpoints": true
     }
   ]
 }
