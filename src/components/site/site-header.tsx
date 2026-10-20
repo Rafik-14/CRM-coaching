@@ -41,7 +41,7 @@ export function SiteHeader() {
           {/* Sized like the navigation: same 14 px type, slim navy button (hit area stays 44 px). */}
           <Link
             href={bookingHref("en-tete")}
-            className="relative hidden h-10 items-center rounded-[7px] bg-navy px-[18px] font-heading text-[14px] font-medium text-white transition-colors duration-200 after:absolute after:inset-x-0 after:-inset-y-0.5 hover:bg-[var(--jg-navy-hover)] sm:inline-flex"
+            className="relative hidden h-10 shrink-0 items-center rounded-[7px] bg-navy px-[18px] whitespace-nowrap font-heading text-[14px] font-medium text-white transition-colors duration-200 after:absolute after:inset-x-0 after:-inset-y-0.5 hover:bg-[var(--jg-navy-hover)] sm:inline-flex"
           >
             Réserver un échange
           </Link>

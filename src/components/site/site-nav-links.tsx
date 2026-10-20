@@ -13,7 +13,7 @@ export function SiteNavLinks() {
 
 export function NavList({ pathname }: { pathname?: string }) {
   return (
-    <ul className="flex items-center gap-x-[clamp(0.75rem,1.3vw,1.5rem)]">
+    <ul className="flex items-center gap-x-[clamp(0.625rem,0.95vw,1.375rem)]">
       {SITE_NAV.map((item) => {
         const active = pathname ? isActive(pathname, item.href) : false;
         return (
@@ -22,7 +22,7 @@ export function NavList({ pathname }: { pathname?: string }) {
               href={item.href}
               aria-current={active ? "page" : undefined}
               className={cn(
-                "relative inline-flex min-h-11 items-center font-heading text-[14px] font-medium whitespace-nowrap text-navy transition-colors duration-200 hover:text-gold",
+                "relative inline-flex min-h-11 items-center font-heading text-[13.5px] font-medium whitespace-nowrap 2xl:text-[14px] text-navy transition-colors duration-200 hover:text-gold",
                 "after:absolute after:inset-x-0 after:bottom-1.5 after:h-0.5 after:bg-gold after:transition-opacity after:duration-200",
                 active ? "after:opacity-100" : "after:opacity-0",
               )}

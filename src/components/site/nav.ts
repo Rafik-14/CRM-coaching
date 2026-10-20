@@ -5,6 +5,7 @@ export const SITE_NAV = [
   { href: "/accompagnements", label: "Accompagnements" },
   { href: "/pour-qui", label: "Pour qui ?" },
   { href: "/transformations", label: "Transformations" },
+  { href: "/evenements", label: "Événements" },
   { href: "/a-propos", label: "À propos" },
   { href: "/le-chant-du-merle", label: "Le Chant du Merle" },
   { href: "/contact", label: "Contact" },
