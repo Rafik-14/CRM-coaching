@@ -39,6 +39,7 @@ type Contact = {
   currency: string;
   stake: string | null;
   keyMomentAt: Date | null;
+  emailOptOut?: boolean;
 };
 
 const SOURCES = ["Site web", "LinkedIn", "Recommandation", "Partenaire", "Conférence / atelier", "Le Chant du Merle", "Bouche-à-oreille"];
@@ -112,6 +113,10 @@ export function ContactFormDialog({
             <Field label="Nom" name="lastName" defaultValue={contact?.lastName} error={err("lastName")} />
             <Field label="E-mail" name="email" type="email" defaultValue={contact?.email} error={err("email")} />
             <Field label="Téléphone" name="phone" type="tel" defaultValue={contact?.phone} error={err("phone")} />
+            <label className="flex items-center gap-3 text-sm sm:col-span-2">
+              <input type="checkbox" name="emailOptOut" defaultChecked={contact?.emailOptOut ?? false} className="size-4 accent-primary" />
+              Ne souhaite pas recevoir les e-mails facultatifs (suivi, remerciements…)
+            </label>
             <div className="grid gap-2">
               <Label htmlFor="stageId">Étape</Label>
               <Select name="stageId" defaultValue={contact?.stageId ?? stages[0]?.id}>

@@ -13,6 +13,12 @@ const nextConfig: NextConfig = {
   partialPrefetching: true,
   // Self-contained server bundle for the Docker image.
   output: "standalone",
+  // OpenCV (notes scanner) is a large WebAssembly build: load it from node_modules at runtime, not bundled.
+  serverExternalPackages: ["@techstark/opencv-js"],
+  // …and since it is required at runtime, ship it explicitly in the standalone build (pages using the scanner).
+  outputFileTracingIncludes: {
+    "/contacts/**": ["./node_modules/@techstark/opencv-js/package.json", "./node_modules/@techstark/opencv-js/dist/opencv.js"],
+  },
   experimental: {
     // Documents are capped at 10 MB (see lib/validations/documents.ts); leave room for form overhead.
     serverActions: { bodySizeLimit: "11mb" },

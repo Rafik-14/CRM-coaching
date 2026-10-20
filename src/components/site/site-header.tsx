@@ -16,15 +16,20 @@ export function SiteHeader() {
         Aller au contenu
       </a>
       <div className="mx-auto flex h-[72px] w-[calc(100%-40px)] max-w-[1240px] items-center gap-6 md:w-[calc(100%-48px)] xl:h-[84px]">
-        <Link href="/" aria-label="Jérémy Galéa — accueil" className="shrink-0">
+        {/* Bigger logo in the same bar height; on wide screens it moves into the left margin (16 px kept from the edge). */}
+        <Link
+          href="/"
+          aria-label="Jérémy Galéa — accueil"
+          className="-ml-1 shrink-0 xl:-ml-[min(56px,calc((100vw-1272px)/2))]"
+        >
           <Image
             src="/brand/jg-logo.svg"
             alt="Jérémy Galéa — Révéler votre potentiel"
-            width={78}
-            height={56}
+            width={92}
+            height={66}
             unoptimized
             priority
-            className="h-12 w-auto xl:h-14"
+            className="h-[62px] w-auto xl:h-[74px]"
           />
         </Link>
         <nav aria-label="Navigation principale" className="mx-auto hidden xl:block">

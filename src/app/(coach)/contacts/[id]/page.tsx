@@ -19,6 +19,14 @@ import { GoalsPanel } from "@/components/coaching/goals-panel";
 import { PackagesPanel } from "@/components/coaching/packages-panel";
 import { DocumentsPanel } from "@/components/coaching/documents-panel";
 import { DeleteTaskButton, TaskDialog } from "@/components/coaching/task-dialog";
+import { ClientBookingLink } from "@/components/coaching/client-booking-link";
+import { ScheduledEmailsList, SendEmailDialog } from "@/components/coaching/send-email-dialog";
+import { getPendingEmails } from "@/server/queries/scheduled-emails";
+import { QuestionnairePanel } from "@/components/coaching/questionnaire-panel";
+import { getContactQuestionnaire } from "@/server/questionnaire";
+import { formatAnswer, type Answer } from "@/lib/questionnaire";
+import { TEMPLATE_DEFS, TEMPLATE_KEYS, type TemplateKey } from "@/lib/email-templates";
+import { getClientBookingLink } from "@/server/client-booking";
 import { getContact, getContactTimeline, getStages, listPartnerOptions } from "@/server/queries/contacts";
 import { getBusinessSettings } from "@/server/business";
 import { countryLabel, segmentLabel, subSegmentLabel } from "@/lib/jg";
@@ -28,7 +36,7 @@ import { cn } from "@/lib/utils";
 import { ContactFormDialog } from "../contact-form-dialog";
 import { DeleteContactButton } from "./delete-contact-button";
 
-const TABS = ["apercu", "seances", "objectifs", "taches", "documents", "historique"] as const;
+const TABS = ["apercu", "seances", "objectifs", "taches", "documents", "questionnaire", "historique"] as const;
 const clientStatusLabel = { active: "Actif", paused: "En pause", finished: "Terminé", stopped: "Arrêté" } as const;
 
 export default function ContactPage({ params, searchParams }: PageProps<"/contacts/[id]">) {
@@ -56,7 +64,7 @@ async function ContactDetail({
 }) {
   const [{ id }, sp] = await Promise.all([params, searchParams]);
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
-  const [contact, stages, timeline, templates, packageOptions, partners, business] = await Promise.all([
+  const [contact, stages, timeline, templates, packageOptions, partners, business, bookingLink, pendingEmails, intake] = await Promise.all([
     getContact(id),
     getStages(),
     getContactTimeline(id),
@@ -64,6 +72,9 @@ async function ContactDetail({
     getActivePackages(),
     listPartnerOptions(),
     getBusinessSettings(),
+    getClientBookingLink(id),
+    getPendingEmails(id),
+    getContactQuestionnaire(id),
   ]);
   if (!contact) notFound();
   const tab = TABS.find((t) => t === sp.onglet) ?? "apercu";
@@ -103,6 +114,11 @@ async function ContactDetail({
         </div>
         <div className="flex flex-wrap gap-2">
           <ContactFormDialog stages={stages} partners={partners} defaultCurrency={business.currency} contact={contact} />
+          <SendEmailDialog
+            contactId={contact.id}
+            email={contact.email}
+            templates={TEMPLATE_KEYS.filter((k) => TEMPLATE_DEFS[k].manual).map((k) => ({ key: k, label: TEMPLATE_DEFS[k].label }))}
+          />
           {client && (
             <CloseCoachingDialog
               contactId={contact.id}
@@ -165,6 +181,11 @@ async function ContactDetail({
           {client && (
             <TabsTrigger value="documents">
               Documents <Count n={client.documents.length} />
+            </TabsTrigger>
+          )}
+          {(client || intake.latest) && (
+            <TabsTrigger value="questionnaire">
+              Questionnaire {intake.answered && <span className="ml-1 size-1.5 rounded-full bg-success" aria-label="rempli" />}
             </TabsTrigger>
           )}
           <TabsTrigger value="historique">Historique</TabsTrigger>
@@ -311,6 +332,41 @@ async function ContactDetail({
                 </CardContent>
               </Card>
             )}
+            {pendingEmails.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>E-mails automatiques prévus</CardTitle>
+                  <CardDescription>
+                    {contact.emailOptOut ? "Ne reçoit plus les e-mails facultatifs" : "Annulez-en un s’il ne convient plus"}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ScheduledEmailsList
+                    items={pendingEmails.map((m) => ({
+                      id: m.id,
+                      label: TEMPLATE_DEFS[m.templateKey as TemplateKey]?.label ?? m.templateKey,
+                      when: m.due ? "Dans quelques minutes" : formatDayTime(m.sendAt),
+                    }))}
+                  />
+                </CardContent>
+              </Card>
+            )}
+            {active && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Réservation en ligne</CardTitle>
+                  <CardDescription>Lien personnel pour réserver ses séances</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ClientBookingLink
+                    contactId={contact.id}
+                    firstName={contact.firstName}
+                    hasEmail={!!contact.email}
+                    link={bookingLink && { url: bookingLink.url, lastUsedLabel: bookingLink.lastUsedAt ? formatDayTime(bookingLink.lastUsedAt) : null }}
+                  />
+                </CardContent>
+              </Card>
+            )}
           </div>
         </TabsContent>
 
@@ -410,11 +466,42 @@ async function ContactDetail({
         {/* ------------------------------------------------ Documents */}
         {client && (
           <TabsContent value="documents" className="mt-4">
-            <DocumentsPanel contactId={contact.id} documents={client.documents} />
+            <DocumentsPanel
+              contactId={contact.id}
+              documents={client.documents}
+              sessions={contact.sessions
+                .filter((s) => s.status !== "cancelled")
+                .map((s) => ({ id: s.id, label: `${s.type} · ${formatDayTime(s.startsAt)}`, startsAt: s.startsAt.toISOString() }))}
+            />
           </TabsContent>
         )}
 
         {/* ------------------------------------------------ Historique */}
+        {(client || intake.latest) && (
+          <TabsContent value="questionnaire" className="mt-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Questionnaire de départ</CardTitle>
+                <CardDescription>Ce que {contact.firstName} a partagé avant de commencer</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <QuestionnairePanel
+                  contactId={contact.id}
+                  hasEmail={!!contact.email}
+                  status={
+                    intake.answered
+                      ? `Rempli le ${formatDayTime(intake.answered.submittedAt!)}`
+                      : intake.latest
+                        ? `Lien créé le ${formatDayTime(intake.latest.sentAt)} · pas encore rempli`
+                        : null
+                  }
+                  answers={intake.answered?.answers?.map((a) => ({ label: a.label, value: formatAnswer(a as Answer) })) ?? null}
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
+
         <TabsContent value="historique" className="mt-4">
           <Card>
             <CardContent>

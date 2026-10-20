@@ -215,18 +215,25 @@
   .jg-site .jg-on-navy :is(h1, h2, h3, h4, strong) {
     color: var(--jg-white);
   }
+  /* Phones: smaller titles so lines stay short; balanced line breaks, no lone word on the last line. */
+  .jg-site :is(h1, h2, h3, h4, .jg-h1, .jg-h2, .jg-h3) {
+    text-wrap: balance;
+  }
+  .jg-site p {
+    text-wrap: pretty;
+  }
   .jg-h1 {
-    font-size: 2.375rem;
-    line-height: 1.08;
-    letter-spacing: -0.6px;
+    font-size: 2rem;
+    line-height: 1.1;
+    letter-spacing: -0.5px;
   }
   .jg-h2 {
-    font-size: 1.9375rem;
-    line-height: 1.15;
+    font-size: 1.5625rem;
+    line-height: 1.2;
   }
   .jg-h3 {
-    font-size: 1.4375rem;
-    line-height: 1.2;
+    font-size: 1.3125rem;
+    line-height: 1.22;
   }
   .jg-h4 {
     font-size: 1.1875rem;
@@ -235,9 +242,15 @@
   @media (min-width: 768px) {
     .jg-h1 {
       font-size: 2.875rem;
+      line-height: 1.08;
     }
     .jg-h2 {
       font-size: 2.125rem;
+      line-height: 1.15;
+    }
+    .jg-h3 {
+      font-size: 1.4375rem;
+      line-height: 1.2;
     }
   }
   @media (min-width: 1024px) {

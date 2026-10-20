@@ -4,7 +4,7 @@ import { formatRelative } from "@/lib/format";
 type Event = {
   id: string;
   at: Date;
-  kind: "created" | "session_done" | "session_planned" | "session_cancelled" | "stage" | "closed" | "update";
+  kind: "created" | "session_done" | "session_planned" | "session_cancelled" | "stage" | "closed" | "update" | "email";
   title: string;
   description?: string;
   /** Most recent event that already happened (highlighted). */
@@ -19,6 +19,7 @@ const dot: Record<Event["kind"], string> = {
   stage: "bg-primary",
   closed: "bg-warning",
   update: "bg-muted-foreground",
+  email: "bg-gold",
 };
 
 export function Timeline({ events, className }: { events: Event[]; className?: string }) {

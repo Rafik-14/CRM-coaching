@@ -29,7 +29,7 @@ export function Section({
     <section
       className={cn(
         tones[tone],
-        size === "compact" ? "py-14 md:py-20" : "py-16 md:py-24 lg:py-[120px]",
+        size === "compact" ? "py-11 md:py-20" : "py-12 md:py-24 lg:py-[120px]",
         className,
       )}
       {...props}
@@ -70,7 +70,7 @@ export function ButtonLink({ href, variant, block, className, children, ...props
   );
 }
 
-/** The main call to action, everywhere: « Réserver un échange stratégique ». */
+/** The main call to action, everywhere: « Réserver un échange stratégique ». */
 export function BookingButton({
   source,
   profil,
@@ -81,14 +81,26 @@ export function BookingButton({
 }: CtaProps & { source: string; profil?: string; label?: string }) {
   return (
     <ButtonLink href={bookingHref(source, profil)} variant={variant} block={block} className={className}>
-      {label}
+      {/* On small phones « stratégique » is dropped so the button stays on one line. */}
+      {label === BOOKING_LABEL ? (
+        <span>
+          Réserver un échange<span className="max-[419px]:hidden"> stratégique</span>
+        </span>
+      ) : (
+        label
+      )}
       <ArrowRight aria-hidden />
     </ButtonLink>
   );
 }
 
-/** Text link with an arrow (« Comprendre la Méthode JG® → »). The arrow stays on the last line when the text wraps. */
+const ARROW_UNDERLINE =
+  "underline decoration-gold decoration-2 underline-offset-[6px] transition-colors duration-200 group-hover:decoration-navy [.jg-on-navy_&]:group-hover:decoration-white";
+
+/** Text link with an arrow (« Comprendre la Méthode JG® → »). The last word and the arrow never split across lines. */
 export function ArrowLink({ className, children, ...props }: React.ComponentProps<typeof Link>) {
+  const text = typeof children === "string" ? children : null;
+  const cut = text ? text.lastIndexOf(" ") : -1;
   return (
     <Link
       className={cn(
@@ -97,18 +109,19 @@ export function ArrowLink({ className, children, ...props }: React.ComponentProp
       )}
       {...props}
     >
-      <span className="underline decoration-gold decoration-2 underline-offset-[6px] transition-colors duration-200 group-hover:decoration-navy [.jg-on-navy_&]:group-hover:decoration-white">
-        {children}
+      {text && cut > 0 && <span className={ARROW_UNDERLINE}>{text.slice(0, cut + 1)}</span>}
+      <span className="whitespace-nowrap">
+        <span className={ARROW_UNDERLINE}>{text && cut > 0 ? text.slice(cut + 1) : children}</span>
+        <ArrowRight
+          aria-hidden
+          className="ml-2 inline size-4 align-[-3px] transition-transform duration-200 group-hover:translate-x-0.5"
+        />
       </span>
-      <ArrowRight
-        aria-hidden
-        className="ml-2 inline size-4 align-[-3px] transition-transform duration-200 group-hover:translate-x-0.5"
-      />
     </Link>
   );
 }
 
-/** « Mot • mot • mot » list (domains, « Pour : … »). Separators end a line, they never start one. */
+/** « Mot • mot • mot » list (domains, « Pour : … »). Separators end a line, they never start one. */
 export function DotList({ items, className }: { items: readonly string[]; className?: string }) {
   return (
     <ul className={cn("leading-relaxed", className)}>

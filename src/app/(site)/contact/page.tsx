@@ -20,7 +20,7 @@ export default function ContactPage() {
         <Container>
           <SectionHeading as="h1" eyebrow="Contact" title="Parlons de votre situation.">
             <p>
-              Vous avez une question, un projet, une évolution en tête ou simplement besoin d’y voir plus clair ?
+              Vous avez une question, un projet, une évolution en tête ou simplement besoin d’y voir plus clair ?
             </p>
             <p>
               Un premier échange permet de comprendre où vous en êtes, ce que vous cherchez à faire évoluer et quel
@@ -48,7 +48,7 @@ export default function ContactPage() {
       <Section tone="ivory">
         <Container className="grid gap-12 lg:grid-cols-[1.4fr_0.6fr] lg:gap-20">
           <div>
-            <SectionHeading title="Vous préférez m’écrire ?">
+            <SectionHeading title="Vous préférez m’écrire ?">
               <p>Vous pouvez également me laisser un message.</p>
             </SectionHeading>
             <div className="mt-10">

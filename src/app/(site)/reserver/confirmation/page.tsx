@@ -7,6 +7,8 @@ import { siteButton } from "@/components/site/button";
 import { ArrowLink, ButtonLink, Container, GoldLine, Section } from "@/components/site/ui";
 import { APP_TIME_ZONE } from "@/lib/format";
 import { getBookedSession } from "@/server/booking";
+import { db } from "@/server/db";
+import { currentToken } from "@/server/access-tokens";
 
 export const metadata: Metadata = {
   title: "Échange stratégique réservé",
@@ -62,6 +64,7 @@ async function Confirmation({ searchParams }: { searchParams: PageProps<"/reserv
   }
 
   const cancelled = session.status !== "planned";
+  const manage = cancelled ? null : await currentToken(db, "manage", { sessionId: session.id });
   return (
     <div>
       <CircleCheck aria-hidden className="size-10 text-[var(--jg-teal)]" strokeWidth={1.5} />
@@ -89,9 +92,15 @@ async function Confirmation({ searchParams }: { searchParams: PageProps<"/reserv
         <>
           <p className="mt-8 max-w-[640px]">
             {NEXT_STEP[session.location ?? ""] ?? "Je vous confirme les détails avant notre échange."} Un empêchement ?{" "}
-            <Link href="/contact?source=confirmation" className="font-semibold text-navy underline">
-              Écrivez-moi
-            </Link>
+            {manage ? (
+              <Link href={`/rdv/${manage.token}`} className="font-semibold text-navy underline">
+                Déplacer ou annuler
+              </Link>
+            ) : (
+              <Link href="/contact?source=confirmation" className="font-semibold text-navy underline">
+                Écrivez-moi
+              </Link>
+            )}
             .
           </p>
           <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:items-center">

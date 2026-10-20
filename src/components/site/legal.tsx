@@ -20,7 +20,7 @@ export function LegalPage({ title, children }: { title: string; children: React.
           <TriangleAlert aria-hidden className="mt-0.5 size-5 shrink-0" strokeWidth={1.75} />
           <p className="jg-small">
             <strong className="text-[#5c3c07]">Texte provisoire, à compléter par le client.</strong> Les passages
-            signalés « à compléter » doivent être fournis ou validés par Jérémy Galéa ou son conseil avant la mise en
+            signalés « à compléter » doivent être fournis ou validés par Jérémy Galéa ou son conseil avant la mise en
             ligne.
           </p>
         </div>

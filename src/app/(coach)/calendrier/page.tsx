@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { connection } from "next/server";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/page-header";
@@ -73,6 +73,10 @@ async function Calendar({ searchParams }: { searchParams: PageProps<"/calendrier
   const next = new Date(month.getFullYear(), month.getMonth() + 1, 1);
   const todayKey = key(now);
   const inMonth = sessions.filter((s) => s.startsAt.getMonth() === month.getMonth());
+  const held = inMonth.filter((s) => s.status === "done" || s.status === "no_show");
+  const noShowPct = held.length ? Math.round((held.filter((s) => s.status === "no_show").length / held.length) * 100) : null;
+  const active = inMonth.filter((s) => s.status !== "cancelled");
+  const onlinePct = active.length ? Math.round((active.filter((s) => s.bookedVia === "online").length / active.length) * 100) : null;
   const monthDays = days.filter((d) => d.getMonth() === month.getMonth() && byDay.has(key(d)));
 
   return (
@@ -134,8 +138,9 @@ async function Calendar({ searchParams }: { searchParams: PageProps<"/calendrier
                       key={s.id}
                       href={`/contacts/${s.contact.id}?onglet=seances`}
                       className={cn("truncate rounded-md px-1.5 py-0.5 text-[11px] transition-colors", chip[s.status])}
-                      title={`${timeFmt.format(s.startsAt)} · ${s.contact.firstName} ${s.contact.lastName} · ${s.type}`}
+                      title={`${timeFmt.format(s.startsAt)} · ${s.contact.firstName} ${s.contact.lastName} · ${s.type}${s.bookedVia === "online" ? " · réservé en ligne" : ""}`}
                     >
+                      {s.bookedVia === "online" && <Globe aria-label="Réservé en ligne" className="mr-0.5 inline size-3 align-[-2px]" />}
                       <span className="font-medium tabular-nums">{timeFmt.format(s.startsAt)}</span> {s.contact.firstName}
                       {s.type === "Échange stratégique" && " · échange"}
                     </Link>
@@ -169,6 +174,7 @@ async function Calendar({ searchParams }: { searchParams: PageProps<"/calendrier
                     <span className="truncate">
                       {s.contact.firstName} {s.contact.lastName} · {s.type}
                     </span>
+                    {s.bookedVia === "online" && <Globe aria-label="Réservé en ligne" className="ml-auto size-3.5 shrink-0" />}
                   </Link>
                 </li>
               ))}
@@ -179,10 +185,15 @@ async function Calendar({ searchParams }: { searchParams: PageProps<"/calendrier
 
       <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
         <span>{inMonth.length} rendez-vous ce mois-ci</span>
+        <span>Absences : {noShowPct === null ? "—" : `${noShowPct} %`}</span>
+        <span>Réservés en ligne : {onlinePct === null ? "—" : `${onlinePct} %`}</span>
         <Legend className="bg-primary/40" label="Prévue" />
         <Legend className="bg-success/50" label="Effectuée" />
         <Legend className="bg-destructive/40" label="Absent" />
         <Legend className="bg-muted-foreground/40" label="Annulée" />
+        <span className="flex items-center gap-1.5">
+          <Globe className="size-3" /> Réservé en ligne
+        </span>
       </div>
     </div>
   );

@@ -15,3 +15,11 @@ export const ALLOWED_DOCUMENTS: Record<string, string> = {
 export const ACCEPT_ATTRIBUTE = Object.keys(ALLOWED_DOCUMENTS)
   .map((e) => `.${e}`)
   .join(",");
+
+// ---------------------------------------------------------------- notes scanner
+
+export const MAX_SCAN_PAGES = 12;
+/** Per photo, after the browser has reduced it (≈ 2 000 px): keeps a full scan under the 11 MB request limit. */
+export const MAX_SCAN_PHOTO_BYTES = 3 * 1024 * 1024;
+/** Long side of the photos sent by the browser. */
+export const SCAN_UPLOAD_MAX_SIDE = 2000;

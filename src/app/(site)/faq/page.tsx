@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/faq" },
 };
 
-/** « Combien de séances faut-il prévoir ? » — offers and prices from the CRM. */
+/** « Combien de séances faut-il prévoir ? » — offers and prices from the CRM. */
 async function OfferPrices() {
   await connection();
   const offers = await getPublicOffers();
@@ -32,7 +32,7 @@ async function OfferPrices() {
 
 const QUESTIONS: { q: string; a: React.ReactNode }[] = [
   {
-    q: "Je ne sais pas quel accompagnement choisir. Comment savoir lequel est fait pour moi ?",
+    q: "Je ne sais pas quel accompagnement choisir. Comment savoir lequel est fait pour moi ?",
     a: (
       <>
         <p>Vous n’avez pas besoin de le savoir avant de commencer.</p>
@@ -45,7 +45,7 @@ const QUESTIONS: { q: string; a: React.ReactNode }[] = [
     ),
   },
   {
-    q: "Est-ce du coaching professionnel classique ?",
+    q: "Est-ce du coaching professionnel classique ?",
     a: (
       <>
         <p>
@@ -64,7 +64,7 @@ const QUESTIONS: { q: string; a: React.ReactNode }[] = [
     ),
   },
   {
-    q: "Je sais déjà ce que je fais. Pourquoi aurais-je besoin d’un accompagnement ?",
+    q: "Je sais déjà ce que je fais. Pourquoi aurais-je besoin d’un accompagnement ?",
     a: (
       <>
         <p>Parce que savoir faire n’est pas toujours savoir expliquer, incarner ou faire percevoir sa valeur.</p>
@@ -80,7 +80,7 @@ const QUESTIONS: { q: string; a: React.ReactNode }[] = [
     ),
   },
   {
-    q: "Est-ce que l’accompagnement consiste à apprendre à mieux se vendre ?",
+    q: "Est-ce que l’accompagnement consiste à apprendre à mieux se vendre ?",
     a: (
       <>
         <p>Pas au sens classique du terme.</p>
@@ -96,7 +96,7 @@ const QUESTIONS: { q: string; a: React.ReactNode }[] = [
     ),
   },
   {
-    q: "Combien de séances faut-il prévoir ?",
+    q: "Combien de séances faut-il prévoir ?",
     a: (
       <>
         <p>Cela dépend de votre objectif.</p>
@@ -109,15 +109,15 @@ const QUESTIONS: { q: string; a: React.ReactNode }[] = [
     ),
   },
   {
-    q: "Est-ce que je peux être accompagné même si je ne sais pas encore exactement ce que je veux faire ?",
+    q: "Est-ce que je peux être accompagné même si je ne sais pas encore exactement ce que je veux faire ?",
     a: (
       <>
         <p>Oui.</p>
         <p>C’est même souvent un excellent point de départ.</p>
         <p>L’accompagnement ne consiste pas nécessairement à partir d’un projet déjà défini.</p>
         <p>
-          Il peut commencer par une question plus fondamentale : « Qu’est-ce qui me correspond réellement et vers quoi
-          ai-je envie d’aller ? »
+          Il peut commencer par une question plus fondamentale : « Qu’est-ce qui me correspond réellement et vers quoi
+          ai-je envie d’aller ? »
         </p>
         <p>
           Le travail sur votre parcours permet alors de faire émerger des éléments qui peuvent vous aider à construire
@@ -127,7 +127,7 @@ const QUESTIONS: { q: string; a: React.ReactNode }[] = [
     ),
   },
   {
-    q: "Est-ce adapté aux personnes qui ont déjà beaucoup d’expérience ?",
+    q: "Est-ce adapté aux personnes qui ont déjà beaucoup d’expérience ?",
     a: (
       <>
         <p>Oui.</p>
@@ -143,7 +143,7 @@ const QUESTIONS: { q: string; a: React.ReactNode }[] = [
     ),
   },
   {
-    q: "Comment se passe le premier échange ?",
+    q: "Comment se passe le premier échange ?",
     a: (
       <>
         <p>Le premier échange dure 20 minutes.</p>
@@ -160,7 +160,7 @@ const QUESTIONS: { q: string; a: React.ReactNode }[] = [
     ),
   },
   {
-    q: "Comment fonctionne le paiement des accompagnements ?",
+    q: "Comment fonctionne le paiement des accompagnements ?",
     a: (
       <>
         <p>Les modalités de paiement sont précisées avant le début de l’accompagnement.</p>
@@ -189,7 +189,7 @@ export default function FaqPage() {
     <>
       <Section className="pt-10 md:pt-16 lg:pt-20">
         <Container>
-          <SectionHeading as="h1" eyebrow="FAQ" title="Vous avez une question avant de commencer ?">
+          <SectionHeading as="h1" eyebrow="FAQ" title="Vous avez une question avant de commencer ?">
             <p>Voici les réponses aux questions que l’on me pose le plus souvent.</p>
           </SectionHeading>
           <div className="mt-12 max-w-[880px] border-t border-[var(--jg-light-gray)]">

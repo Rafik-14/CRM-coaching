@@ -1,7 +1,7 @@
 import Form from "next/form";
 import { Search } from "lucide-react";
 
-/** Searches contacts (name, e-mail, phone) from anywhere. */
+/** Searches contacts (name, e-mail, phone, organisation, titles / keywords of their documents) from anywhere. */
 export function GlobalSearch() {
   return (
     <Form action="/contacts" className="relative w-full max-w-md" role="search">
@@ -9,7 +9,7 @@ export function GlobalSearch() {
       <input
         name="q"
         type="search"
-        placeholder="Rechercher un contact, un e-mail…"
+        placeholder="Rechercher un contact, un e-mail, des notes…"
         aria-label="Rechercher un contact"
         className="h-10 w-full rounded-lg border border-transparent bg-muted pr-4 pl-10 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-ring/60"
       />

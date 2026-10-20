@@ -77,7 +77,7 @@ export default function MethodePage() {
       {/* Prise de conscience */}
       <Section tone="ivory">
         <Container className="grid gap-10 lg:grid-cols-2 lg:gap-20">
-          <SectionHeading title="Et si votre parcours racontait plus que vous ne le pensez ?" />
+          <SectionHeading title="Et si votre parcours racontait plus que vous ne le pensez ?" />
           <div className="lg:pt-14">
             <div className="jg-prose max-w-[640px]">
               <p>Vos expériences, vos choix et votre manière d’agir ne sont pas des éléments isolés.</p>
@@ -177,7 +177,7 @@ export default function MethodePage() {
           <div className="max-w-[860px]">
             <GoldLine />
             <h2 className="jg-h2 mt-6">La Méthode JG® ne vous apprend pas à jouer un rôle.</h2>
-            <p className="mt-6">Elle réduit l’écart entre :</p>
+            <p className="mt-6">Elle réduit l’écart entre :</p>
           </div>
           <FlowLine
             strong
@@ -193,8 +193,8 @@ export default function MethodePage() {
         </Container>
       </Section>
 
-      <FinalCta title="Et si vous n’aviez pas besoin de changer ?" source="methode">
-        Et si vous aviez surtout besoin de comprendre ce qui était déjà là ?
+      <FinalCta title="Et si vous n’aviez pas besoin de changer ?" source="methode">
+        Et si vous aviez surtout besoin de comprendre ce qui était déjà là ?
       </FinalCta>
     </>
   );

@@ -23,8 +23,9 @@ import { cn } from "@/lib/utils";
 import { formatMoney } from "@/lib/format";
 import { STAGE_COLORS } from "@/lib/validations/phase1";
 import { SESSION_LOCATIONS, SESSION_TYPES } from "@/lib/validations/coaching";
-import { BUFFERS, SLOT_LENGTHS, WEEKDAYS, formatRanges, type BookingSettings } from "@/lib/booking";
+import { BUFFERS, SESSION_LENGTHS, SLOT_LENGTHS, WEEKDAYS, formatRanges, type BookingSettings } from "@/lib/booking";
 import { saveBookingSettings } from "@/server/actions/booking";
+import { saveEmailSettings, sendTestEmail } from "@/server/actions/email";
 import {
   deleteNoteTemplate,
   deleteStage,
@@ -55,7 +56,7 @@ function useSave(
   return useActionState<ActionState, FormData>(async (prev, fd) => {
     const r = await action(prev, fd);
     if (r.ok) {
-      toast.success(success);
+      toast.success(r.message ?? success);
       onDone?.();
     } else if (r.error) toast.error(r.error);
     return r;
@@ -559,7 +560,7 @@ export function BookingSettingsForm({ settings }: { settings: BookingSettings })
     <form action={formAction} className="grid gap-6">
       <label className="flex items-center gap-3 text-sm font-medium">
         <input type="checkbox" name="enabled" defaultChecked={settings.enabled} className="size-4 accent-primary" />
-        Réservation en ligne ouverte sur le site
+        Réservation en ligne ouverte (site et liens clients)
       </label>
 
       <fieldset className="grid gap-3">
@@ -594,6 +595,20 @@ export function BookingSettingsForm({ settings }: { settings: BookingSettings })
             </SelectTrigger>
             <SelectContent>
               {SLOT_LENGTHS.map((n) => (
+                <SelectItem key={n} value={String(n)}>
+                  {n} minutes
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </FormField>
+        <FormField label="Durée d'une séance client" htmlFor="sessionMinutes" hint="Séances réservées par vos clients depuis leur lien personnel.">
+          <Select name="sessionMinutes" defaultValue={String(settings.sessionMinutes)}>
+            <SelectTrigger id="sessionMinutes" className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {SESSION_LENGTHS.map((n) => (
                 <SelectItem key={n} value={String(n)}>
                   {n} minutes
                 </SelectItem>
@@ -645,11 +660,56 @@ export function BookingSettingsForm({ settings }: { settings: BookingSettings })
         >
           <Input id="horizonDays" name="horizonDays" type="number" min={1} max={120} defaultValue={settings.horizonDays} />
         </FormField>
+        <FormField
+          label="Annulation possible jusqu'à (heures)"
+          htmlFor="cancellationHours"
+          hint="Avant ce délai, le lien des e-mails permet d'annuler ou de déplacer. Après, vos coordonnées s'affichent."
+          error={errors?.cancellationHours?.[0]}
+        >
+          <Input id="cancellationHours" name="cancellationHours" type="number" min={0} max={168} defaultValue={settings.cancellationHours} />
+        </FormField>
       </div>
 
       <Button type="submit" disabled={pending} className="justify-self-start">
         {pending && <Loader2 className="animate-spin" />}
         Enregistrer
+      </Button>
+    </form>
+  );
+}
+
+// ------------------------------------------------------------------ e-mails
+
+export function EmailNotifyForm({ notifyTo, fallback }: { notifyTo: string | null; fallback: string | null }) {
+  const [state, formAction, pending] = useSave(saveEmailSettings, "Adresse enregistrée");
+  return (
+    <form action={formAction} className="grid gap-4">
+      <FormField
+        label="Adresse qui reçoit les notifications"
+        htmlFor="notifyTo"
+        hint={`Nouvelles réservations et nouveaux messages du site. Vide = adresse de votre compte${fallback ? ` (${fallback})` : ""}.`}
+        error={state.fieldErrors?.notifyTo?.[0]}
+      >
+        <Input id="notifyTo" name="notifyTo" type="email" defaultValue={notifyTo ?? ""} placeholder={fallback ?? ""} />
+      </FormField>
+      <Button type="submit" disabled={pending} className="justify-self-start">
+        {pending && <Loader2 className="animate-spin" />}
+        Enregistrer
+      </Button>
+    </form>
+  );
+}
+
+export function TestEmailForm({ defaultTo }: { defaultTo: string | null }) {
+  const [state, formAction, pending] = useSave(sendTestEmail, "E-mail de test envoyé");
+  return (
+    <form action={formAction} className="grid gap-4 sm:grid-cols-[1fr_auto] sm:items-end">
+      <FormField label="Envoyer un e-mail de test à" htmlFor="test-to" error={state.fieldErrors?.to?.[0]}>
+        <Input id="test-to" name="to" type="email" defaultValue={defaultTo ?? ""} required />
+      </FormField>
+      <Button type="submit" disabled={pending} variant="outline">
+        {pending && <Loader2 className="animate-spin" />}
+        Envoyer le test
       </Button>
     </form>
   );

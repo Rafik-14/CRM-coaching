@@ -6,32 +6,32 @@ import { offerSlug } from "./content";
 import { bookingHref } from "./nav";
 import { ButtonLink, DotList, GoldLine } from "./ui";
 
-/** « 170 € / 190 CHF · 1 séance » */
+/** « 170 € / 190 CHF · 1 séance » */
 export function priceLine(offer: Pick<PublicOffer, "priceEur" | "priceChf" | "sessionsCount">, withSessions = true) {
   const prices = [formatMoney(offer.priceEur, "EUR"), offer.priceChf != null && formatMoney(offer.priceChf, "CHF")]
     .filter(Boolean)
     .join(" / ");
   if (!withSessions) return prices;
-  // No-break spaces keep « · 3 séances » together when the line wraps.
+  // No-break spaces keep « · 3 séances » together when the line wraps.
   return `${prices} · ${offer.sessionsCount} séance${offer.sessionsCount > 1 ? "s" : ""}`;
 }
 
 /** Site wording that is not stored in the CRM (who the offer is for, button), keyed by offer anchor. */
 const EXTRAS: Record<string, { label: string; items: string[]; cta: string; href: string; secondary?: boolean }> = {
   "architecture-identitaire": {
-    label: "Pour :",
+    label: "Pour :",
     items: ["Clarification", "Repositionnement", "Orientation", "Reconversion", "Évolution"],
     cta: "Réserver une Architecture Identitaire",
     href: bookingHref("offre-architecture-identitaire", "particulier"),
   },
   "accompagnement-decisif": {
-    label: "Pour :",
+    label: "Pour :",
     items: ["Entretien", "Stage", "Alternance", "Oral", "Pitch", "Négociation", "Prise de poste"],
     cta: "Parler de votre enjeu",
     href: bookingHref("offre-accompagnement-decisif", "particulier"),
   },
   "parcours-signature": {
-    label: "Inclus :",
+    label: "Inclus :",
     items: [],
     cta: "Découvrir le Parcours Signature JG®",
     href: "/accompagnements/parcours-signature",
@@ -49,7 +49,7 @@ export async function OfferList() {
         const slug = offerSlug(offer.name);
         const extra = EXTRAS[slug];
         const items = extra?.items.length ? extra.items : offer.includes;
-        const label = extra?.label ?? (offer.includes.length ? "Inclus :" : null);
+        const label = extra?.label ?? (offer.includes.length ? "Inclus :" : null);
         return (
           <li
             key={offer.id}

@@ -1,12 +1,12 @@
 import "server-only";
 import { and, desc, eq } from "drizzle-orm";
 import { db } from "@/server/db";
-import { activityLog, coachingSessions, contacts } from "@/server/db/schema";
+import { activityLog, coachingSessions, contacts, emailLog } from "@/server/db/schema";
 
 export type TimelineEvent = {
   id: string;
   at: Date;
-  kind: "created" | "session_done" | "session_planned" | "session_cancelled" | "stage" | "closed" | "update";
+  kind: "created" | "session_done" | "session_planned" | "session_cancelled" | "stage" | "closed" | "update" | "email";
   title: string;
   description?: string;
   latest?: boolean;
@@ -26,13 +26,15 @@ const actionLabels: Record<string, { title: string; kind: TimelineEvent["kind"] 
   case_study_saved: { title: "Étude de cas mise à jour", kind: "update" },
   goal_created: { title: "Objectif ajouté", kind: "update" },
   document_added: { title: "Document ajouté", kind: "update" },
+  notes_scanned: { title: "Notes manuscrites scannées", kind: "update" },
   created_from_site: { title: "Contact créé via le formulaire du site", kind: "created" },
   site_form_message: { title: "Nouveau message via le site", kind: "update" },
+  echange_booked_online: { title: "Échange stratégique réservé en ligne", kind: "session_planned" },
 };
 
 /** Merged history of a contact. Callers must have checked authorization (requireCoach). */
 export async function buildTimeline(contactId: string, limit = 12): Promise<TimelineEvent[]> {
-  const [contact, logs, sessions] = await Promise.all([
+  const [contact, logs, sessions, emails] = await Promise.all([
     db.query.contacts.findFirst({ where: eq(contacts.id, contactId), columns: { createdAt: true } }),
     db.query.activityLog.findMany({
       where: and(eq(activityLog.entity, "contact"), eq(activityLog.entityId, contactId)),
@@ -45,6 +47,11 @@ export async function buildTimeline(contactId: string, limit = 12): Promise<Time
       .where(eq(coachingSessions.contactId, contactId))
       .orderBy(desc(coachingSessions.startsAt))
       .limit(20),
+    db.query.emailLog.findMany({
+      where: eq(emailLog.contactId, contactId),
+      orderBy: desc(emailLog.createdAt),
+      limit: 20,
+    }),
   ]);
 
   const notes = sessions.length
@@ -83,6 +90,16 @@ export async function buildTimeline(contactId: string, limit = 12): Promise<Time
     if (log.action === "created" || log.action === "session_scheduled") continue;
     const label = actionLabels[log.action];
     if (label) events.push({ id: log.id, at: log.createdAt, kind: label.kind, title: label.title });
+  }
+
+  for (const m of emails) {
+    events.push({
+      id: m.id,
+      at: m.createdAt,
+      kind: "email",
+      title: m.status === "failed" ? "Échec d’envoi d’un e-mail" : "E-mail envoyé",
+      description: m.status === "failed" && m.error ? `${m.subject} — ${m.error}` : m.subject,
+    });
   }
 
   if (contact) events.push({ id: `created-${contactId}`, at: contact.createdAt, kind: "created", title: "Contact ajouté" });

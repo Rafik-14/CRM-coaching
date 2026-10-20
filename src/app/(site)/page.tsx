@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
-import { Card, FinalCta, FlowLine, SectionHeading, Statement, WideFigure } from "@/components/site/blocks";
+import { ArrowRight, Plus } from "lucide-react";
+import { Card, FinalCta, FlowLine, SectionHeading, SectionNumber, Statement, WideFigure } from "@/components/site/blocks";
+import { FloatingBooking } from "@/components/site/floating-booking";
 import { CASES, DOMAINS } from "@/components/site/content";
 import { ArrowLink, BookingButton, Container, DotList, Eyebrow, GoldLine, Section } from "@/components/site/ui";
 import hero from "@/assets/site/hero.webp";
@@ -13,11 +14,12 @@ import etapeClarifier from "@/assets/site/etape-clarifier.webp";
 import etapeReveler from "@/assets/site/etape-reveler.webp";
 import etapeIncarner from "@/assets/site/etape-incarner.webp";
 import { SITE_URL } from "@/lib/site";
+import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: { absolute: "Jérémy Galéa · Méthode JG® — Révéler votre potentiel" },
   description:
-    "Pourquoi vous plutôt qu’un autre ? Coach & formateur, Jérémy Galéa vous aide à rendre votre valeur claire, crédible et évidente. France • Suisse.",
+    "Pourquoi vous plutôt qu’un autre ? Coach & formateur, Jérémy Galéa vous aide à rendre votre valeur claire, crédible et évidente. France • Suisse.",
   alternates: { canonical: "/" },
 };
 
@@ -25,16 +27,25 @@ const STEPS = [
   {
     title: "Clarifier",
     image: etapeClarifier,
+    tone: "bg-navy text-white",
+    number: "text-gold",
+    ring: "border-navy",
     text: "Comprendre votre situation, vos enjeux et ce qui vous freine pour retrouver une direction claire.",
   },
   {
     title: "Révéler",
     image: etapeReveler,
+    tone: "bg-gold text-navy",
+    number: "text-navy",
+    ring: "border-gold",
     text: "Faire émerger la cohérence de votre parcours pour identifier ce qui vous distingue.",
   },
   {
     title: "Incarner",
     image: etapeIncarner,
+    tone: "bg-[var(--jg-teal)] text-white",
+    number: "text-gold",
+    ring: "border-[var(--jg-teal)]",
     text: "Transformer cette clarté en posture, discours et décisions, pour rendre votre valeur visible.",
   },
 ] as const;
@@ -44,7 +55,7 @@ const OFFERS = [
     name: "Architecture Identitaire JG®",
     tagline: "Comprendre ce qui fait réellement votre valeur.",
     text: "Prendre du recul sur votre parcours, révéler ce qui vous distingue et clarifier votre direction.",
-    label: "Pour :",
+    label: "Pour :",
     items: ["Clarification", "Repositionnement", "Orientation", "Reconversion", "Évolution"],
     note: null,
     link: "Découvrir l’Architecture Identitaire JG®",
@@ -54,7 +65,7 @@ const OFFERS = [
     name: "Accompagnement Décisif JG®",
     tagline: "Réussir quand ça compte.",
     text: "Un accompagnement court et ciblé pour préparer un moment où votre valeur doit être comprise, reconnue et choisie.",
-    label: "Pour :",
+    label: "Pour :",
     items: ["Entretien", "Stage", "Alternance", "Oral", "Pitch", "Négociation", "Prise de poste"],
     note: "1 à 3 séances selon votre objectif.",
     link: "Découvrir l’Accompagnement Décisif JG®",
@@ -89,41 +100,52 @@ export default function HomePage() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }} />
-      {/* 1 — Hero: text left, portrait right */}
-      <Section className="pt-10 md:pt-16 lg:pt-20">
-        <Container className="grid items-center gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16">
-          <div>
-            <Eyebrow>Jérémy Galéa · Méthode JG®</Eyebrow>
-            <GoldLine className="mt-4" />
-            <h1 className="jg-h1 mt-6">Pourquoi vous plutôt qu’un autre ?</h1>
-            <p className="mt-6 font-heading text-[1.25rem] leading-snug font-medium text-navy md:text-[1.375rem]">
-              Si vous deviez répondre maintenant, que diriez-vous ?
-            </p>
-            <div className="jg-prose mt-6 max-w-[600px]">
-              <p>
-                Parce qu’au moment où une décision se prend, votre valeur ne suffit pas. Il faut qu’elle soit perçue.
-              </p>
-              <p>
-                <strong>Je vous aide à la rendre claire, crédible et évidente.</strong>
-              </p>
-              <p>Pour être compris, reconnu et choisi.</p>
-            </div>
-            <DotList items={DOMAINS} className="jg-small mt-8 font-medium text-navy" />
-            <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-5">
-              <BookingButton source="accueil-hero" />
-              <p className="jg-small">20 minutes · Sans engagement</p>
-            </div>
-          </div>
-          <div className="relative mx-auto w-full max-w-[520px]">
+      {/* 1 — Hero. Phones: full-width photo with the title on it. Tablet: text then photo. Desktop: text left, portrait right. */}
+      <Section className="pt-0 md:pt-16 lg:pt-20">
+        <Container className="grid lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:gap-x-16">
+          <div className="relative col-start-1 row-start-1 -mx-5 md:row-start-3 md:mx-auto md:mt-12 md:w-full md:max-w-[520px] lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:mt-0">
             <Image
               src={hero}
               alt="Jérémy Galéa, coach et formateur, créateur de la Méthode JG®"
               priority
               placeholder="blur"
               sizes="(min-width: 1024px) 520px, (min-width: 640px) 520px, 100vw"
-              className="aspect-[4/5] w-full rounded-[12px] object-cover object-[50%_25%]"
+              className="h-[min(82svh,660px)] w-full object-cover object-[50%_18%] md:aspect-[4/5] md:h-auto md:rounded-[12px] md:object-[50%_25%]"
             />
-            <span aria-hidden className="absolute -bottom-4 left-8 h-0.5 w-24 bg-gold" />
+            <span
+              aria-hidden
+              className="absolute inset-0 bg-[linear-gradient(180deg,rgba(23,37,54,0)_32%,rgba(23,37,54,0.88)_66%,var(--jg-navy)_100%)] md:hidden"
+            />
+            <span aria-hidden className="absolute -bottom-4 left-8 hidden h-0.5 w-24 bg-gold md:block" />
+          </div>
+          <div className="relative z-10 col-start-1 row-start-1 self-end pb-8 md:pb-0 lg:self-end">
+            <Eyebrow className="max-md:text-gold">Jérémy Galéa · Méthode JG®</Eyebrow>
+            <GoldLine className="mt-4 max-md:hidden" />
+            <h1 className="jg-h1 mt-3 max-md:text-white md:mt-6">Pourquoi vous plutôt qu’un autre ?</h1>
+            <p className="mt-4 font-heading text-[1.125rem] leading-snug font-medium text-navy max-md:text-white/90 md:mt-6 md:text-[1.375rem]">
+              Si vous deviez répondre maintenant, que diriez-vous ?
+            </p>
+            <div className="mt-6 md:hidden">
+              <BookingButton source="accueil-hero" variant="accent" block />
+              <p className="jg-small mt-2 text-center text-white/80">20 minutes · Sans engagement</p>
+            </div>
+          </div>
+          <div className="col-start-1 row-start-2 mt-8 md:mt-6 lg:self-start">
+            <div className="jg-prose max-w-[600px]">
+              <p>
+                Parce qu’au moment où une décision se prend, votre valeur ne suffit pas. Il faut qu’elle soit perçue.
+              </p>
+              <p className="max-md:hidden">
+                <strong>Je vous aide à la rendre claire, crédible et évidente.</strong>
+              </p>
+              <p className="max-md:hidden">Pour être compris, reconnu et choisi.</p>
+            </div>
+            <Statement className="mt-6 md:hidden">Je vous aide à la rendre claire, crédible et évidente. Pour être compris, reconnu et choisi.</Statement>
+            <DotList items={DOMAINS} className="jg-small mt-8 font-medium text-navy" />
+            <div className="mt-10 hidden flex-col gap-3 sm:flex-row sm:items-center sm:gap-5 md:flex">
+              <BookingButton source="accueil-hero" />
+              <p className="jg-small">20 minutes · Sans engagement</p>
+            </div>
           </div>
         </Container>
       </Section>
@@ -131,7 +153,7 @@ export default function HomePage() {
       {/* 2 — Prise de conscience */}
       <Section tone="ivory">
         <Container className="grid gap-10 lg:grid-cols-2 lg:gap-20">
-          <SectionHeading title="Et si votre parcours racontait une histoire que vous n’avez jamais vue ?" />
+          <SectionHeading num={1} title="Et si votre parcours racontait une histoire que vous n’avez jamais vue ?" />
           <div className="jg-prose max-w-[640px] lg:pt-14">
             <p>Vos expériences, vos choix et vos détours ne sont peut-être pas aussi dispersés qu’ils en ont l’air.</p>
             <p>Un fil conducteur relie parfois ce que vous avez construit sans que vous l’ayez encore identifié.</p>
@@ -145,7 +167,7 @@ export default function HomePage() {
       {/* 3 — Valeur + perception */}
       <Section>
         <Container className="grid gap-10 lg:grid-cols-2 lg:gap-20">
-          <SectionHeading title="Votre valeur existe. Mais est-elle perçue ?">
+          <SectionHeading num={2} title="Votre valeur existe. Mais est-elle perçue ?">
             <p>Vous pouvez avoir les compétences, l’expérience et le potentiel.</p>
             <p>Et pourtant, ne pas toujours réussir à les rendre visibles au moment où cela compte.</p>
           </SectionHeading>
@@ -162,9 +184,12 @@ export default function HomePage() {
       {/* 4 — Mantra / territoire JG® */}
       <Section tone="navy">
         <Container>
-          <Eyebrow>Le territoire JG®</Eyebrow>
-          <GoldLine className="mt-4" />
-          <h2 className="jg-h2 mt-6 max-w-[880px]">
+          <div className="flex items-baseline gap-3">
+            <SectionNumber n={3} />
+            <Eyebrow>Le territoire JG®</Eyebrow>
+          </div>
+          <GoldLine className="mt-4 max-md:hidden" />
+          <h2 className="jg-h2 mt-3 max-w-[880px] md:mt-6">
             Savoir ce que vous valez est une force.
             <br />
             Savoir le rendre évident est un pouvoir.
@@ -191,7 +216,7 @@ export default function HomePage() {
               className="order-last h-auto w-full max-w-[440px] rounded-[12px] lg:order-first"
             />
             <div>
-              <SectionHeading eyebrow="La Méthode JG®" title="Comprendre votre parcours pour révéler votre valeur.">
+              <SectionHeading num={4} eyebrow="La Méthode JG®" title="Comprendre votre parcours pour révéler votre valeur.">
                 <p>
                   La Méthode JG® révèle les liens entre vos expériences, vos choix et vos réussites pour faire émerger ce
                   qui vous distingue réellement.
@@ -221,31 +246,46 @@ export default function HomePage() {
       {/* 6 — Comment ça fonctionne ? */}
       <Section tone="ivory">
         <Container>
-          <SectionHeading eyebrow="Comment ça fonctionne ?" title="Trois étapes pour rendre votre valeur évidente." />
+          <SectionHeading num={5} eyebrow="Comment ça fonctionne ?" title="Trois étapes pour rendre votre valeur évidente." />
           <div className="mt-8 grid gap-2">
-            <FlowLine strong items={["Clarifier", "Révéler", "Incarner"]} />
+            <FlowLine strong items={["Clarifier", "Révéler", "Incarner"]} className="hidden md:flex" />
             <FlowLine items={["Comprendre", "Donner du sens", "Rendre visible"]} className="hidden md:flex" />
           </div>
-          <ol className="mt-12 grid gap-6 md:grid-cols-3">
+          {/* Phones: a timeline (gradient line through round pictures). Tablet and desktop: three coloured cards. */}
+          <ol className="relative mt-8 grid gap-5 before:absolute before:top-8 before:bottom-10 before:left-8 before:w-0.5 before:bg-[linear-gradient(var(--jg-navy),var(--jg-gold),var(--jg-teal))] md:mt-12 md:grid-cols-3 md:gap-6 md:before:hidden">
             {STEPS.map((step, i) => (
-              <li key={step.title}>
-                <Card className="h-full p-6 md:p-7">
-                  {/* The picture carries the step name; the heading repeats it for screen readers. */}
+              <li key={step.title} className="relative grid grid-cols-[64px_1fr] items-start gap-3.5 md:block">
+                <span
+                  aria-hidden
+                  className={cn("relative z-10 size-16 overflow-hidden rounded-full border-[3px] bg-white md:hidden", step.ring)}
+                >
                   <Image
                     src={step.image}
                     alt=""
-                    placeholder="blur"
-                    sizes="(min-width: 768px) 320px, 80vw"
-                    className="mx-auto w-full max-w-[240px]"
+                    sizes="96px"
+                    className="absolute top-[-6px] left-1/2 size-24 max-w-none -translate-x-1/2"
                   />
-                  <h3 className="sr-only">
-                    {String(i + 1).padStart(2, "0")} — {step.title}
+                </span>
+                {/* One brand colour per step (navy, gold, teal); on larger screens the picture sits on its own white tile. */}
+                <div className={cn("h-full rounded-[12px] p-4 md:p-6", step.tone)}>
+                  <div className="hidden rounded-[10px] bg-white p-3 md:block">
+                    <Image
+                      src={step.image}
+                      alt=""
+                      placeholder="blur"
+                      sizes="320px"
+                      className="mx-auto w-full max-w-[220px]"
+                    />
+                  </div>
+                  <h3 className={cn("font-heading text-[13px] font-bold tracking-[0.14em] uppercase md:sr-only", step.number)}>
+                    <span className="sr-only">{String(i + 1).padStart(2, "0")} — </span>
+                    {step.title}
                   </h3>
-                  <p aria-hidden className="mt-4 font-heading text-[15px] font-semibold text-navy tabular-nums">
+                  <p aria-hidden className={cn("mt-5 font-heading text-[1.5rem] leading-none font-semibold tabular-nums max-md:hidden", step.number)}>
                     {String(i + 1).padStart(2, "0")}
                   </p>
-                  <p className="mt-3">{step.text}</p>
-                </Card>
+                  <p className="mt-1 text-[15px] leading-snug md:mt-3 md:text-base md:leading-normal">{step.text}</p>
+                </div>
               </li>
             ))}
           </ol>
@@ -255,10 +295,36 @@ export default function HomePage() {
       {/* 7 — Les accompagnements */}
       <Section>
         <Container>
-          <SectionHeading eyebrow="Les accompagnements" title="Trois façons de passer de la compréhension à l’action.">
+          <SectionHeading num={6} eyebrow="Les accompagnements" title="Trois façons de passer de la compréhension à l’action.">
             <p>Un accompagnement adapté à votre situation, votre objectif et votre moment professionnel.</p>
           </SectionHeading>
-          <ul className="mt-12 grid gap-6 lg:grid-cols-3">
+          {/* Phones: fold-out list, the first one open. */}
+          <div className="mt-8 border-t border-[var(--jg-light-gray)] md:hidden">
+            {OFFERS.map((offer, i) => (
+              <details key={offer.name} open={i === 0} className="group border-b border-[var(--jg-light-gray)]">
+                <summary className="flex cursor-pointer list-none items-start gap-3 py-4 [&::-webkit-details-marker]:hidden">
+                  <span className="font-heading text-[15px] font-semibold text-gold tabular-nums">{String(i + 1).padStart(2, "0")}</span>
+                  <span className="flex-1">
+                    <span className="block font-heading text-[15px] font-semibold tracking-[0.04em] text-navy uppercase">{offer.name}</span>
+                    <span className="mt-0.5 block text-[15px] leading-snug">{offer.tagline}</span>
+                  </span>
+                  <Plus aria-hidden className="mt-0.5 size-5 shrink-0 text-navy transition-transform duration-200 group-open:rotate-45" />
+                </summary>
+                <div className="pb-5 pl-[30px]">
+                  <p>{offer.text}</p>
+                  <div className="jg-small mt-3">
+                    {offer.label && <p className="font-semibold text-navy">{offer.label}</p>}
+                    <DotList items={offer.items} className="mt-1" />
+                    {offer.note && <p className="mt-3">{offer.note}</p>}
+                  </div>
+                  <ArrowLink href={offer.href} className="mt-2">
+                    {offer.link}
+                  </ArrowLink>
+                </div>
+              </details>
+            ))}
+          </div>
+          <ul className="mt-12 hidden gap-6 md:grid lg:grid-cols-3">
             {OFFERS.map((offer, i) => (
               <li key={offer.name}>
                 <Card className="flex h-full flex-col">
@@ -283,7 +349,7 @@ export default function HomePage() {
           </ul>
           <div className="mt-12 flex flex-col gap-6 rounded-[12px] bg-ivory p-7 md:flex-row md:items-center md:justify-between md:p-10">
             <div>
-              <p className="jg-h3 font-heading font-semibold text-navy">Vous ne savez pas quel accompagnement choisir ?</p>
+              <p className="jg-h3 font-heading font-semibold text-navy">Vous ne savez pas quel accompagnement choisir ?</p>
               <p className="mt-2">Parlons de votre situation.</p>
             </div>
             <BookingButton source="accueil-accompagnements" />
@@ -295,6 +361,7 @@ export default function HomePage() {
       <Section tone="ivory">
         <Container>
           <SectionHeading
+            num={7}
             eyebrow="Transformations"
             title="Quand on comprend mieux son parcours, on ne se présente plus de la même manière."
           >
@@ -327,7 +394,7 @@ export default function HomePage() {
                   <span className="mt-6 block font-heading text-[13px] font-semibold tracking-[0.16em] uppercase">
                     Avant
                   </span>
-                  <span className="mt-2 block italic">« {c.teaser} »</span>
+                  <span className="mt-2 block italic">« {c.teaser} »</span>
                   <span className="mt-auto inline-flex items-center gap-2 pt-6 font-heading text-[15px] font-semibold text-navy underline decoration-gold decoration-2 underline-offset-[6px]">
                     Lire le cas pratique
                     <ArrowRight aria-hidden className="size-4 transition-transform duration-200 group-hover:translate-x-0.5" />
@@ -377,6 +444,7 @@ export default function HomePage() {
       <FinalCta title="La prochaine décision vous appartient." source="accueil-final">
         Votre valeur mérite d’être évidente.
       </FinalCta>
+      <FloatingBooking source="accueil-flottant" />
     </>
   );
 }

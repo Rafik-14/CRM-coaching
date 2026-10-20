@@ -6,7 +6,7 @@ import intervention from "@/assets/site/intervention.webp";
 import atelier from "@/assets/site/atelier.webp";
 
 export const metadata: Metadata = {
-  title: "Pour qui ?",
+  title: "Pour qui ?",
   description:
     "Particuliers, entrepreneurs, entreprises, cabinets RH et chasseurs de têtes, écoles et universités : votre situation détermine le point de départ.",
   alternates: { canonical: "/pour-qui" },
@@ -27,7 +27,7 @@ const AUDIENCES: Audience[] = [
     id: "entrepreneurs",
     profil: "entrepreneur",
     label: "Entrepreneurs",
-    title: "Dans un marché ultra-concurrentiel, pourquoi vous plutôt qu’un autre ?",
+    title: "Dans un marché ultra-concurrentiel, pourquoi vous plutôt qu’un autre ?",
     paragraphs: [
       "Votre expertise existe. Votre valeur aussi.",
       "Je vous aide à révéler votre singularité et à la rendre suffisamment lisible pour que vos clients comprennent plus rapidement pourquoi vous choisir.",
@@ -82,7 +82,7 @@ export default function PourQuiPage() {
     <>
       <Section className="pt-10 md:pt-16 lg:pt-20">
         <Container>
-          <SectionHeading as="h1" eyebrow="Pour qui ?" title="Votre situation détermine le point de départ.">
+          <SectionHeading as="h1" eyebrow="Pour qui ?" title="Votre situation détermine le point de départ.">
             <p>Identifiez votre besoin. Je vous aide à trouver la réponse la plus pertinente.</p>
           </SectionHeading>
           <nav aria-label="Publics" className="mt-10">
@@ -152,7 +152,7 @@ export default function PourQuiPage() {
         </Section>
       ))}
 
-      <FinalCta title="Vous ne savez pas encore où vous situer ?" source="pour-qui">
+      <FinalCta title="Vous ne savez pas encore où vous situer ?" source="pour-qui">
         Votre situation n’entre pas forcément dans une case. Parlons-en.
       </FinalCta>
     </>

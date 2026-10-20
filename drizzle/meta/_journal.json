@@ -36,6 +36,69 @@
       "when": 1791833812564,
       "tag": "0004_note_template_session_type",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1792008019765,
+      "tag": "0005_email_log",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792009850733,
+      "tag": "0006_document_scanner",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1792063688808,
+      "tag": "0007_session_reminders",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1792065372716,
+      "tag": "0008_availability_exceptions",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1792066441170,
+      "tag": "0009_booked_via",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1792094101371,
+      "tag": "0010_email_templates_sequences",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1792094982571,
+      "tag": "0011_intake_questionnaire",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1792237876691,
+      "tag": "0012_invoicing",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1792519705948,
+      "tag": "0013_remove_billing",
+      "breakpoints": true
     }
   ]
 }
