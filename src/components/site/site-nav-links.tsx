@@ -13,7 +13,7 @@ export function SiteNavLinks() {
 
 export function NavList({ pathname }: { pathname?: string }) {
   return (
-    <ul className="flex items-center gap-x-[clamp(0.625rem,0.95vw,1.375rem)]">
+    <ul className="flex items-center gap-x-[clamp(0.5rem,0.8vw,1.375rem)]">
       {SITE_NAV.map((item) => {
         const active = pathname ? isActive(pathname, item.href) : false;
         return (
