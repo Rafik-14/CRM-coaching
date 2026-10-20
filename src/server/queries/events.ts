@@ -161,3 +161,38 @@ export async function eventsBetween(from: Date, to: Date) {
     .where(and(eq(events.status, "published"), ne(events.manualHistory, true), lte(events.startsAt, to), gt(events.endsAt, from)))
     .orderBy(asc(events.startsAt));
 }
+
+/** Analyses › Événements: the last 12 months of events held, attendance, and what the events brought in. */
+export async function getEventStats(now = new Date()) {
+  await requireCoach();
+  const since = new Date(now.getTime() - 365 * 86_400_000);
+  const held = await db
+    .select({ id: events.id, title: events.title, startsAt: events.startsAt })
+    .from(events)
+    .where(and(eq(events.status, "published"), eq(events.manualHistory, false), lte(events.endsAt, now), gt(events.startsAt, since)))
+    .orderBy(desc(events.startsAt));
+  const regs = held.length
+    ? await db
+        .select({ eventId: eventRegistrations.eventId, seats: eventRegistrations.seats, attended: eventRegistrations.attended })
+        .from(eventRegistrations)
+        .where(and(inArray(eventRegistrations.eventId, held.map((e) => e.id)), eq(eventRegistrations.status, "confirmed")))
+    : [];
+  const rows = held.map((e) => {
+    const mine = regs.filter((r) => r.eventId === e.id);
+    const registered = mine.reduce((n, r) => n + r.seats, 0);
+    const present = mine.filter((r) => r.attended).reduce((n, r) => n + r.seats, 0);
+    return { ...e, registered, present };
+  });
+  const fromEvents = await db.query.contacts.findMany({
+    where: (c, { like }) => like(c.source, "Événement%"),
+    columns: { id: true },
+    with: { client: { columns: { id: true } } },
+  });
+  return {
+    rows,
+    registered: rows.reduce((n, r) => n + r.registered, 0),
+    present: rows.reduce((n, r) => n + r.present, 0),
+    contacts: fromEvents.length,
+    clients: fromEvents.filter((c) => c.client).length,
+  };
+}

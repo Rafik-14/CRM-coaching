@@ -2,7 +2,7 @@ import "server-only";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { and, asc, eq, gte, lte, ne, sql } from "drizzle-orm";
 import { db } from "@/server/db";
-import { availabilityExceptions, coachingSessions, settings } from "@/server/db/schema";
+import { availabilityExceptions, coachingSessions, events, settings } from "@/server/db/schema";
 import { APP_TIME_ZONE } from "@/lib/format";
 import {
   computeAvailability,
@@ -39,7 +39,15 @@ export async function getBusyIntervals(
         excludeSessionId ? ne(coachingSessions.id, excludeSessionId) : undefined,
       ),
     );
-  return rows.map((r) => ({ start: r.startsAt, end: new Date(r.startsAt.getTime() + r.durationMin * 60_000) }));
+  // Published conferences & workshops block the coach's time too.
+  const busyEvents = await executor
+    .select({ startsAt: events.startsAt, endsAt: events.endsAt })
+    .from(events)
+    .where(and(eq(events.status, "published"), eq(events.manualHistory, false), lte(events.startsAt, to), gte(events.endsAt, from)));
+  return [
+    ...rows.map((r) => ({ start: r.startsAt, end: new Date(r.startsAt.getTime() + r.durationMin * 60_000) })),
+    ...busyEvents.map((e) => ({ start: e.startsAt, end: e.endsAt })),
+  ];
 }
 
 /** Today in the coach's time zone, as YYYY-MM-DD. */

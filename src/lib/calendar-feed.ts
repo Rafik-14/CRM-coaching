@@ -24,8 +24,11 @@ export const FEED_FUTURE_DAYS = 366;
 
 export const shortName = (first: string, last: string) => [first.trim(), last.trim() ? `${last.trim()[0].toUpperCase()}.` : ""].filter(Boolean).join(" ");
 
-export function buildCoachFeed(sessions: FeedSession[], baseUrl: string, now = new Date()) {
-  const events: IcsEventInput[] = sessions.map((s) => ({
+/** Conferences & workshops shown in the coach's agenda next to the sessions. */
+export type FeedEvent = { id: string; title: string; startsAt: Date; endsAt: Date; location: string | null; updatedAt: Date };
+
+export function buildCoachFeed(sessions: FeedSession[], baseUrl: string, now = new Date(), events: FeedEvent[] = []) {
+  const items: IcsEventInput[] = sessions.map((s) => ({
     uid: `session-${s.id}@crm-jeremygalea`,
     start: s.startsAt,
     durationMin: s.durationMin,
@@ -36,5 +39,18 @@ export function buildCoachFeed(sessions: FeedSession[], baseUrl: string, now = n
     status: s.status === "cancelled" ? "CANCELLED" : "CONFIRMED",
     updatedAt: s.updatedAt,
   }));
-  return icsCalendar(events, { name: "Séances · Méthode JG®", refreshMinutes: 60 }, now);
+  for (const e of events) {
+    items.push({
+      uid: `event-${e.id}@crm-jeremygalea`,
+      start: e.startsAt,
+      durationMin: Math.max(15, Math.round((e.endsAt.getTime() - e.startsAt.getTime()) / 60_000)),
+      summary: `Événement · ${e.title}`,
+      location: e.location,
+      url: `${baseUrl}/mes-evenements/${e.id}`,
+      description: `Inscrits dans le CRM : ${baseUrl}/mes-evenements/${e.id}`,
+      status: "CONFIRMED",
+      updatedAt: e.updatedAt,
+    });
+  }
+  return icsCalendar(items, { name: "Séances · Méthode JG®", refreshMinutes: 60 }, now);
 }
