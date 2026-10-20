@@ -89,7 +89,7 @@ export function ManageBooking({
 
       {mode === "cancel" && (
         <form action={cancel} className="grid gap-6 rounded-[12px] border border-[var(--jg-light-gray)] bg-ivory p-6 md:p-9">
-          <p className="jg-h4 font-heading font-semibold text-navy">Annuler ce rendez-vous ?</p>
+          <p className="jg-h4 font-heading font-semibold text-navy">Annuler ce rendez-vous ?</p>
           <label className="grid gap-2">
             <span className="font-heading text-[15px] font-semibold text-navy">
               Un mot pour Jérémy <span className="font-sans font-normal">(facultatif)</span>

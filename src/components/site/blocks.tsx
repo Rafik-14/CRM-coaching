@@ -40,7 +40,7 @@ export function Statement({ children, className }: { children: React.ReactNode; 
   );
 }
 
-/** « 01 — CLARIFIER » style numbered steps, in columns on desktop. */
+/** « 01 — CLARIFIER » style numbered steps, in columns on desktop. */
 export function Steps({
   steps,
   className,
@@ -67,7 +67,7 @@ export function Steps({
   );
 }
 
-/** A line of words joined by arrows (« Comprendre → Donner du sens → Rendre visible »). Vertical on phones. */
+/** A line of words joined by arrows (« Comprendre → Donner du sens → Rendre visible »). Vertical on phones. */
 export function FlowLine({ items, className, strong }: { items: readonly string[]; className?: string; strong?: boolean }) {
   return (
     <ol
@@ -92,7 +92,7 @@ export function FlowLine({ items, className, strong }: { items: readonly string[
   );
 }
 
-/** « AVANT » / « APRÈS » quotes, side by side on desktop. */
+/** « AVANT » / « APRÈS » quotes, side by side on desktop. */
 export function BeforeAfter({ pairs, className }: { pairs: readonly { before: string; after: string }[]; className?: string }) {
   return (
     <div className={cn("grid gap-6", className)}>
@@ -100,7 +100,7 @@ export function BeforeAfter({ pairs, className }: { pairs: readonly { before: st
         <div key={pair.before} className="grid gap-px overflow-hidden rounded-[12px] bg-[var(--jg-light-gray)] md:grid-cols-2">
           <figure className="bg-white p-7 md:p-9">
             <figcaption className="font-heading text-[13px] font-semibold tracking-[0.16em] uppercase">Avant</figcaption>
-            <blockquote className="mt-3 text-[1.0625rem] italic">« {pair.before} »</blockquote>
+            <blockquote className="mt-3 text-[1.0625rem] italic">« {pair.before} »</blockquote>
           </figure>
           <figure className="bg-white p-7 md:p-9">
             <figcaption className="flex items-center gap-3 font-heading text-[13px] font-semibold tracking-[0.16em] text-navy uppercase">
@@ -108,7 +108,7 @@ export function BeforeAfter({ pairs, className }: { pairs: readonly { before: st
               Après
             </figcaption>
             <blockquote className="mt-3 font-heading text-[1.125rem] leading-snug font-semibold text-navy">
-              « {pair.after} »
+              « {pair.after} »
             </blockquote>
           </figure>
         </div>

@@ -1,7 +1,7 @@
 import { getBookedSession } from "@/server/booking";
 import { icsEvent } from "@/lib/ics";
 
-/** Calendar file of a booked « Échange stratégique » (link on the confirmation page, signed reference). */
+/** Calendar file of a booked « Échange stratégique » (link on the confirmation page, signed reference). */
 export async function GET(request: Request) {
   const session = await getBookedSession(new URL(request.url).searchParams.get("r"));
   if (!session || session.status !== "planned") return new Response("Rendez-vous introuvable", { status: 404 });

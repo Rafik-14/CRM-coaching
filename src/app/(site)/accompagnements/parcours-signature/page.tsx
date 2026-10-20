@@ -45,10 +45,10 @@ const BENEFITS = [
 ] as const;
 
 const SIGNS = [
-  "votre situation actuelle ne correspond plus à ce que vous êtes devenu(e) ;",
-  "vous avez du mal à donner une direction claire à la suite de votre parcours ;",
-  "vous sentez que votre potentiel dépasse ce que vous exprimez aujourd’hui ;",
-  "vous souhaitez repositionner votre identité professionnelle ;",
+  "votre situation actuelle ne correspond plus à ce que vous êtes devenu(e) ;",
+  "vous avez du mal à donner une direction claire à la suite de votre parcours ;",
+  "vous sentez que votre potentiel dépasse ce que vous exprimez aujourd’hui ;",
+  "vous souhaitez repositionner votre identité professionnelle ;",
   "vous êtes prêt(e) à prendre une nouvelle place, mais vous ne savez pas encore comment l’incarner.",
 ] as const;
 
@@ -90,9 +90,9 @@ export default function ParcoursSignaturePage() {
 
       <Section tone="ivory">
         <Container className="grid gap-10 lg:grid-cols-2 lg:gap-20">
-          <SectionHeading title="Et si le vrai sujet n’était pas de changer ?">
+          <SectionHeading title="Et si le vrai sujet n’était pas de changer ?">
             <p>Vous sentez qu’une évolution devient nécessaire.</p>
-            <p>Peut-être parce que :</p>
+            <p>Peut-être parce que :</p>
           </SectionHeading>
           <div className="lg:pt-14">
             <ul className="grid gap-3">
@@ -144,7 +144,7 @@ export default function ParcoursSignaturePage() {
             </p>
           </div>
           <div className="lg:pt-14">
-            <p className="font-heading text-[13px] font-semibold tracking-[0.16em] uppercase">Vous bénéficiez de :</p>
+            <p className="font-heading text-[13px] font-semibold tracking-[0.16em] uppercase">Vous bénéficiez de :</p>
             <ul className="mt-4 grid gap-4">
               {BENEFITS.map((b) => (
                 <li key={b} className="flex gap-3">

@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import { siteButton } from "./button";
 import { ConsentCheckbox, Field, Honeypot, SegmentSelect, SubSegmentSelect, controlProps, inputClass } from "./form";
 
-/** « Vous préférez m'écrire ? » — reads ?profil / ?source to pre-fill the client type. */
+/** « Vous préférez m'écrire ? » — reads ?profil / ?source to pre-fill the client type. */
 export function ContactForm() {
   const params = useSearchParams();
   const profil = params.get("profil") ?? "";

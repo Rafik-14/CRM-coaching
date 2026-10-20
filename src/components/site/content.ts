@@ -1,4 +1,4 @@
-/** Anchor of an offer on /accompagnements: « Architecture Identitaire JG® » → « architecture-identitaire ». */
+/** Anchor of an offer on /accompagnements: « Architecture Identitaire JG® » → « architecture-identitaire ». */
 export function offerSlug(name: string) {
   return name
     .replace(/JG®?/g, "")
@@ -12,7 +12,7 @@ export function offerSlug(name: string) {
 
 export const DOMAINS = ["Identité professionnelle", "Positionnement", "Évolution", "Leadership", "Recrutement"] as const;
 
-/** The two written case studies (page « Transformations »), with the teaser used on the home page. */
+/** The two written case studies (page « Transformations »), with the teaser used on the home page. */
 export const CASES = [
   {
     slug: "yannick",

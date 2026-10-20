@@ -16,9 +16,9 @@ export default function ConfidentialitePage() {
         </p>
       </LegalSection>
       <LegalSection title="Informations collectées">
-        <p>Uniquement ce que vous saisissez dans les formulaires du site :</p>
+        <p>Uniquement ce que vous saisissez dans les formulaires du site :</p>
         <ul>
-          <li>formulaire de contact : nom, prénom, e-mail, téléphone (facultatif), type de profil, message ;</li>
+          <li>formulaire de contact : nom, prénom, e-mail, téléphone (facultatif), type de profil, message ;</li>
           <li>
             réservation d’un échange stratégique : les mêmes informations, le créneau choisi, votre enjeu et quelques
             mots sur votre situation (facultatifs).

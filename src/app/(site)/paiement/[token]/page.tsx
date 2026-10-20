@@ -52,7 +52,7 @@ async function Payment({ params, searchParams }: { params: PageProps<"/paiement/
       <Eyebrow>Facture n° {inv.number}</Eyebrow>
       <GoldLine className="mt-4" />
       <h1 className="jg-h1 mt-6">
-        {sp.merci === "1" && !done ? "Merci, votre paiement est en cours." : done ? "Cette facture est réglée. Merci !" : "Régler votre facture"}
+        {sp.merci === "1" && !done ? "Merci, votre paiement est en cours." : done ? "Cette facture est réglée. Merci !" : "Régler votre facture"}
       </h1>
       <dl className="mt-8 grid gap-4 rounded-[12px] border border-[var(--jg-light-gray)] bg-ivory p-7 sm:grid-cols-3">
         <div>

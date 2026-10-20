@@ -8,11 +8,11 @@ import branding from "@/assets/site/branding.webp";
 export const metadata: Metadata = {
   title: "À propos",
   description:
-    "Jérémy Galéa, coach et formateur pour adultes depuis plus de 10 ans, créateur de la Méthode JG®. « Je ne cherche pas à vous faire devenir quelqu’un d’autre. »",
+    "Jérémy Galéa, coach et formateur pour adultes depuis plus de 10 ans, créateur de la Méthode JG®. « Je ne cherche pas à vous faire devenir quelqu’un d’autre. »",
   alternates: { canonical: "/a-propos" },
 };
 
-/** Short lines read one after the other (a « stack »), with a gold dash. */
+/** Short lines read one after the other (a « stack »), with a gold dash. */
 function LineStack({ lines }: { lines: readonly string[] }) {
   return (
     <ul className="grid gap-2">
@@ -42,7 +42,7 @@ export default function AProposPage() {
             </div>
             <div className="jg-prose mt-8 max-w-[620px]">
               <p>
-                Depuis plus de 10 ans, j’accompagne des adultes dans des moments où quelque chose doit évoluer :
+                Depuis plus de 10 ans, j’accompagne des adultes dans des moments où quelque chose doit évoluer :
                 transition professionnelle, recherche d’emploi, entretien à fort enjeu, repositionnement, prise de poste
                 ou perte de confiance.
               </p>
@@ -79,7 +79,7 @@ export default function AProposPage() {
                   "Une réaction.",
                   "Une façon de décider.",
                   "Une contradiction.",
-                  "Une qualité que la personne considère comme « normale », alors qu’elle est précisément l’une de ses forces.",
+                  "Une qualité que la personne considère comme « normale », alors qu’elle est précisément l’une de ses forces.",
                 ]}
               />
             </div>
@@ -129,7 +129,7 @@ export default function AProposPage() {
                 d’un rêve ou d’une ambition simplement parce qu’elles n’arrivaient pas à exprimer ce qu’elles portaient
                 en elles.
               </p>
-              <p>C’est là qu’est née ma conviction profonde :</p>
+              <p>C’est là qu’est née ma conviction profonde :</p>
             </div>
             <Statement className="mt-6">Aider l’être humain avant tout.</Statement>
             <p className="mt-6">
@@ -187,7 +187,7 @@ export default function AProposPage() {
                 "Des niveaux d’expérience très différents.",
               ]}
             />
-            <p className="mt-8">Mais une constante revient :</p>
+            <p className="mt-8">Mais une constante revient :</p>
             <Statement className="mt-4">leur valeur était souvent déjà là.</Statement>
             <p className="mt-6">Elle avait simplement besoin d’être comprise, mise en cohérence et rendue lisible.</p>
           </div>
@@ -199,7 +199,7 @@ export default function AProposPage() {
         <Container className="grid gap-10 lg:grid-cols-2 lg:gap-20">
           <SectionHeading title="Ce que je cherche à provoquer">
             <p>Je ne cherche pas seulement à vous aider à mieux parler de vous.</p>
-            <p>Je cherche à provoquer un changement plus profond :</p>
+            <p>Je cherche à provoquer un changement plus profond :</p>
           </SectionHeading>
           <div className="lg:pt-14">
             <LineStack

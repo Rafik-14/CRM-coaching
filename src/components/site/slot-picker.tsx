@@ -9,9 +9,9 @@ import { cn } from "@/lib/utils";
 const dayFmt = new Intl.DateTimeFormat("fr-FR", { timeZone: "UTC", weekday: "short", day: "numeric", month: "short" });
 export const longDayFmt = new Intl.DateTimeFormat("fr-FR", { timeZone: "UTC", weekday: "long", day: "numeric", month: "long" });
 export const slotTimeFmt = new Intl.DateTimeFormat("fr-FR", { timeZone: APP_TIME_ZONE, hour: "2-digit", minute: "2-digit" });
-/** « 2026-10-15 » is a calendar day: format it as such (noon UTC avoids any day shift). */
+/** « 2026-10-15 » is a calendar day: format it as such (noon UTC avoids any day shift). */
 export const asDay = (date: string) => new Date(`${date}T12:00:00Z`);
-/** « Jeu 15 oct. » */
+/** « Jeu 15 oct. » */
 const shortDay = (date: string) => {
   const text = dayFmt.format(asDay(date)).replace(".", "");
   return text.charAt(0).toUpperCase() + text.slice(1);
@@ -19,7 +19,7 @@ const shortDay = (date: string) => {
 
 const FIRST_DAYS = 15;
 
-/** « Vendredi 16 octobre à 10:30 » for the selected slot. */
+/** « Vendredi 16 octobre à 10:30 » for the selected slot. */
 export function describeSlot(days: AvailableDay[], slot: string) {
   const day = days.find((d) => d.slots.includes(slot));
   return day ? `${longDayFmt.format(asDay(day.date))} à ${slotTimeFmt.format(new Date(slot))}` : "";
@@ -53,7 +53,7 @@ export function SlotPicker({
   days: AvailableDay[];
   slot: string;
   onSlotChange: (slot: string) => void;
-  /** Line under the times, e.g. « Heure de Paris / Genève · 60 minutes · Visio ». */
+  /** Line under the times, e.g. « Heure de Paris / Genève · 60 minutes · Visio ». */
   info: string;
   error?: string;
   /** Step numbers for the two legends, e.g. ["01", "02"]. */

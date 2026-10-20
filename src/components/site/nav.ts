@@ -1,9 +1,9 @@
-/** Public website navigation (brief « Architecture visuelle du site JG® »). */
+/** Public website navigation (brief « Architecture visuelle du site JG® »). */
 export const SITE_NAV = [
   { href: "/", label: "Accueil" },
   { href: "/methode", label: "La Méthode JG®" },
   { href: "/accompagnements", label: "Accompagnements" },
-  { href: "/pour-qui", label: "Pour qui ?" },
+  { href: "/pour-qui", label: "Pour qui ?" },
   { href: "/transformations", label: "Transformations" },
   { href: "/a-propos", label: "À propos" },
   { href: "/le-chant-du-merle", label: "Le Chant du Merle" },

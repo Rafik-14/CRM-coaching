@@ -2,7 +2,7 @@ import { ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Eyebrow } from "./ui";
 
-/** Case study header: « photo » (monogram until real photos are supplied), name, field. */
+/** Case study header: « photo » (monogram until real photos are supplied), name, field. */
 export function CaseHeader({ name, domain, as: Tag = "h2" }: { name: string; domain?: string | null; as?: "h2" | "h3" }) {
   return (
     <div className="flex items-center gap-5">
@@ -37,7 +37,7 @@ export function CaseBlock({ label, children, className }: { label: string; child
 export function CaseQuote({ children }: { children: React.ReactNode }) {
   return (
     <blockquote className="font-heading text-[1.1875rem] leading-snug font-medium text-navy md:text-[1.3125rem]">
-      « {children} »
+      « {children} »
     </blockquote>
   );
 }
@@ -55,7 +55,7 @@ export function KeyPiece({ label, children }: { label: string; children: React.R
   );
 }
 
-/** « De … → à … » list. Items without an arrow are shown as they are. */
+/** « De … → à … » list. Items without an arrow are shown as they are. */
 export function ChangeList({ items }: { items: readonly string[] }) {
   return (
     <ul className="grid gap-4">

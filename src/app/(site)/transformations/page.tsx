@@ -61,8 +61,8 @@ export default function TransformationsPage() {
                 </p>
               </KeyPiece>
               <p>
-                Le travail n’était plus seulement de chercher « quel métier faire », mais de comprendre « qui je suis
-                dans ce que je fais ».
+                Le travail n’était plus seulement de chercher « quel métier faire », mais de comprendre « qui je suis
+                dans ce que je fais ».
               </p>
             </CaseBlock>
             <CaseBlock label="Après">
@@ -81,7 +81,7 @@ export default function TransformationsPage() {
               <ChangeList
                 items={[
                   "De la recherche d’un métier → à la compréhension de son identité professionnelle.",
-                  "De « qu’est-ce que je peux faire ? » → à « qu’est-ce que j’apporte naturellement ? »",
+                  "De « qu’est-ce que je peux faire ? » → à « qu’est-ce que j’apporte naturellement ? »",
                   "De la description de son parcours → à la compréhension de ce qui le relie.",
                 ]}
               />
@@ -113,12 +113,12 @@ export default function TransformationsPage() {
             </CaseBlock>
             <CaseBlock label="Le déclic">
               <p>Le travail autour du Territoire de valeurs a permis de déplacer progressivement son regard.</p>
-              <p>Au lieu de chercher uniquement à répondre à :</p>
-              <CaseQuote>Qu’est-ce que je sais faire ?</CaseQuote>
-              <p>nous avons commencé à explorer :</p>
+              <p>Au lieu de chercher uniquement à répondre à :</p>
+              <CaseQuote>Qu’est-ce que je sais faire ?</CaseQuote>
+              <p>nous avons commencé à explorer :</p>
               <CaseQuote>
                 Qu’est-ce que je permets aux organisations de comprendre, de transformer ou de révéler grâce à ce que je
-                sais faire ?
+                sais faire ?
               </CaseQuote>
               <p>Les différentes expériences, compétences et dimensions de son parcours ont commencé à se relier.</p>
               <ul className="flex flex-wrap gap-2">
@@ -134,10 +134,10 @@ export default function TransformationsPage() {
               <p>Ce qui semblait être plusieurs expertises distinctes commençait à révéler un même fil conducteur.</p>
             </CaseBlock>
             <CaseBlock label="Après">
-              <p>Une formulation de positionnement a progressivement émergé :</p>
+              <p>Une formulation de positionnement a progressivement émergé :</p>
               <KeyPiece label="Sa formulation de positionnement">
-                « Révéler le potentiel caché des organisations grâce à une meilleure compréhension de leurs données, de
-                leurs processus et de leurs équipes. »
+                « Révéler le potentiel caché des organisations grâce à une meilleure compréhension de leurs données, de
+                leurs processus et de leurs équipes. »
               </KeyPiece>
               <p>Le changement n’est pas simplement lexical.</p>
               <p>
@@ -150,7 +150,7 @@ export default function TransformationsPage() {
             <CaseBlock label="Ce qui a changé">
               <ChangeList
                 items={[
-                  "De « ce que je fais » → à « ce que je provoque ».",
+                  "De « ce que je fais » → à « ce que je provoque ».",
                   "De l’accumulation d’expertises → à un fil conducteur.",
                   "De la description d’un parcours → à la révélation d’une valeur.",
                   "De plusieurs compétences → à une identité professionnelle plus lisible.",
@@ -181,7 +181,7 @@ export default function TransformationsPage() {
       </Section>
 
       <FinalCta
-        title="Et si votre parcours racontait lui aussi quelque chose que vous n’avez jamais vu ?"
+        title="Et si votre parcours racontait lui aussi quelque chose que vous n’avez jamais vu ?"
         source="transformations"
       />
     </>
@@ -219,7 +219,7 @@ async function CrmCaseStudies() {
               </dl>
               {c.positioningStatement && (
                 <div className="mt-8">
-                  <KeyPiece label="Formulation de positionnement">« {c.positioningStatement} »</KeyPiece>
+                  <KeyPiece label="Formulation de positionnement">« {c.positioningStatement} »</KeyPiece>
                 </div>
               )}
               {c.changes.length > 0 && (

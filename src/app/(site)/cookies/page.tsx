@@ -17,7 +17,7 @@ export default function CookiesPage() {
           n’est donc nécessaire.
         </p>
         <p>
-          Seul l’espace privé de Jérémy Galéa (« Espace coach ») utilise un cookie de session, strictement nécessaire à
+          Seul l’espace privé de Jérémy Galéa (« Espace coach ») utilise un cookie de session, strictement nécessaire à
           la connexion.
         </p>
       </LegalSection>

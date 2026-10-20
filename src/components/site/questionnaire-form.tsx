@@ -24,7 +24,7 @@ export function QuestionnaireForm({ token, questions }: { token: string; questio
       <div className="rounded-[12px] border border-[var(--jg-light-gray)] bg-white p-7 md:p-9" role="status">
         <CircleCheck aria-hidden className="size-8 text-[var(--jg-teal)]" strokeWidth={1.5} />
         <p className="jg-h4 mt-4 font-heading font-semibold text-navy">Merci, vos réponses sont bien envoyées.</p>
-        <p className="mt-3">Je les lis avant notre première séance. À très vite !</p>
+        <p className="mt-3">Je les lis avant notre première séance. À très vite !</p>
       </div>
     );
   }

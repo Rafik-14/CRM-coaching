@@ -36,7 +36,7 @@ export default function AccompagnementsPage() {
 
       <Section>
         <Container className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-center lg:gap-20">
-          <SectionHeading title="Vous ne savez pas quel accompagnement choisir ?">
+          <SectionHeading title="Vous ne savez pas quel accompagnement choisir ?">
             <p>Vous n’avez pas besoin de le savoir avant de commencer.</p>
             <p>Parlons de votre situation et déterminons ensemble le point de départ le plus pertinent.</p>
           </SectionHeading>

@@ -117,13 +117,13 @@ async function Manage({
         ) : canChange ? (
           <>
             <p className="mb-6 max-w-[640px]">
-              Un empêchement ? Vous pouvez déplacer ou annuler ce rendez-vous ici jusqu’à {`${config.cancellationHours} h`} avant.
+              Un empêchement ? Vous pouvez déplacer ou annuler ce rendez-vous ici jusqu’à {`${config.cancellationHours} h`} avant.
             </p>
             <ManageBooking token={token} days={days} durationMin={session.durationMin} location={session.location} />
           </>
         ) : (
           <p className="max-w-[640px]">
-            Le rendez-vous a lieu dans moins de {`${config.cancellationHours} h`} : il ne peut plus être modifié en ligne. Un imprévu ?
+            Le rendez-vous a lieu dans moins de {`${config.cancellationHours} h`} : il ne peut plus être modifié en ligne. Un imprévu ?
             Répondez simplement à l’e-mail reçu ou{" "}
             <Link href="/contact?source=rdv" className="font-semibold text-navy underline">
               écrivez-moi

@@ -48,7 +48,7 @@ export default function ChantDuMerlePage() {
         <Container className="grid items-center gap-12 lg:grid-cols-[0.85fr_1.15fr] lg:gap-20">
           <Image
             src={livre}
-            alt="Le livre « Le Chant du Merle » de Jérémy Galéa, tenu entre les mains d’une lectrice"
+            alt="Le livre « Le Chant du Merle » de Jérémy Galéa, tenu entre les mains d’une lectrice"
             priority
             placeholder="blur"
             sizes="(min-width: 1024px) 460px, 100vw"
