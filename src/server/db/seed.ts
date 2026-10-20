@@ -95,6 +95,7 @@ async function resetDemoData() {
   if (biz && !name.includes("(démo)")) {
     throw new Error(`Refusing SEED_RESET_DEMO: business « ${name} » is not a demo.`);
   }
+  await db.delete(s.events); // cascades: registrations, photos, quotes
   await db.delete(s.contacts); // cascades: clients, sessions, notes, goals, sold offers, documents, tasks
   await db.delete(s.tasks);
   await db.delete(s.activityLog);
@@ -407,7 +408,105 @@ async function seedDemoData({ stages, templates, offers }: Ref) {
     })),
   );
 
+  await seedDemoEvents();
   return created;
+}
+
+/** Fake conferences & workshops for the demo: two upcoming (with registrations), two past (with a recap). */
+async function seedDemoEvents() {
+  const evening = (d: number, h: number, m = 0) => {
+    const date = daysFromNow(d);
+    date.setHours(h, m, 0, 0);
+    return date;
+  };
+  const [conf, atelier] = await db
+    .insert(s.events)
+    .values([
+      {
+        slug: `demo-reveler-sa-valeur-${evening(16, 18, 30).toISOString().slice(0, 10)}`,
+        kind: "conference",
+        title: "Révéler sa valeur professionnelle",
+        summary: "Une soirée pour comprendre ce qui fait votre valeur, et pourquoi elle n’est pas toujours perçue.",
+        description:
+          "On ne choisit pas toujours le plus compétent. On choisit celui dont la valeur est la plus évidente.\n\nPendant cette conférence, nous verrons comment relier vos expériences, vos choix et vos réussites pour faire émerger ce qui vous distingue.\n\nUn temps d’échange est prévu à la fin.",
+        startsAt: evening(16, 18, 30),
+        endsAt: evening(16, 20),
+        location: "Maison des associations, Lyon",
+        capacity: 40,
+        priceText: "Gratuit",
+        partner: "Association Tremplin Emploi",
+        audience: "tous",
+        status: "published",
+      },
+      {
+        slug: `demo-atelier-pitch-${evening(30, 9, 30).toISOString().slice(0, 10)}`,
+        kind: "workshop",
+        title: "Atelier : se présenter en 2 minutes",
+        summary: "Un atelier pratique pour construire une présentation claire, crédible et qui vous ressemble.",
+        description: "En petit groupe, chacun construit et teste sa présentation, avec des retours personnalisés.\n\nPrévoyez de quoi écrire.",
+        startsAt: evening(30, 9, 30),
+        endsAt: evening(30, 12),
+        location: "Espace Coworking Part-Dieu, Lyon",
+        capacity: 12,
+        maxSeatsPerBooking: 2,
+        priceText: "20 € à régler sur place",
+        audience: "tous",
+        status: "published",
+      },
+      {
+        slug: `demo-ecole-oral-${evening(-45, 14).toISOString().slice(0, 10)}`,
+        kind: "workshop",
+        title: "Réussir son oral de stage",
+        summary: "Atelier pour des étudiants en dernière année.",
+        startsAt: evening(-45, 14),
+        endsAt: evening(-45, 17),
+        location: "IUT Lyon 3",
+        partner: "IUT Lyon 3",
+        audience: "ecoles",
+        status: "published",
+        registrationOpen: false,
+        manualHistory: true,
+        recap: "Trois heures avec 24 étudiants pour préparer leurs oraux de stage : chacun est reparti avec une présentation de 2 minutes testée devant le groupe.\n\nMerci à l’équipe pédagogique pour son accueil.",
+        participantsShown: 24,
+        showRecap: true,
+      },
+      {
+        slug: `demo-entreprise-valeur-${evening(-90, 12).toISOString().slice(0, 10)}`,
+        kind: "conference",
+        title: "Rendre sa valeur visible en entreprise",
+        summary: "Conférence pour les managers d’une entreprise de services.",
+        startsAt: evening(-90, 12),
+        endsAt: evening(-90, 13, 30),
+        location: "Lyon",
+        partner: "Groupe Horizon Services",
+        audience: "entreprises",
+        status: "published",
+        registrationOpen: false,
+        manualHistory: true,
+        recap: "Une conférence pendant la pause déjeuner, suivie de nombreuses questions sur l’évolution interne et la prise de poste.",
+        participantsShown: 60,
+        showRecap: true,
+      },
+    ])
+    .returning({ id: s.events.id });
+  const people = await db.query.contacts.findMany({ where: sql`${s.contacts.email} is not null`, limit: 9 });
+  await db.insert(s.eventRegistrations).values(
+    people.map((c, i) => ({
+      eventId: i < 6 ? conf.id : atelier.id,
+      contactId: c.id,
+      firstName: c.firstName,
+      lastName: c.lastName,
+      email: c.email!,
+      phone: c.phone,
+      seats: i === 2 ? 2 : 1,
+    })),
+  );
+  const history = await db.query.events.findMany({ where: eq(s.events.manualHistory, true), columns: { id: true } });
+  await db.insert(s.eventQuotes).values([
+    { eventId: history[0].id, text: "J’ai enfin su expliquer ce que j’apporte, en deux phrases.", author: "Étudiante, licence pro" },
+    { eventId: history[0].id, text: "Concret, bienveillant et très utile avant les entretiens.", author: "Étudiant" },
+    { eventId: history[1].id, text: "Une vraie prise de conscience pour toute l’équipe.", author: "Responsable RH" },
+  ]);
 }
 
 main().catch((err) => {
