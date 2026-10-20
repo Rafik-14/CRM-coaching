@@ -1,4 +1,4 @@
-import { CalendarDays, ChartColumn, CheckSquare, Columns3, LayoutDashboard, Receipt, Settings, Users } from "lucide-react";
+import { CalendarDays, ChartColumn, CheckSquare, Columns3, LayoutDashboard, Settings, Users } from "lucide-react";
 
 export const navItems = [
   { href: "/tableau-de-bord", label: "Tableau de bord", icon: LayoutDashboard },
@@ -6,7 +6,6 @@ export const navItems = [
   { href: "/pipeline", label: "Pipeline", icon: Columns3 },
   { href: "/calendrier", label: "Calendrier", icon: CalendarDays },
   { href: "/taches", label: "Tâches", icon: CheckSquare },
-  { href: "/factures", label: "Factures", icon: Receipt },
   { href: "/analyses", label: "Analyses", icon: ChartColumn },
   { href: "/parametres", label: "Paramètres", icon: Settings },
 ] as const;

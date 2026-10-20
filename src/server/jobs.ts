@@ -10,10 +10,6 @@ import { sendEmail } from "@/server/email/send";
 import { sendSessionReminders, type ReminderKind } from "@/server/reminders";
 import { releaseStuckEmails } from "@/server/scheduled-emails";
 import { runDueEmails } from "@/server/sequences";
-import { claimDueReminders, paidCents, releaseReminder } from "@/server/invoicing";
-import { getInvoicingSettings } from "@/server/billing";
-import { sendInvoiceMail } from "@/server/billing-mail";
-import { invoices } from "@/server/db/schema";
 
 /**
  * Scheduled jobs, run by POST /api/cron/run (every 5 minutes on the server: system cron).
@@ -61,27 +57,6 @@ const sendScheduledEmails: Job = {
   },
 };
 
-/** Payment reminders for unpaid invoices, at the days chosen in Paramètres › Facturation. */
-const invoiceReminders: Job = {
-  name: "invoiceReminders",
-  async run(now) {
-    const { reminderDays } = await getInvoicingSettings();
-    let sent = 0;
-    let failed = 0;
-    for (const { id, step } of await claimDueReminders(db, now, reminderDays)) {
-      const inv = await db.query.invoices.findFirst({ where: eq(invoices.id, id), columns: { totalCents: true } });
-      const due = (inv?.totalCents ?? 0) - (await paidCents(db, id));
-      const r = await sendInvoiceMail(id, "payment_reminder", due);
-      if (r.ok) sent++;
-      else {
-        failed++;
-        await releaseReminder(db, id, step);
-      }
-    }
-    return { sent, failed };
-  },
-};
-
 /** Private links revoked or expired more than 30 days ago are deleted. */
 const purgeOldTokens: Job = {
   name: "purgeOldTokens",
@@ -100,7 +75,7 @@ const purgeOldTokens: Job = {
   },
 };
 
-export const JOBS: Job[] = [markStuckEmails, sessionReminders("24h"), sessionReminders("1h"), sendScheduledEmails, invoiceReminders, purgeOldTokens];
+export const JOBS: Job[] = [markStuckEmails, sessionReminders("24h"), sessionReminders("1h"), sendScheduledEmails, purgeOldTokens];
 
 /** Runs every job in order; one failing job never stops the others. */
 export async function runJobs(now = new Date()) {

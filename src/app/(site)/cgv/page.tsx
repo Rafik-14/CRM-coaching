@@ -31,7 +31,8 @@ export default function CgvPage() {
       </LegalSection>
       <LegalSection title="4. Commande et paiement">
         <p>
-          <ToComplete>moyens de paiement, échéancier pour les accompagnements en plusieurs séances, acompte éventuel</ToComplete>
+          Aucun paiement n’est demandé sur le site. Les modalités de règlement de l’accompagnement sont convenues
+          directement avec Jérémy Galéa, avant le début de l’accompagnement.
         </p>
       </LegalSection>
       <LegalSection title="5. Report et annulation des séances">
