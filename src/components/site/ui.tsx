@@ -29,7 +29,7 @@ export function Section({
     <section
       className={cn(
         tones[tone],
-        size === "compact" ? "py-14 md:py-20" : "py-16 md:py-24 lg:py-[120px]",
+        size === "compact" ? "py-11 md:py-20" : "py-12 md:py-24 lg:py-[120px]",
         className,
       )}
       {...props}
@@ -81,7 +81,14 @@ export function BookingButton({
 }: CtaProps & { source: string; profil?: string; label?: string }) {
   return (
     <ButtonLink href={bookingHref(source, profil)} variant={variant} block={block} className={className}>
-      {label}
+      {/* On small phones « stratégique » is dropped so the button stays on one line. */}
+      {label === BOOKING_LABEL ? (
+        <span>
+          Réserver un échange<span className="max-[419px]:hidden"> stratégique</span>
+        </span>
+      ) : (
+        label
+      )}
       <ArrowRight aria-hidden />
     </ButtonLink>
   );

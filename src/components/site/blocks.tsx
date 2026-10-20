@@ -8,21 +8,38 @@ export function SectionHeading({
   title,
   children,
   as: Tag = "h2",
+  num,
   className,
 }: {
   eyebrow?: string;
   title: React.ReactNode;
   children?: React.ReactNode;
   as?: "h1" | "h2";
+  /** Gold section number, shown on phones only (« 01 »). */
+  num?: number;
   className?: string;
 }) {
   return (
     <div className={cn("max-w-[760px]", className)}>
-      {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
-      <GoldLine className={eyebrow ? "mt-4" : undefined} />
-      <Tag className={cn(Tag === "h1" ? "jg-h1" : "jg-h2", "mt-6")}>{title}</Tag>
+      {(eyebrow || num) && (
+        <div className="flex items-baseline gap-3">
+          {num && <SectionNumber n={num} />}
+          {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
+        </div>
+      )}
+      <GoldLine className={cn(eyebrow && "mt-4", num && "max-md:hidden")} />
+      <Tag className={cn(Tag === "h1" ? "jg-h1" : "jg-h2", num ? "mt-3 md:mt-6" : "mt-6")}>{title}</Tag>
       {children && <div className="jg-prose mt-6">{children}</div>}
     </div>
+  );
+}
+
+/** « 01 » in gold before a section label — phones only, to give rhythm to the long scroll. */
+export function SectionNumber({ n }: { n: number }) {
+  return (
+    <span aria-hidden className="font-heading text-[2rem] leading-none font-bold text-gold tabular-nums md:hidden">
+      {String(n).padStart(2, "0")}
+    </span>
   );
 }
 
@@ -31,7 +48,7 @@ export function Statement({ children, className }: { children: React.ReactNode; 
   return (
     <div
       className={cn(
-        "border-l-2 border-gold pl-6 font-heading text-[1.375rem] leading-snug font-semibold text-navy md:text-[1.625rem] [.jg-on-navy_&]:text-white",
+        "border-l-2 border-gold pl-5 font-heading text-[1.25rem] leading-snug font-semibold text-navy md:pl-6 md:text-[1.625rem] [.jg-on-navy_&]:text-white",
         className,
       )}
     >
