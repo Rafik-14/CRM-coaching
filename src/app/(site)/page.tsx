@@ -101,7 +101,7 @@ const JSON_LD = {
 export default function HomePage() {
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD).replace(/</g, "\\u003c") }} />
       {/* 1 — Hero. Phones: full-width photo with the title on it. Tablet: text then photo. Desktop: text left, portrait right. */}
       <Section className="pt-0 md:pt-16 lg:pt-20">
         <Container className="grid lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:gap-x-16">

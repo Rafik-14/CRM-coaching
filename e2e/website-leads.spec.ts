@@ -55,13 +55,12 @@ test.describe("du site au CRM", () => {
     await openContact(page, email);
     await expect(page.getByText("Échange stratégique réservé en ligne").first()).toBeVisible();
 
-    // The visitor opens « gérer mon rendez-vous » and cancels.
-    await v.page.getByRole("link", { name: /déplacer|annuler|gérer/i }).first().click();
+    // The visitor opens « Déplacer ou annuler » and cancels.
+    await v.page.getByRole("link", { name: "Déplacer ou annuler" }).click();
     await expect(v.page).toHaveURL(/\/rdv\//);
-    await v.page.getByRole("button", { name: /Annuler/ }).first().click();
-    const confirm = v.page.getByRole("button", { name: /Oui|Confirmer l’annulation|Annuler le rendez-vous/ });
-    if (await confirm.count()) await confirm.first().click();
-    await expect(v.page.getByText(/annulé/i).first()).toBeVisible();
+    await v.page.getByRole("button", { name: "Annuler le rendez-vous" }).click();
+    await v.page.getByRole("button", { name: "Oui, annuler le rendez-vous" }).click();
+    await expect(v.page.getByRole("heading", { level: 1 })).toHaveText("Ce rendez-vous est annulé.");
     await v.context.close();
   });
 });

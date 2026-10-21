@@ -1,3 +1,4 @@
+import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 import { openContact, testEmail } from "./helpers";
 
@@ -17,6 +18,9 @@ test.describe("CRM", () => {
     ] as const) {
       await page.goto(path);
       await expect(page.getByRole("heading", { level: 1 }).first(), path).toContainText(title);
+      const a11y = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).analyze();
+      const serious = a11y.violations.filter((v) => v.impact === "serious" || v.impact === "critical");
+      expect(serious.map((v) => `${path} · ${v.id}: ${v.help} (${v.nodes.length}) ${v.nodes[0]?.target.join(" ")}`), "accessibilité").toEqual([]);
     }
   });
 

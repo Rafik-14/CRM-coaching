@@ -73,14 +73,23 @@ test("événement : création, inscriptions, liste d’attente, annulation, pré
     await v.context.close();
   }
 
-  // The same person registering twice does not take a second seat.
-  const again = await visitor(browser);
-  await register(again.page, slug, "Inès", people[0].email);
-  await again.context.close();
+  // Someone typing an already-registered e-mail (maybe not its owner) gets no access to that booking:
+  // no redirect to the private page, nothing changed, a neutral message, the link goes to the address on file.
+  const stranger = await visitor(browser);
+  await stranger.page.goto(`/evenements/${slug}`);
+  await fill(stranger.page, /^Prénom/, "Intrus");
+  await fill(stranger.page, /^Nom/, "Inconnu");
+  await fill(stranger.page, /^E-mail/, people[0].email);
+  await acceptConsent(stranger.page);
+  await stranger.page.getByRole("button", { name: "Rejoindre la liste d’attente" }).click();
+  await expect(stranger.page.getByRole("status")).toContainText("Cette adresse e-mail est déjà inscrite.");
+  await expect(stranger.page).not.toHaveURL(/\/inscription\//);
+  await stranger.context.close();
 
   await page.goto(eventUrl);
   await expect(page.getByText("Inscrits (2 places)")).toBeVisible();
   await expect(page.getByText("Liste d’attente (1)")).toBeVisible();
+  await expect(page.getByText("Intrus")).toHaveCount(0);
 
   // 4 · Hugo cancels from his private link: Nora gets the seat.
   const hugo = await visitor(browser);

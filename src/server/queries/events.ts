@@ -59,6 +59,7 @@ export type CoachEvent = NonNullable<Awaited<ReturnType<typeof getCoachEvent>>>;
 
 /** Events of one contact (contact page). */
 export async function getContactEvents(contactId: string) {
+  await requireCoach();
   return db
     .select({ registration: eventRegistrations, event: { id: events.id, title: events.title, startsAt: events.startsAt, kind: events.kind } })
     .from(eventRegistrations)

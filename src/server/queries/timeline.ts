@@ -58,6 +58,7 @@ export async function buildTimeline(contactId: string, limit = 12): Promise<Time
       .from(eventRegistrations)
       .innerJoin(eventsTable, eq(eventsTable.id, eventRegistrations.eventId))
       .where(eq(eventRegistrations.contactId, contactId))
+      .orderBy(desc(eventRegistrations.createdAt))
       .limit(20),
   ]);
 

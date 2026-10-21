@@ -7,13 +7,13 @@ import { and, eq, inArray, max, ne } from "drizzle-orm";
 import sharp from "sharp";
 import { z } from "zod";
 import { db } from "@/server/db";
-import { activityLog, eventPhotos, eventQuotes, eventRegistrations, events } from "@/server/db/schema";
+import { accessTokens, activityLog, eventPhotos, eventQuotes, eventRegistrations, events } from "@/server/db/schema";
 import { requireCoach } from "@/server/dal";
 import { clientIp, rateLimited } from "@/server/rate-limit";
 import { findOrCreateSiteContact } from "@/server/site-leads";
 import { contentMatchesExtension, deleteStoredFile, saveFile } from "@/server/storage";
 import { cancelRegistration, refillFromWaitlist, registerForEvent, seatsTaken, type EventRow, type RegistrationRow } from "@/server/events";
-import { notifyCoachOfRegistration, registrationLink, sendEventMail, sendEventMessage } from "@/server/event-mail";
+import { notifyCoachOfRegistration, registrationLink, sendEventChanged, sendEventMail, sendEventMessage } from "@/server/event-mail";
 import { getRegistrationByToken } from "@/server/queries/events";
 import {
   PHOTO_MAX_BYTES,
@@ -86,17 +86,42 @@ export async function updateEvent(id: string, _prev: ActionState, formData: Form
   const { startsAt, endsAt } = eventTimes({ date, startTime, endTime });
   // The public address only changes while nobody could have shared it.
   const slug = ev.status === "draft" ? await uniqueSlug(v.title, startsAt, ev.id) : ev.slug;
-  await db.update(events).set({ ...v, startsAt, endsAt, slug }).where(eq(events.id, ev.id));
+  const [updated] = await db.update(events).set({ ...v, startsAt, endsAt, slug }).where(eq(events.id, ev.id)).returning();
+
+  // Date, time or place changed: private links follow the new date, the reminder is sent again for the
+  // new day, and everyone registered (or waiting) is told — unless the event is still a draft or already past.
+  const timeChanged = ev.startsAt.getTime() !== startsAt.getTime() || ev.endsAt.getTime() !== endsAt.getTime();
+  const placeChanged = (ev.location ?? null) !== v.location || (ev.onlineUrl ?? null) !== v.onlineUrl;
+  let notified = 0;
+  if (timeChanged || placeChanged) {
+    const regs = await db
+      .select()
+      .from(eventRegistrations)
+      .where(and(eq(eventRegistrations.eventId, ev.id), inArray(eventRegistrations.status, ["confirmed", "waitlist"])));
+    if (timeChanged && regs.length) {
+      const ids = regs.map((r) => r.id);
+      await db.update(eventRegistrations).set({ reminderSentAt: null }).where(inArray(eventRegistrations.id, ids));
+      await db
+        .update(accessTokens)
+        .set({ expiresAt: new Date(endsAt.getTime() + 30 * 86_400_000) })
+        .where(and(inArray(accessTokens.registrationId, ids), eq(accessTokens.purpose, "event_registration")));
+    }
+    if (updated.status === "published" && startsAt > new Date() && regs.length) {
+      notified = regs.length;
+      after(async () => {
+        for (const r of regs) await sendEventChanged(updated, r);
+      });
+    }
+  }
+
   // More seats, or the waiting list switched on: people waiting get their seat right away.
   const promoted = await refillFromWaitlist(db, ev.id);
-  mailPromoted({ ...ev, ...v, startsAt, endsAt, slug }, promoted);
+  mailPromoted(updated, promoted);
   refresh();
-  return {
-    ok: true,
-    message: promoted.length
-      ? `Enregistré. ${promoted.length} personne${promoted.length > 1 ? "s" : ""} de la liste d’attente ${promoted.length > 1 ? "ont" : "a"} obtenu une place.`
-      : "Événement enregistré.",
-  };
+  const parts = ["Événement enregistré."];
+  if (notified) parts.push(`${notified} personne${notified > 1 ? "s" : ""} prévenue${notified > 1 ? "s" : ""} du changement.`);
+  if (promoted.length) parts.push(`${promoted.length} personne${promoted.length > 1 ? "s" : ""} de la liste d’attente ${promoted.length > 1 ? "ont" : "a"} obtenu une place.`);
+  return { ok: true, message: parts.join(" ") };
 }
 
 /** Publish (visible on the site) or back to draft. */
@@ -173,10 +198,13 @@ export async function coachCancelRegistration(registrationId: string): Promise<A
 /** « Présent » on the day: used for the thank-you e-mail and the attendance rate. */
 export async function setAttendance(registrationId: string, attended: boolean): Promise<ActionState> {
   const user = await requireCoach();
+  const current = await db.query.eventRegistrations.findFirst({ where: eq(eventRegistrations.id, uuid.parse(registrationId)), with: { event: true } });
+  if (!current) return { error: "Inscription introuvable." };
+  if (current.event.startsAt > new Date()) return { error: "La présence se note à partir du début de l’événement." };
   const [reg] = await db
     .update(eventRegistrations)
     .set({ attended })
-    .where(and(eq(eventRegistrations.id, uuid.parse(registrationId)), eq(eventRegistrations.status, "confirmed")))
+    .where(and(eq(eventRegistrations.id, current.id), eq(eventRegistrations.status, "confirmed")))
     .returning();
   if (reg?.contactId && attended) {
     await db.insert(activityLog).values({ actorId: user.id, entity: "contact", entityId: reg.contactId, action: "event_attended" });
@@ -306,11 +334,8 @@ export async function registerForEventPublic(eventId: string, _prev: SiteFormSta
   const ev = await db.query.events.findFirst({ where: eq(events.id, uuid.parse(eventId)) });
   if (!ev) return { error: "Cet événement n’existe plus.", values };
 
-  const { contactId, created } = await findOrCreateSiteContact(
-    { firstName: v.firstName, lastName: v.lastName, email: v.email, phone: v.phone, source: `Événement · ${ev.title}` },
-    v.company ? `Structure indiquée à l’inscription : ${v.company}` : null,
-  );
-  const r = await registerForEvent(db, { ...v, eventId: ev.id, contactId, source: "site" });
+  // The seat first: a refused registration (closed, full…) must not create or change a contact.
+  const r = await registerForEvent(db, { ...v, eventId: ev.id, contactId: null, source: "site" });
   if (!r.ok) {
     const messages = {
       not_found: "Cet événement n’est plus disponible.",
@@ -320,6 +345,19 @@ export async function registerForEventPublic(eventId: string, _prev: SiteFormSta
     } as const;
     return { error: messages[r.reason], values };
   }
+  if (r.duplicate) {
+    // Already registered with this e-mail: never show the private page here (whoever typed the address may not
+    // be its owner). The link goes again to the address on file, and the visitor gets a neutral answer.
+    after(() => sendEventMail(r.status === "confirmed" ? "event_confirmation" : "event_waitlist", ev, r.registration).then(() => undefined));
+    return { ok: true };
+  }
+
+  const { contactId, created } = await findOrCreateSiteContact(
+    { firstName: v.firstName, lastName: v.lastName, email: v.email, phone: v.phone, source: `Événement · ${ev.title}` },
+    v.company ? `Structure indiquée à l’inscription : ${v.company}` : null,
+  );
+  await db.update(eventRegistrations).set({ contactId }).where(eq(eventRegistrations.id, r.registration.id));
+  r.registration.contactId = contactId;
 
   await db.insert(activityLog).values({ entity: "contact", entityId: contactId, action: created ? "created_from_event" : "event_registered_online" });
   if (created) await db.insert(activityLog).values({ entity: "contact", entityId: contactId, action: "event_registered_online" });

@@ -14,6 +14,16 @@ export function EventRegistrationForm({ eventId, maxSeats, waitlist }: { eventId
   const e = state.fieldErrors;
   const val = (name: string) => state.values?.[name] ?? "";
 
+  // A new registration goes to its confirmation page; `ok` here means the address was already registered.
+  if (state.ok) {
+    return (
+      <div role="status" className="rounded-[12px] border border-[var(--jg-light-gray)] bg-ivory p-6">
+        <p className="font-heading font-semibold text-navy">Cette adresse e-mail est déjà inscrite.</p>
+        <p className="mt-2">Nous venons d’y renvoyer le lien personnel de l’inscription, pour la consulter ou l’annuler.</p>
+      </div>
+    );
+  }
+
   return (
     <form action={action} noValidate className="relative grid gap-6">
       <Honeypot />

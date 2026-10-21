@@ -81,9 +81,19 @@ describe("events · seats", () => {
     assert.deepEqual(r, { ok: false, reason: "full" });
   });
 
-  it("updates the booking when the same e-mail registers again (no duplicate)", async () => {
+  it("from the website, the same e-mail again changes nothing (a stranger can't alter a booking)", async () => {
     await registerForEvent(t.db, person("a@test.fr", 1), NOW);
-    const again = await registerForEvent(t.db, person("A@Test.fr", 2), NOW);
+    const again = await registerForEvent(t.db, { ...person("A@Test.fr", 2), firstName: "Intrus" }, NOW);
+    assert.equal(again.ok && again.duplicate, true);
+    const rows = await t.db.select().from(eventRegistrations).where(eq(eventRegistrations.eventId, eventId));
+    assert.equal(rows.length, 1);
+    assert.equal(rows[0].seats, 1);
+    assert.equal(rows[0].firstName, "Test");
+  });
+
+  it("added by the coach, the same e-mail updates the booking", async () => {
+    await registerForEvent(t.db, person("a@test.fr", 1), NOW);
+    const again = await registerForEvent(t.db, person("a@test.fr", 2, "manual"), NOW);
     assert.equal(again.ok && again.updated, true);
     const rows = await t.db.select().from(eventRegistrations).where(eq(eventRegistrations.eventId, eventId));
     assert.equal(rows.length, 1);
