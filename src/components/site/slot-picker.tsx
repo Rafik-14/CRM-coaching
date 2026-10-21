@@ -29,7 +29,7 @@ function Legend({ number, children }: { number?: string; children: React.ReactNo
   return (
     <legend className="font-heading text-[1.125rem] font-semibold text-navy">
       {number && (
-        <span className="text-gold" aria-hidden>
+        <span className="text-[var(--jg-gold-ink)]" aria-hidden>
           {number} —{" "}
         </span>
       )}

@@ -47,7 +47,7 @@ export function QuestionnaireForm({ token, questions }: { token: string; questio
         return (
           <fieldset key={q.id} className="grid gap-3">
             <legend className="mb-3 font-heading text-[1.0625rem] font-semibold text-navy">
-              <span className="text-gold" aria-hidden>
+              <span className="text-[var(--jg-gold-ink)]" aria-hidden>
                 {String(i + 1).padStart(2, "0")} —{" "}
               </span>
               {q.label}

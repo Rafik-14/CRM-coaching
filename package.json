@@ -14,7 +14,9 @@
     "db:reset": "node -e \"require('fs').rmSync('.data/pglite',{recursive:true,force:true})\" && concurrently -k -s first -n db,setup \"npm:db:server\" \"wait-on -t 30000 tcp:127.0.0.1:54320 && npm run db:migrate && npm run db:seed\"",
     "typecheck": "tsc --noEmit",
     "db:server": "node scripts/db-server.mjs",
-    "test": "tsx --test \"src/**/*.test.ts\""
+    "test": "tsx --test \"src/**/*.test.ts\"",
+    "test:e2e": "playwright test",
+    "test:pg": "tsx --test \"src/**/*.pg-test.ts\""
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -40,9 +42,11 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.11.0",
     "@electric-sql/pglite": "^0.5.8",
     "@electric-sql/pglite-socket": "^0.2.11",
     "@faker-js/faker": "^10.6.0",
+    "@playwright/test": "^1.56.1",
     "@tailwindcss/turbopack": "^4",
     "@types/node": "^20",
     "@types/nodemailer": "^8.0.2",
@@ -56,5 +60,8 @@
     "tsx": "^4.23.15",
     "typescript": "^5",
     "wait-on": "^9.5.1"
+  },
+  "overrides": {
+    "playwright-core": "1.56.1"
   }
 }

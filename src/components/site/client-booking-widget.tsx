@@ -42,7 +42,7 @@ export function ClientBookingWidget({
       />
       <label className="grid gap-2">
         <span className="font-heading text-[1.125rem] font-semibold text-navy">
-          <span className="text-gold" aria-hidden>
+          <span className="text-[var(--jg-gold-ink)]" aria-hidden>
             03 —{" "}
           </span>
           Un mot pour préparer la séance <span className="font-sans text-[15px] font-normal">(facultatif)</span>

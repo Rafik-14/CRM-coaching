@@ -46,7 +46,7 @@ const STEPS = [
     title: "Incarner",
     image: etapeIncarner,
     tone: "bg-[var(--jg-teal)] text-white",
-    number: "text-gold",
+    number: "text-white",
     ring: "border-[var(--jg-teal)]",
     text: "Transformer cette clarté en posture, discours et décisions, pour rendre votre valeur visible.",
   },

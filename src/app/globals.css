@@ -67,6 +67,8 @@
   --jg-navy-hover: #243a52;
   --jg-anthracite: #343a3f;
   --jg-gold: #d4a866;
+  /* Gold for small text on white / ivory (contrast 5:1; the bright gold stays for lines and large text). */
+  --jg-gold-ink: #86652b;
   --jg-teal: #0f6b6b;
   --jg-ivory: #f8f6f2;
   --jg-light-gray: #e7e7e5;
