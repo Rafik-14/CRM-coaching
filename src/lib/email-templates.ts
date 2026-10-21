@@ -14,6 +14,12 @@ export const TEMPLATE_KEYS = [
   "package_last_session",
   "coaching_finished",
   "questionnaire_invite",
+  "event_confirmation",
+  "event_waitlist",
+  "event_seat_available",
+  "event_reminder",
+  "event_cancelled",
+  "event_thanks",
 ] as const;
 export type TemplateKey = (typeof TEMPLATE_KEYS)[number];
 
@@ -29,6 +35,9 @@ export const VARIABLES = {
   lien_reservation: "Lien pour réserver (lien personnel pour un client)",
   lien_accompagnements: "Page « Accompagnements » du site",
   lien_questionnaire: "Lien du questionnaire de départ",
+  evenement: "Titre de la conférence ou de l’atelier",
+  lieu: "Adresse, ou « en ligne »",
+  lien_echange: "Page de réservation de l’échange stratégique",
 } as const;
 export type VariableName = keyof typeof VARIABLES;
 export type TemplateVars = Partial<Record<VariableName, string>>;
@@ -150,6 +159,75 @@ export const TEMPLATE_DEFS: Record<TemplateKey, TemplateDef> = {
       "Le lien reste valable 30 jours. Vos réponses ne sont lues que par moi.",
     ].join("\n\n"),
   },
+  event_confirmation: {
+    label: "Inscription à un événement",
+    trigger: "Dès qu’une personne réserve sa place à une conférence ou un atelier.",
+    variables: ["prenom", "evenement", "date", "heure", "lieu", "nom_coach"],
+    essential: true,
+    manual: false,
+    subject: "Inscription confirmée : {{evenement}}",
+    heading: "Merci {{prenom}}, votre place est réservée.",
+    body: [
+      "Je suis ravi de vous compter parmi nous pour « {{evenement}} », le {{date}} à {{heure}}.",
+      "Vous trouverez les détails ci-dessous. L’événement est joint à cet e-mail pour l’ajouter à votre agenda.",
+    ].join("\n\n"),
+  },
+  event_waitlist: {
+    label: "Événement complet · liste d’attente",
+    trigger: "Quand une personne s’inscrit à un événement complet.",
+    variables: ["prenom", "evenement", "date", "heure", "nom_coach"],
+    essential: true,
+    manual: false,
+    subject: "Liste d’attente : {{evenement}}",
+    heading: "Merci {{prenom}}.",
+    body: "« {{evenement}} » est complet pour le moment. Vous êtes sur la liste d’attente : si une place se libère, elle vous est attribuée automatiquement et je vous préviens par e-mail.",
+  },
+  event_seat_available: {
+    label: "Une place s’est libérée",
+    trigger: "Quand une place se libère et revient à la première personne de la liste d’attente.",
+    variables: ["prenom", "evenement", "date", "heure", "lieu", "nom_coach"],
+    essential: true,
+    manual: false,
+    subject: "Une place s’est libérée : {{evenement}}",
+    heading: "Bonne nouvelle, {{prenom}} !",
+    body: "Une place s’est libérée pour « {{evenement}} », le {{date}} à {{heure}}. Elle est à vous : votre inscription est confirmée.",
+  },
+  event_reminder: {
+    label: "Rappel la veille d’un événement",
+    trigger: "La veille de chaque conférence ou atelier, aux personnes inscrites.",
+    variables: ["prenom", "evenement", "date", "heure", "lieu", "nom_coach"],
+    essential: true,
+    manual: false,
+    subject: "Rappel : {{evenement}} demain à {{heure}}",
+    heading: "À demain, {{prenom}} !",
+    body: "Petit rappel : « {{evenement}} » a lieu demain, {{date}} à {{heure}}.",
+  },
+  event_cancelled: {
+    label: "Annulation d’un événement",
+    trigger: "Quand vous annulez une conférence ou un atelier.",
+    variables: ["prenom", "evenement", "date", "heure", "nom_coach"],
+    essential: true,
+    manual: false,
+    subject: "Annulation : {{evenement}}",
+    heading: "Bonjour {{prenom}},",
+    body: [
+      "Je suis désolé : « {{evenement}} », prévu le {{date}} à {{heure}}, est annulé.",
+      "Je vous tiendrai informé des prochaines dates. Pour toute question, répondez simplement à cet e-mail.",
+    ].join("\n\n"),
+  },
+  event_thanks: {
+    label: "Merci après un événement",
+    trigger: "Le lendemain d’un événement, aux personnes marquées présentes.",
+    variables: ["prenom", "evenement", "lien_echange", "nom_coach"],
+    essential: false,
+    manual: false,
+    subject: "Merci d’avoir participé à {{evenement}}",
+    heading: "Merci {{prenom}} !",
+    body: [
+      "Merci d’avoir participé à « {{evenement}} ». J’espère que ce moment vous a été utile.",
+      "Si vous souhaitez aller plus loin sur votre situation, je vous propose un échange stratégique de 20 minutes, offert et sans engagement : {{lien_echange}}",
+    ].join("\n\n"),
+  },
 };
 
 /** Example values for the preview in Paramètres. */
@@ -165,6 +243,9 @@ export const SAMPLE_VARS: Required<TemplateVars> = {
   lien_reservation: "https://www.exemple.ch/reserver/seance/…",
   lien_accompagnements: "https://www.exemple.ch/accompagnements",
   lien_questionnaire: "https://www.exemple.ch/questionnaire/…",
+  evenement: "Révéler sa valeur professionnelle",
+  lieu: "Maison des associations, Lyon",
+  lien_echange: "https://www.exemple.ch/reserver",
 };
 
 const VAR_PATTERN = /\{\{\s*([a-z_]+)\s*\}\}/g;

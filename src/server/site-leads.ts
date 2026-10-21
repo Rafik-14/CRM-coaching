@@ -20,6 +20,8 @@ export type SiteLead = {
   stake?: string | null;
   /** Label of the page / button the visitor came from (« Site web · <cta> »). */
   cta?: string | null;
+  /** Overrides « Site web · <cta> » (e.g. « Événement · <titre> »). */
+  source?: string | null;
 };
 
 export async function findOrCreateSiteContact(lead: SiteLead, note?: string | null) {
@@ -47,7 +49,7 @@ export async function findOrCreateSiteContact(lead: SiteLead, note?: string | nu
       lastName: lead.lastName ?? "",
       email: lead.email,
       phone: lead.phone || null,
-      source: lead.cta ? `Site web · ${lead.cta}` : "Site web",
+      source: lead.source ?? (lead.cta ? `Site web · ${lead.cta}` : "Site web"),
       segment: lead.segment ?? null,
       subSegment: lead.subSegment ?? null,
       stake: lead.stake ?? null,

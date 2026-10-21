@@ -27,6 +27,8 @@ import { getContactQuestionnaire } from "@/server/questionnaire";
 import { formatAnswer, type Answer } from "@/lib/questionnaire";
 import { TEMPLATE_DEFS, TEMPLATE_KEYS, type TemplateKey } from "@/lib/email-templates";
 import { getClientBookingLink } from "@/server/client-booking";
+import { getContactEvents } from "@/server/queries/events";
+import { REGISTRATION_STATUS_LABEL, type RegistrationStatus } from "@/lib/events";
 import { getContact, getContactTimeline, getStages, listPartnerOptions } from "@/server/queries/contacts";
 import { getBusinessSettings } from "@/server/business";
 import { countryLabel, segmentLabel, subSegmentLabel } from "@/lib/jg";
@@ -64,7 +66,7 @@ async function ContactDetail({
 }) {
   const [{ id }, sp] = await Promise.all([params, searchParams]);
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
-  const [contact, stages, timeline, templates, packageOptions, partners, business, bookingLink, pendingEmails, intake] = await Promise.all([
+  const [contact, stages, timeline, templates, packageOptions, partners, business, bookingLink, pendingEmails, intake, contactEvents] = await Promise.all([
     getContact(id),
     getStages(),
     getContactTimeline(id),
@@ -75,6 +77,7 @@ async function ContactDetail({
     getClientBookingLink(id),
     getPendingEmails(id),
     getContactQuestionnaire(id),
+    getContactEvents(id),
   ]);
   if (!contact) notFound();
   const tab = TABS.find((t) => t === sp.onglet) ?? "apercu";
@@ -329,6 +332,28 @@ async function ContactDetail({
                     clientPackages={client.packages}
                     options={packageOptions}
                   />
+                </CardContent>
+              </Card>
+            )}
+            {contactEvents.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Événements</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ul className="grid gap-2 text-sm">
+                    {contactEvents.map(({ registration: r, event: e }) => (
+                      <li key={r.id}>
+                        <Link href={`/mes-evenements/${e.id}`} className="flex items-center justify-between gap-2 hover:underline">
+                          <span className="min-w-0 truncate font-medium">{e.title}</span>
+                          <span className="shrink-0 text-xs text-muted-foreground">
+                            {formatDate(e.startsAt)} ·{" "}
+                            {r.attended ? "présent" : REGISTRATION_STATUS_LABEL[r.status as RegistrationStatus]?.toLowerCase() ?? r.status}
+                          </span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
                 </CardContent>
               </Card>
             )}

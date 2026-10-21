@@ -65,3 +65,22 @@ describe("shortName", () => {
     assert.equal(shortName("Marc", ""), "Marc");
   });
 });
+
+describe("calendar feed · events", () => {
+  it("adds conferences and workshops next to the sessions", () => {
+    const feed = buildCoachFeed([session], "https://crm.example.test", new Date("2026-10-15T10:00:00Z"), [
+      {
+        id: "e1e1e1e1-1111-4222-8333-944455556666",
+        title: "Révéler sa valeur",
+        startsAt: new Date("2026-11-19T17:30:00Z"),
+        endsAt: new Date("2026-11-19T19:00:00Z"),
+        location: "Lyon",
+        updatedAt: new Date("2026-10-15T09:30:00Z"),
+      },
+    ]).replace(/\r\n /g, "");
+    assert.equal(feed.match(/BEGIN:VEVENT/g)?.length, 2);
+    assert.match(feed, /UID:event-e1e1e1e1-1111-4222-8333-944455556666@crm-jeremygalea\r\n/);
+    assert.match(feed, /DTSTART:20261119T173000Z\r\nDTEND:20261119T190000Z\r\n/);
+    assert.match(feed, /SUMMARY:Événement · Révéler sa valeur\r\n/);
+  });
+});

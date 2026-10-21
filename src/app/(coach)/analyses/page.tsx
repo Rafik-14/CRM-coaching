@@ -5,6 +5,7 @@ import { Banknote, Lightbulb, Percent, Trophy, UserX } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/page-header";
 import { StatCard } from "@/components/stat-card";
+import { getEventStats } from "@/server/queries/events";
 import { DonutChart } from "@/components/charts";
 import { stageDot } from "@/components/stage-badge";
 import { getAnalytics } from "@/server/queries/analytics";
@@ -292,6 +293,43 @@ async function Analytics() {
           </p>
         )}
       </AnimateOnView>
+
+      <EventStatsSection />
     </div>
+  );
+}
+
+/** Conferences & workshops of the last 12 months: attendance and contacts they brought (docs/EVENTS-PLAN.md §3). */
+async function EventStatsSection() {
+  const st = await getEventStats();
+  if (!st.rows.length && !st.contacts) return null;
+  return (
+    <AnimateOnView className="rounded-xl border border-border bg-card p-5">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <h2 className="font-semibold">Événements · 12 derniers mois</h2>
+        <Link href="/mes-evenements" className="text-sm text-muted-foreground hover:underline">
+          Voir les événements
+        </Link>
+      </div>
+      <p className="mb-4 text-sm text-muted-foreground">
+        {st.registered} inscrit{st.registered > 1 ? "s" : ""} · {st.present} présent{st.present > 1 ? "s" : ""}
+        {st.registered ? ` (${Math.round((st.present / st.registered) * 100)} %)` : ""} · {st.contacts} contact{st.contacts > 1 ? "s" : ""} venu
+        {st.contacts > 1 ? "s" : ""} d’un événement, dont {st.clients} devenu{st.clients > 1 ? "s" : ""} client{st.clients > 1 ? "s" : ""}
+      </p>
+      {st.rows.length > 0 && (
+        <ul className="grid gap-2">
+          {st.rows.map((r) => (
+            <li key={r.id} className="flex items-baseline justify-between gap-3 text-sm">
+              <Link href={`/mes-evenements/${r.id}`} className="truncate hover:underline">
+                {r.title}
+              </Link>
+              <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
+                {r.present} / {r.registered} présents{r.registered ? ` · ${Math.round((r.present / r.registered) * 100)} %` : ""}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </AnimateOnView>
   );
 }

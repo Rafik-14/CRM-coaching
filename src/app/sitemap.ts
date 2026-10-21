@@ -9,6 +9,7 @@ const PAGES: { path: string; priority: number }[] = [
   { path: "/accompagnements/parcours-signature", priority: 0.8 },
   { path: "/pour-qui", priority: 0.8 },
   { path: "/transformations", priority: 0.8 },
+  { path: "/evenements", priority: 0.8 },
   { path: "/a-propos", priority: 0.7 },
   { path: "/le-chant-du-merle", priority: 0.6 },
   { path: "/reserver", priority: 0.9 },

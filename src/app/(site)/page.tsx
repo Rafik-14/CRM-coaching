@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Plus } from "lucide-react";
 import { Card, FinalCta, FlowLine, SectionHeading, SectionNumber, Statement, WideFigure } from "@/components/site/blocks";
 import { FloatingBooking } from "@/components/site/floating-booking";
+import { HomeEvents } from "@/components/site/home-events";
 import { CASES, DOMAINS } from "@/components/site/content";
 import { ArrowLink, BookingButton, Container, DotList, Eyebrow, GoldLine, Section } from "@/components/site/ui";
 import hero from "@/assets/site/hero.webp";
@@ -356,6 +358,11 @@ export default function HomePage() {
           </div>
         </Container>
       </Section>
+
+      {/* 7 bis — Conférences & ateliers (only when there are events) */}
+      <Suspense fallback={null}>
+        <HomeEvents />
+      </Suspense>
 
       {/* 8 — Transformations */}
       <Section tone="ivory">

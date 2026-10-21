@@ -2,11 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { connection } from "next/server";
-import { ChevronLeft, ChevronRight, Globe } from "lucide-react";
+import { ChevronLeft, ChevronRight, Globe, Presentation } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/page-header";
 import { getCalendarSessions, type CalendarSession } from "@/server/queries/calendar";
+import { eventsBetween } from "@/server/queries/events";
 import { listScheduleOptions } from "@/server/queries/contacts";
 import { ScheduleSessionDialog } from "@/components/coaching/schedule-session-dialog";
 import { cn } from "@/lib/utils";
@@ -65,9 +66,12 @@ async function Calendar({ searchParams }: { searchParams: PageProps<"/calendrier
   const days = Array.from({ length: 42 }, (_, i) => new Date(gridStart.getFullYear(), gridStart.getMonth(), gridStart.getDate() + i));
   const gridEnd = new Date(days[41].getFullYear(), days[41].getMonth(), days[41].getDate() + 1);
 
-  const sessions = await getCalendarSessions(gridStart, gridEnd);
+  const [sessions, monthEvents] = await Promise.all([getCalendarSessions(gridStart, gridEnd), eventsBetween(gridStart, gridEnd)]);
   const byDay = new Map<string, CalendarSession[]>();
   for (const s of sessions) byDay.set(key(s.startsAt), [...(byDay.get(key(s.startsAt)) ?? []), s]);
+  // Conferences & workshops (published) appear in gold, before the sessions of the day.
+  const eventsByDay = new Map<string, typeof monthEvents>();
+  for (const e of monthEvents) eventsByDay.set(key(e.startsAt), [...(eventsByDay.get(key(e.startsAt)) ?? []), e]);
 
   const prev = new Date(month.getFullYear(), month.getMonth() - 1, 1);
   const next = new Date(month.getFullYear(), month.getMonth() + 1, 1);
@@ -77,7 +81,7 @@ async function Calendar({ searchParams }: { searchParams: PageProps<"/calendrier
   const noShowPct = held.length ? Math.round((held.filter((s) => s.status === "no_show").length / held.length) * 100) : null;
   const active = inMonth.filter((s) => s.status !== "cancelled");
   const onlinePct = active.length ? Math.round((active.filter((s) => s.bookedVia === "online").length / active.length) * 100) : null;
-  const monthDays = days.filter((d) => d.getMonth() === month.getMonth() && byDay.has(key(d)));
+  const monthDays = days.filter((d) => d.getMonth() === month.getMonth() && (byDay.has(key(d)) || eventsByDay.has(key(d))));
 
   return (
     <div className="grid gap-4">
@@ -133,6 +137,17 @@ async function Calendar({ searchParams }: { searchParams: PageProps<"/calendrier
                   {d.getDate()}
                 </div>
                 <div className="grid gap-1">
+                  {(eventsByDay.get(key(d)) ?? []).map((e) => (
+                    <Link
+                      key={e.id}
+                      href={`/mes-evenements/${e.id}`}
+                      className="truncate rounded-md bg-gold/20 px-1.5 py-0.5 text-[11px] font-medium text-foreground transition-colors hover:bg-gold/30"
+                      title={`${timeFmt.format(e.startsAt)} · ${e.title}`}
+                    >
+                      <Presentation aria-hidden className="mr-0.5 inline size-3 align-[-2px]" />
+                      <span className="tabular-nums">{timeFmt.format(e.startsAt)}</span> {e.title}
+                    </Link>
+                  ))}
                   {list.slice(0, 3).map((s) => (
                     <Link
                       key={s.id}
@@ -164,7 +179,16 @@ async function Calendar({ searchParams }: { searchParams: PageProps<"/calendrier
               {dayFmt.format(d)}
             </h3>
             <ul className="grid gap-1.5">
-              {byDay.get(key(d))!.map((s) => (
+              {(eventsByDay.get(key(d)) ?? []).map((e) => (
+                <li key={e.id}>
+                  <Link href={`/mes-evenements/${e.id}`} className="flex items-center gap-2 rounded-lg bg-gold/20 px-2.5 py-1.5 text-sm">
+                    <span className="font-medium tabular-nums">{timeFmt.format(e.startsAt)}</span>
+                    <span className="truncate">{e.title}</span>
+                    <Presentation aria-hidden className="ml-auto size-3.5 shrink-0" />
+                  </Link>
+                </li>
+              ))}
+              {(byDay.get(key(d)) ?? []).map((s) => (
                 <li key={s.id}>
                   <Link
                     href={`/contacts/${s.contact.id}?onglet=seances`}

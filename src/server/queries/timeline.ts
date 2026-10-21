@@ -1,7 +1,7 @@
 import "server-only";
 import { and, desc, eq } from "drizzle-orm";
 import { db } from "@/server/db";
-import { activityLog, coachingSessions, contacts, emailLog } from "@/server/db/schema";
+import { activityLog, coachingSessions, contacts, emailLog, eventRegistrations, events as eventsTable } from "@/server/db/schema";
 
 export type TimelineEvent = {
   id: string;
@@ -30,11 +30,12 @@ const actionLabels: Record<string, { title: string; kind: TimelineEvent["kind"] 
   created_from_site: { title: "Contact créé via le formulaire du site", kind: "created" },
   site_form_message: { title: "Nouveau message via le site", kind: "update" },
   echange_booked_online: { title: "Échange stratégique réservé en ligne", kind: "session_planned" },
+  created_from_event: { title: "Contact créé par une inscription à un événement", kind: "created" },
 };
 
 /** Merged history of a contact. Callers must have checked authorization (requireCoach). */
 export async function buildTimeline(contactId: string, limit = 12): Promise<TimelineEvent[]> {
-  const [contact, logs, sessions, emails] = await Promise.all([
+  const [contact, logs, sessions, emails, registrations] = await Promise.all([
     db.query.contacts.findFirst({ where: eq(contacts.id, contactId), columns: { createdAt: true } }),
     db.query.activityLog.findMany({
       where: and(eq(activityLog.entity, "contact"), eq(activityLog.entityId, contactId)),
@@ -52,6 +53,12 @@ export async function buildTimeline(contactId: string, limit = 12): Promise<Time
       orderBy: desc(emailLog.createdAt),
       limit: 20,
     }),
+    db
+      .select({ r: eventRegistrations, title: eventsTable.title, startsAt: eventsTable.startsAt })
+      .from(eventRegistrations)
+      .innerJoin(eventsTable, eq(eventsTable.id, eventRegistrations.eventId))
+      .where(eq(eventRegistrations.contactId, contactId))
+      .limit(20),
   ]);
 
   const notes = sessions.length
@@ -90,6 +97,22 @@ export async function buildTimeline(contactId: string, limit = 12): Promise<Time
     if (log.action === "created" || log.action === "session_scheduled") continue;
     const label = actionLabels[log.action];
     if (label) events.push({ id: log.id, at: log.createdAt, kind: label.kind, title: label.title });
+  }
+
+  // Conferences & workshops: registration, waiting list, presence, cancellation.
+  for (const { r, title, startsAt } of registrations) {
+    const seats = r.seats > 1 ? ` (${r.seats} places)` : "";
+    events.push({
+      id: `reg-${r.id}`,
+      at: r.createdAt,
+      kind: "session_planned",
+      title: r.status === "waitlist" ? "Liste d’attente d’un événement" : "Inscription à un événement",
+      description: `${title}${seats}`,
+    });
+    if (r.attended) events.push({ id: `att-${r.id}`, at: startsAt, kind: "session_done", title: "A participé à un événement", description: title });
+    if (r.status === "cancelled" && r.cancelledAt) {
+      events.push({ id: `can-${r.id}`, at: r.cancelledAt, kind: "session_cancelled", title: "Inscription à un événement annulée", description: title });
+    }
   }
 
   for (const m of emails) {
