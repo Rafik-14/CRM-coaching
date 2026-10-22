@@ -3,6 +3,7 @@ export const SITE_NAV = [
   { href: "/", label: "Accueil" },
   { href: "/methode", label: "La Méthode JG®" },
   { href: "/accompagnements", label: "Accompagnements" },
+  { href: "/bilan-de-competences", label: "Bilan de compétences" },
   { href: "/pour-qui", label: "Pour qui ?" },
   { href: "/transformations", label: "Transformations" },
   { href: "/evenements", label: "Événements" },
@@ -10,6 +11,9 @@ export const SITE_NAV = [
   { href: "/le-chant-du-merle", label: "Le Chant du Merle" },
   { href: "/contact", label: "Contact" },
 ] as const;
+
+/** Desktop: these pages sit in the « Plus » menu (ten pages don't fit on one line); phones list them all. */
+export const DESKTOP_MORE: readonly string[] = ["/evenements", "/a-propos", "/le-chant-du-merle"];
 
 /** Small links at the bottom of every page. */
 export const LEGAL_NAV = [

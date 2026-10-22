@@ -6,7 +6,7 @@ import { ArrowRight, Plus } from "lucide-react";
 import { Card, FinalCta, FlowLine, SectionHeading, SectionNumber, Statement, WideFigure } from "@/components/site/blocks";
 import { FloatingBooking } from "@/components/site/floating-booking";
 import { HomeEvents } from "@/components/site/home-events";
-import { CASES, DOMAINS } from "@/components/site/content";
+import { CASES, DOMAINS, offerColor } from "@/components/site/content";
 import { ArrowLink, BookingButton, Container, DotList, Eyebrow, GoldLine, Section } from "@/components/site/ui";
 import hero from "@/assets/site/hero.webp";
 import methode from "@/assets/site/methode.webp";
@@ -21,7 +21,7 @@ import { cn } from "@/lib/utils";
 export const metadata: Metadata = {
   title: { absolute: "Jérémy Galéa · Méthode JG® — Révéler votre potentiel" },
   description:
-    "Pourquoi vous plutôt qu’un autre ? Coach & formateur, Jérémy Galéa vous aide à rendre votre valeur claire, crédible et évidente. France • Suisse.",
+    "Votre valeur ne se résume pas à ce que vous savez faire. Coach & formateur, Jérémy Galéa vous aide à clarifier votre identité professionnelle et à rendre votre valeur visible. France • Suisse.",
   alternates: { canonical: "/" },
 };
 
@@ -33,6 +33,7 @@ const STEPS = [
     number: "text-gold",
     ring: "border-navy",
     text: "Comprendre votre situation, vos enjeux et ce qui vous freine pour retrouver une direction claire.",
+    result: "Vous identifiez vos priorités et la direction à prendre.",
   },
   {
     title: "Révéler",
@@ -41,6 +42,7 @@ const STEPS = [
     number: "text-navy",
     ring: "border-gold",
     text: "Faire émerger la cohérence de votre parcours pour identifier ce qui vous distingue.",
+    result: "Vous prenez conscience de vos forces distinctives et de ce qui fait votre singularité.",
   },
   {
     title: "Incarner",
@@ -49,39 +51,72 @@ const STEPS = [
     number: "text-white",
     ring: "border-[var(--jg-teal)]",
     text: "Transformer cette clarté en posture, discours et décisions, pour rendre votre valeur visible.",
+    result: "Vous affirmez votre positionnement et exprimez plus clairement ce qui vous distingue.",
   },
 ] as const;
 
+const HERO_DOMAINS = ["Identité professionnelle", "Positionnement", "Évolution de carrière", "Leadership", "Recrutement", "Prise de parole"] as const;
+
+/** The four formulas of the home page; each keeps its colour (OFFER_COLORS) on Accompagnements too. */
 const OFFERS = [
   {
+    slug: "architecture-identitaire",
+    eyebrow: null,
     name: "Architecture Identitaire JG®",
-    tagline: "Comprendre ce qui fait réellement votre valeur.",
-    text: "Prendre du recul sur votre parcours, révéler ce qui vous distingue et clarifier votre direction.",
-    label: "Pour :",
-    items: ["Clarification", "Repositionnement", "Orientation", "Reconversion", "Évolution"],
+    tagline: "Comprendre ce qui fait votre valeur.",
+    paragraphs: [
+      "Vous avez un parcours, des compétences et une expérience. Mais vous avez peut-être du mal à en dégager le fil conducteur, à identifier ce qui vous distingue ou à savoir quelle direction prendre.",
+      "L’Architecture Identitaire JG® vous aide à prendre du recul sur votre parcours, à révéler vos forces distinctives et à clarifier votre identité professionnelle pour construire une direction qui vous ressemble.",
+    ],
+    label: "Pour vous si vous souhaitez :",
+    items: ["Clarifier votre identité professionnelle", "Vous repositionner", "Vous orienter", "Envisager une reconversion", "Préparer une évolution"],
     note: null,
     link: "Découvrir l’Architecture Identitaire JG®",
     href: "/accompagnements#architecture-identitaire",
   },
   {
+    slug: "accompagnement-decisif",
+    eyebrow: null,
     name: "Accompagnement Décisif JG®",
-    tagline: "Réussir quand ça compte.",
-    text: "Un accompagnement court et ciblé pour préparer un moment où votre valeur doit être comprise, reconnue et choisie.",
-    label: "Pour :",
-    items: ["Entretien", "Stage", "Alternance", "Oral", "Pitch", "Négociation", "Prise de poste"],
-    note: "1 à 3 séances selon votre objectif.",
+    tagline: "Faire la différence au moment où tout se joue.",
+    paragraphs: [
+      "Un entretien, un oral, un pitch ou une négociation : certaines situations exigent de savoir exprimer clairement sa valeur, de rendre sa contribution compréhensible et de renforcer sa crédibilité.",
+      "L’Accompagnement Décisif JG® vous aide à préparer une échéance professionnelle précise pour mieux structurer votre message, affirmer votre positionnement et faire comprendre ce qui vous distingue.",
+    ],
+    label: "Pour préparer :",
+    items: ["Un entretien de recrutement", "Un stage ou une alternance", "Un oral", "Un pitch", "Une négociation", "Une prise de poste"],
+    note: "Format : 3 séances selon votre objectif.",
     link: "Découvrir l’Accompagnement Décisif JG®",
     href: "/accompagnements#accompagnement-decisif",
   },
   {
+    slug: "parcours-signature",
+    eyebrow: null,
     name: "Parcours Signature JG®",
-    tagline: "Transformer votre compréhension en trajectoire.",
-    text: "Un accompagnement pour révéler durablement votre valeur et l’incarner dans votre trajectoire professionnelle.",
-    label: null,
-    items: ["8 séances individuelles", "Workbook Signature JG®", "Exercices entre les séances"],
+    tagline: "Révéler votre valeur. L’incarner durablement.",
+    paragraphs: [
+      "Vous souhaitez aller au-delà d’une difficulté ponctuelle pour construire un positionnement professionnel solide, cohérent avec qui vous êtes et avec ce que vous souhaitez apporter.",
+      "Le Parcours Signature JG® vous accompagne en profondeur pour relier votre parcours, vos forces et vos aspirations, clarifier ce qui vous distingue et transformer cette compréhension en une posture, un discours et une trajectoire professionnelle assumés.",
+    ],
+    label: "Votre accompagnement comprend :",
+    items: ["8 séances individuelles", "Le Workbook Signature JG®", "Des exercices entre les séances"],
     note: null,
     link: "Découvrir le Parcours Signature JG®",
     href: "/accompagnements/parcours-signature",
+  },
+  {
+    slug: "bilan-de-competences",
+    eyebrow: "Une autre façon d’avancer",
+    name: "Bilan de compétences",
+    tagline: "Besoin de faire le point sur votre avenir professionnel ?",
+    paragraphs: [
+      "Le bilan de compétences vous permet d’analyser votre parcours, d’identifier vos compétences et vos motivations, et de construire un projet professionnel cohérent avec vos aspirations.",
+    ],
+    label: null,
+    items: [],
+    note: null,
+    link: "Découvrir le bilan de compétences",
+    href: "/bilan-de-competences",
   },
 ] as const;
 
@@ -123,9 +158,9 @@ export default function HomePage() {
           <div className="relative z-10 col-start-1 row-start-1 self-end pb-8 md:pb-0 lg:self-end">
             <Eyebrow className="max-md:text-gold">Jérémy Galéa · Méthode JG®</Eyebrow>
             <GoldLine className="mt-4 max-md:hidden" />
-            <h1 className="jg-h1 mt-3 max-md:text-white md:mt-6">Pourquoi vous plutôt qu’un autre ?</h1>
+            <h1 className="jg-h1 mt-3 max-md:text-white md:mt-6">Votre valeur ne se résume pas à ce que vous savez faire.</h1>
             <p className="mt-4 font-heading text-[1.125rem] leading-snug font-medium text-navy max-md:text-white/90 md:mt-6 md:text-[1.375rem]">
-              Si vous deviez répondre maintenant, que diriez-vous ?
+              Elle se joue aussi dans la façon dont elle est perçue.
             </p>
             <div className="mt-6 md:hidden">
               <BookingButton source="accueil-hero" variant="accent" block />
@@ -135,15 +170,21 @@ export default function HomePage() {
           <div className="col-start-1 row-start-2 mt-8 md:mt-6 lg:self-start">
             <div className="jg-prose max-w-[600px]">
               <p>
-                Parce qu’au moment où une décision se prend, votre valeur ne suffit pas. Il faut qu’elle soit perçue.
+                Vous avez des compétences, de l’expérience et un potentiel. Mais savez-vous les exprimer de façon à être
+                compris, reconnu et choisi ?
               </p>
               <p className="max-md:hidden">
-                <strong>Je vous aide à la rendre claire, crédible et évidente.</strong>
+                <strong>
+                  Je vous accompagne pour clarifier votre identité professionnelle, affirmer votre positionnement et rendre
+                  votre valeur visible dans les moments où une décision se prend.
+                </strong>
               </p>
-              <p className="max-md:hidden">Pour être compris, reconnu et choisi.</p>
             </div>
-            <Statement className="mt-6 md:hidden">Je vous aide à la rendre claire, crédible et évidente. Pour être compris, reconnu et choisi.</Statement>
-            <DotList items={DOMAINS} className="jg-small mt-8 font-medium text-navy" />
+            <Statement className="mt-6 md:hidden">
+              Je vous accompagne pour clarifier votre identité professionnelle, affirmer votre positionnement et rendre votre
+              valeur visible dans les moments où une décision se prend.
+            </Statement>
+            <DotList items={HERO_DOMAINS} className="jg-small mt-8 font-medium text-navy" />
             <div className="mt-10 hidden flex-col gap-3 sm:flex-row sm:items-center sm:gap-5 md:flex">
               <BookingButton source="accueil-hero" />
               <p className="jg-small">20 minutes · Sans engagement</p>
@@ -157,10 +198,16 @@ export default function HomePage() {
         <Container className="grid gap-10 lg:grid-cols-2 lg:gap-20">
           <SectionHeading num={1} title="Et si votre parcours racontait une histoire que vous n’avez jamais vue ?" />
           <div className="jg-prose max-w-[640px] lg:pt-14">
-            <p>Vos expériences, vos choix et vos détours ne sont peut-être pas aussi dispersés qu’ils en ont l’air.</p>
+            <p>
+              Vos expériences, vos choix et même vos détours ont façonné des compétences, des réflexes et une manière d’agir
+              qui vous sont propres.
+            </p>
             <p>Un fil conducteur relie parfois ce que vous avez construit sans que vous l’ayez encore identifié.</p>
             <p>
-              <strong>Mon rôle est de le faire émerger, pour révéler ce qui vous distingue et éclairer la suite.</strong>
+              <strong>
+                Mon rôle est de faire émerger ce fil conducteur pour vous aider à comprendre ce qui vous distingue et à
+                construire un positionnement professionnel qui vous ressemble.
+              </strong>
             </p>
           </div>
         </Container>
@@ -178,7 +225,7 @@ export default function HomePage() {
               <p>On ne choisit pas toujours le plus compétent.</p>
               <p className="mt-2">On choisit celui dont la valeur est la plus évidente.</p>
             </Statement>
-            <p className="mt-8 max-w-[560px]">Parce qu’une valeur que l’on ne comprend pas reste difficile à choisir.</p>
+            <p className="mt-8 max-w-[560px]">Car ce qui n’est pas compris est plus difficile à reconnaître, à défendre et à choisir.</p>
           </div>
         </Container>
       </Section>
@@ -201,7 +248,7 @@ export default function HomePage() {
               <p>Votre valeur ne se joue pas seulement dans ce que vous êtes.</p>
               <p>Elle se joue dans ce que l’autre en perçoit.</p>
             </div>
-            <Statement>Je vous rends évident au moment où la décision se prend.</Statement>
+            <Statement>Je vous aide à rendre votre valeur évidente au moment où une décision se prend.</Statement>
           </div>
         </Container>
       </Section>
@@ -218,14 +265,22 @@ export default function HomePage() {
               className="order-last h-auto w-full max-w-[440px] rounded-[12px] lg:order-first"
             />
             <div>
-              <SectionHeading num={4} eyebrow="La Méthode JG®" title="Comprendre votre parcours pour révéler votre valeur.">
+              <SectionHeading
+                num={4}
+                eyebrow="La Méthode JG®"
+                title="Comprendre votre parcours. Clarifier votre valeur. Affirmer votre positionnement."
+              >
                 <p>
-                  La Méthode JG® révèle les liens entre vos expériences, vos choix et vos réussites pour faire émerger ce
-                  qui vous distingue réellement.
+                  La Méthode JG® vous aide à relier vos expériences, vos choix et vos réussites pour identifier ce qui vous
+                  distingue.
                 </p>
                 <p>
-                  Puis nous transformons cette compréhension en identité, positionnement et expression, pour que votre
-                  valeur soit plus claire — pour vous comme pour les autres.
+                  Nous transformons ensuite cette compréhension en un positionnement professionnel clair et une expression
+                  plus juste de votre valeur.
+                </p>
+                <p>
+                  Vous pouvez ainsi mieux expliquer ce que vous apportez, ce qui vous différencie et la contribution que vous
+                  souhaitez incarner.
                 </p>
               </SectionHeading>
               <ArrowLink href="/methode" className="mt-8">
@@ -236,7 +291,7 @@ export default function HomePage() {
           <WideFigure label="Schéma : de la valeur réelle à la valeur perçue" className="mt-16 md:mt-24">
             <Image
               src={schemaValeur}
-              alt="Votre valeur réelle (expérience, compétences, qualités, potentiel) devient, grâce à mon intervention (clarifier, structurer, rendre évidente votre valeur), une valeur perçue : claire, lisible et reconnue, qui crée plus d’opportunités et des décisions en votre faveur."
+              alt="Votre valeur réelle (expérience, compétences, qualités, potentiel : elle existe déjà) devient, grâce à mon intervention (clarifier, révéler, incarner : je vous aide à la traduire et à la communiquer efficacement), une valeur perçue, claire, lisible et reconnue, qui crée plus d’opportunités et des décisions en votre faveur."
               placeholder="blur"
               sizes="(min-width: 1240px) 1240px, (min-width: 768px) 100vw, 760px"
               className="rounded-[12px]"
@@ -287,6 +342,7 @@ export default function HomePage() {
                     {String(i + 1).padStart(2, "0")}
                   </p>
                   <p className="mt-1 text-[15px] leading-snug md:mt-3 md:text-base md:leading-normal">{step.text}</p>
+                  <p className="mt-2 font-heading text-[14px] leading-snug font-semibold md:mt-3 md:text-[15px]">{step.result}</p>
                 </div>
               </li>
             ))}
@@ -297,28 +353,41 @@ export default function HomePage() {
       {/* 7 — Les accompagnements */}
       <Section>
         <Container>
-          <SectionHeading num={6} eyebrow="Les accompagnements" title="Trois façons de passer de la compréhension à l’action.">
-            <p>Un accompagnement adapté à votre situation, votre objectif et votre moment professionnel.</p>
+          <SectionHeading num={6} eyebrow="Les accompagnements" title="Révéler votre valeur. Construire la suite.">
+            <p>Des accompagnements adaptés à votre situation, à vos objectifs et au moment professionnel que vous traversez.</p>
           </SectionHeading>
-          {/* Phones: fold-out list, the first one open. */}
+          {/* Phones: fold-out list, the first one open. Each formula keeps its colour (number, line, subtitle). */}
           <div className="mt-8 border-t border-[var(--jg-light-gray)] md:hidden">
             {OFFERS.map((offer, i) => (
-              <details key={offer.name} open={i === 0} className="group border-b border-[var(--jg-light-gray)]">
+              <details
+                key={offer.name}
+                open={i === 0}
+                style={{ "--offer": offerColor(offer.slug) } as React.CSSProperties}
+                className="group border-b border-l-4 border-[var(--jg-light-gray)] border-l-[var(--offer)] pl-3"
+              >
                 <summary className="flex cursor-pointer list-none items-start gap-3 py-4 [&::-webkit-details-marker]:hidden">
-                  <span className="font-heading text-[15px] font-semibold text-gold tabular-nums">{String(i + 1).padStart(2, "0")}</span>
+                  <span className="font-heading text-[15px] font-semibold text-[var(--offer)] tabular-nums">
+                    {offer.eyebrow ? "+" : String(i + 1).padStart(2, "0")}
+                  </span>
                   <span className="flex-1">
                     <span className="block font-heading text-[15px] font-semibold tracking-[0.04em] text-navy uppercase">{offer.name}</span>
-                    <span className="mt-0.5 block text-[15px] leading-snug">{offer.tagline}</span>
+                    <span className="mt-0.5 block font-heading text-[15px] leading-snug font-medium text-[var(--offer)]">{offer.tagline}</span>
                   </span>
                   <Plus aria-hidden className="mt-0.5 size-5 shrink-0 text-navy transition-transform duration-200 group-open:rotate-45" />
                 </summary>
                 <div className="pb-5 pl-[30px]">
-                  <p>{offer.text}</p>
-                  <div className="jg-small mt-3">
-                    {offer.label && <p className="font-semibold text-navy">{offer.label}</p>}
-                    <DotList items={offer.items} className="mt-1" />
-                    {offer.note && <p className="mt-3">{offer.note}</p>}
-                  </div>
+                  {offer.paragraphs.map((p, k) => (
+                    <p key={k} className={k ? "mt-3" : undefined}>
+                      {p}
+                    </p>
+                  ))}
+                  {(offer.label || offer.note) && (
+                    <div className="jg-small mt-3">
+                      {offer.label && <p className="font-semibold text-navy">{offer.label}</p>}
+                      {offer.items.length > 0 && <DotList items={offer.items} className="mt-1" />}
+                      {offer.note && <p className="mt-3">{offer.note}</p>}
+                    </div>
+                  )}
                   <ArrowLink href={offer.href} className="mt-2">
                     {offer.link}
                   </ArrowLink>
@@ -326,22 +395,29 @@ export default function HomePage() {
               </details>
             ))}
           </div>
-          <ul className="mt-12 hidden gap-6 md:grid lg:grid-cols-3">
+          {/* Tablet and desktop: four cards (2 × 2), a coloured top line, number and subtitle per formula. */}
+          <ul className="mt-12 hidden gap-6 md:grid md:grid-cols-2">
             {OFFERS.map((offer, i) => (
-              <li key={offer.name}>
-                <Card className="flex h-full flex-col">
-                  <p className="font-heading text-[15px] font-semibold text-navy tabular-nums">
-                    {String(i + 1).padStart(2, "0")}
+              <li key={offer.name} style={{ "--offer": offerColor(offer.slug) } as React.CSSProperties}>
+                <Card className="flex h-full flex-col border-t-4 border-t-[var(--offer)]">
+                  <p className="font-heading text-[15px] font-semibold text-[var(--offer)] tabular-nums">
+                    {offer.eyebrow ? <span className="text-[13px] tracking-[0.16em] uppercase">{offer.eyebrow}</span> : String(i + 1).padStart(2, "0")}
                   </p>
-                  <GoldLine className="mt-3 w-8" />
+                  <span aria-hidden className="mt-3 block h-0.5 w-8 bg-[var(--offer)]" />
                   <h3 className="jg-h4 mt-5 tracking-[0.04em] uppercase">{offer.name}</h3>
-                  <p className="mt-3 font-heading text-[1.125rem] leading-snug font-medium text-navy">{offer.tagline}</p>
-                  <p className="mt-4">{offer.text}</p>
-                  <div className="jg-small mt-5">
-                    {offer.label && <p className="font-semibold text-navy">{offer.label}</p>}
-                    <DotList items={offer.items} className="mt-1" />
-                    {offer.note && <p className="mt-3">{offer.note}</p>}
-                  </div>
+                  <p className="mt-3 font-heading text-[1.125rem] leading-snug font-semibold text-[var(--offer)]">{offer.tagline}</p>
+                  {offer.paragraphs.map((p, k) => (
+                    <p key={k} className="mt-4">
+                      {p}
+                    </p>
+                  ))}
+                  {(offer.label || offer.note) && (
+                    <div className="jg-small mt-5">
+                      {offer.label && <p className="font-semibold text-navy">{offer.label}</p>}
+                      {offer.items.length > 0 && <DotList items={offer.items} className="mt-1" />}
+                      {offer.note && <p className="mt-3">{offer.note}</p>}
+                    </div>
+                  )}
                   <ArrowLink href={offer.href} className="mt-auto self-start pt-6">
                     {offer.link}
                   </ArrowLink>
@@ -351,10 +427,14 @@ export default function HomePage() {
           </ul>
           <div className="mt-12 flex flex-col gap-6 rounded-[12px] bg-ivory p-7 md:flex-row md:items-center md:justify-between md:p-10">
             <div>
-              <p className="jg-h3 font-heading font-semibold text-navy">Vous ne savez pas quel accompagnement choisir ?</p>
-              <p className="mt-2">Parlons de votre situation.</p>
+              <Eyebrow>Vous hésitez entre plusieurs accompagnements ?</Eyebrow>
+              <p className="jg-h3 mt-3 font-heading font-semibold text-navy">Commençons par votre situation.</p>
+              <p className="mt-2">En 20 minutes, échangeons sur votre besoin, votre objectif et les prochaines étapes possibles.</p>
             </div>
-            <BookingButton source="accueil-accompagnements" />
+            <div className="shrink-0">
+              <BookingButton source="accueil-accompagnements" />
+              <p className="jg-small mt-2">20 minutes · Sans engagement</p>
+            </div>
           </div>
         </Container>
       </Section>
@@ -448,7 +528,11 @@ export default function HomePage() {
       </Section>
 
       {/* 10 — CTA final */}
-      <FinalCta title="La prochaine décision vous appartient." source="accueil-final">
+      <FinalCta
+        title="La prochaine décision vous appartient."
+        source="accueil-final"
+        note="20 minutes pour parler de votre situation et identifier les prochaines étapes possibles. Sans engagement."
+      >
         Votre valeur mérite d’être évidente.
       </FinalCta>
       <FloatingBooking source="accueil-flottant" />

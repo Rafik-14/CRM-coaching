@@ -1,10 +1,9 @@
-import { Suspense } from "react";
 import type { Metadata } from "next";
-import { connection } from "next/server";
+import Image from "next/image";
 import { FinalCta, SectionHeading, Statement } from "@/components/site/blocks";
 import { CaseBlock, CaseHeader, CaseQuote, ChangeList, KeyPiece } from "@/components/site/case-study";
 import { Container, GoldLine, Section } from "@/components/site/ui";
-import { getPublicCaseStudies } from "@/server/queries/site";
+import yannick from "@/assets/site/yannick.webp";
 
 export const metadata: Metadata = {
   title: "Transformations",
@@ -33,8 +32,10 @@ export default function TransformationsPage() {
 
       {/* Yannick */}
       <Section tone="ivory" id="yannick" className="scroll-mt-20">
-        <Container>
-          <CaseHeader name="Yannick" domain="Comptabilité / gestion" />
+        {/* Desktop: Yannick's portrait in a column next to his story (it stays in view while reading). */}
+        <Container className="grid gap-12 lg:grid-cols-[1fr_320px] lg:gap-16">
+          <div>
+          <CaseHeader name="Yannick" domain="Comptabilité / gestion" photo={yannick} />
           <div className="mt-12 grid gap-10">
             <CaseBlock label="Avant">
               <CaseQuote>Je sais ce que je fais, mais j’ai du mal à expliquer ce qui me correspond vraiment.</CaseQuote>
@@ -87,6 +88,14 @@ export default function TransformationsPage() {
               />
             </CaseBlock>
           </div>
+          </div>
+          <Image
+            src={yannick}
+            alt="Yannick"
+            placeholder="blur"
+            sizes="320px"
+            className="hidden aspect-[2/3] w-full rounded-[12px] object-cover lg:sticky lg:top-28 lg:block"
+          />
         </Container>
       </Section>
 
@@ -161,11 +170,6 @@ export default function TransformationsPage() {
         </Container>
       </Section>
 
-      {/* Case studies written in the CRM, published with the client's consent */}
-      <Suspense fallback={null}>
-        <CrmCaseStudies />
-      </Suspense>
-
       <Section tone="ivory">
         <Container>
           <GoldLine />
@@ -185,57 +189,5 @@ export default function TransformationsPage() {
         source="transformations"
       />
     </>
-  );
-}
-
-async function CrmCaseStudies() {
-  await connection();
-  const cases = await getPublicCaseStudies();
-  if (cases.length === 0) return null;
-  return (
-    <Section id="autres-parcours" className="scroll-mt-20 border-t border-[var(--jg-light-gray)]">
-      <Container>
-        <SectionHeading eyebrow="Transformations" title="D’autres parcours" />
-        <ul className="mt-12 grid gap-6 lg:grid-cols-2">
-          {cases.map((c) => (
-            <li key={c.id} className="rounded-[12px] border border-[var(--jg-light-gray)] bg-white p-7 md:p-9">
-              <CaseHeader as="h3" name={c.firstName} domain={c.stake} />
-              <dl className="mt-8 grid gap-6">
-                {[
-                  { label: "Avant", text: c.before },
-                  { label: "Le déclic", text: c.trigger },
-                  { label: "Après", text: c.after },
-                ]
-                  .filter((step) => step.text)
-                  .map((step) => (
-                    <div key={step.label}>
-                      <dt className="flex items-center gap-3 font-heading text-[13px] font-semibold tracking-[0.16em] text-navy uppercase">
-                        <span aria-hidden className="h-0.5 w-6 bg-gold" />
-                        {step.label}
-                      </dt>
-                      <dd className="mt-2 whitespace-pre-line">{step.text}</dd>
-                    </div>
-                  ))}
-              </dl>
-              {c.positioningStatement && (
-                <div className="mt-8">
-                  <KeyPiece label="Formulation de positionnement">« {c.positioningStatement} »</KeyPiece>
-                </div>
-              )}
-              {c.changes.length > 0 && (
-                <div className="mt-8">
-                  <p className="font-heading text-[13px] font-semibold tracking-[0.16em] text-navy uppercase">
-                    Ce qui a changé
-                  </p>
-                  <div className="mt-3">
-                    <ChangeList items={c.changes} />
-                  </div>
-                </div>
-              )}
-            </li>
-          ))}
-        </ul>
-      </Container>
-    </Section>
   );
 }

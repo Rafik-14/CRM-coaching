@@ -23,7 +23,7 @@ test.describe("téléphone", () => {
 
   test("accueil : photo d’ouverture, accompagnements dépliables, bouton flottant", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText(/Pourquoi vous plutôt qu’un autre/);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(/Votre valeur ne se résume pas à ce que vous savez faire/);
     // Floating button: hidden at the top, shown after scrolling past the photo.
     // Hidden from assistive tech while invisible, so it is found by its link rather than its role.
     const floating = page.locator('a[href*="source=accueil-flottant"]');

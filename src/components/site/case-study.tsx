@@ -1,14 +1,32 @@
+import Image, { type StaticImageData } from "next/image";
 import { ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Eyebrow } from "./ui";
 
 /** Case study header: « photo » (monogram until real photos are supplied), name, field. */
-export function CaseHeader({ name, domain, as: Tag = "h2" }: { name: string; domain?: string | null; as?: "h2" | "h3" }) {
+// With a photo, the large portrait sits next to the story on desktop: the round one is for smaller screens.
+export function CaseHeader({
+  name,
+  domain,
+  photo,
+  as: Tag = "h2",
+}: {
+  name: string;
+  domain?: string | null;
+  photo?: StaticImageData;
+  as?: "h2" | "h3";
+}) {
   return (
     <div className="flex items-center gap-5">
+      {photo && (
+        <Image src={photo} alt="" sizes="80px" className="size-16 shrink-0 rounded-full object-cover object-[50%_20%] md:size-20 lg:hidden" />
+      )}
       <span
         aria-hidden
-        className="flex size-16 shrink-0 items-center justify-center rounded-full bg-navy font-heading text-[1.5rem] font-semibold text-white md:size-20 md:text-[1.75rem]"
+        className={cn(
+          "flex size-16 shrink-0 items-center justify-center rounded-full bg-navy font-heading text-[1.5rem] font-semibold text-white md:size-20 md:text-[1.75rem]",
+          photo && "hidden",
+        )}
       >
         {name[0]}
       </span>

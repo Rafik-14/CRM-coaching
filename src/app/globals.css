@@ -69,6 +69,11 @@
   --jg-gold: #d4a866;
   /* Gold for small text on white / ivory (contrast 5:1; the bright gold stays for lines and large text). */
   --jg-gold-ink: #86652b;
+  /* One colour per offer, the same on the home page and Accompagnements (text contrast ≥ 5:1 on white). */
+  --jg-offer-architecture: var(--jg-teal);
+  --jg-offer-decisif: var(--jg-gold-ink);
+  --jg-offer-signature: var(--jg-navy);
+  --jg-offer-bilan: #9a4a32;
   --jg-teal: #0f6b6b;
   --jg-ivory: #f8f6f2;
   --jg-light-gray: #e7e7e5;

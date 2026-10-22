@@ -9,6 +9,7 @@ const PAGES = [
   "/methode",
   "/accompagnements",
   "/accompagnements/parcours-signature",
+  "/bilan-de-competences",
   "/pour-qui",
   "/transformations",
   "/evenements",
@@ -45,10 +46,19 @@ test.describe("site public", () => {
     const { page, context } = await visitor(browser);
     await page.goto("/");
     const nav = page.getByRole("navigation", { name: "Navigation principale" });
-    for (const label of ["La Méthode JG®", "Accompagnements", "Événements", "Contact"]) {
+    for (const label of ["La Méthode JG®", "Accompagnements", "Bilan de compétences", "Contact"]) {
       await nav.getByRole("link", { name: label }).click();
       await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     }
+    // The last pages are in « Plus ».
+    for (const [label, path] of [["Événements", /\/evenements/], ["À propos", /\/a-propos/], ["Le Chant du Merle", /\/le-chant-du-merle/]] as const) {
+      await nav.getByRole("button", { name: "Plus" }).click();
+      await nav.getByRole("link", { name: label }).click();
+      await expect(page).toHaveURL(path);
+    }
+    // « Accueil » is the logo.
+    await page.getByRole("link", { name: /accueil/i }).first().click();
+    await expect(page).toHaveURL(/\/$/);
     await context.close();
   });
 
