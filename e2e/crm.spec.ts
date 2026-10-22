@@ -7,7 +7,7 @@ import { openContact, testEmail } from "./helpers";
 test.describe("CRM", () => {
   test("toutes les pages du CRM s’ouvrent", async ({ page }) => {
     for (const [path, title] of [
-      ["/tableau-de-bord", /Bonjour|Tableau de bord/],
+      ["/tableau-de-bord", /Bonjour|Bonsoir|Tableau de bord/],
       ["/contacts", /Contacts/],
       ["/pipeline", /Pipeline/],
       ["/calendrier", /Calendrier/],

@@ -24,6 +24,7 @@ async function register(page: Page, slug: string, firstName: string, email: stri
 }
 
 test("événement : création, inscriptions, liste d’attente, annulation, présence, export", async ({ page, browser }) => {
+  test.setTimeout(240_000); // the longest journey: eight visitors and the coach
   const title = `Atelier e2e ${runId()}`;
 
   // 1 · The coach creates the event (draft) and publishes it.
