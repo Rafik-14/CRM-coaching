@@ -1,5 +1,5 @@
 import "server-only";
-import { asc, eq } from "drizzle-orm";
+import { asc, eq, sql } from "drizzle-orm";
 import { db } from "@/server/db";
 import { activityLog, contacts, pipelineStages, tasks } from "@/server/db/schema";
 import { currencyFor } from "@/server/business";
@@ -25,7 +25,8 @@ export type SiteLead = {
 };
 
 export async function findOrCreateSiteContact(lead: SiteLead, note?: string | null) {
-  const existing = await db.query.contacts.findFirst({ where: eq(contacts.email, lead.email) });
+  // Case-insensitive: « Marie.Dupont@… » typed in the CRM is the same person as « marie.dupont@… » from the site.
+  const existing = await db.query.contacts.findFirst({ where: sql`lower(${contacts.email}) = ${lead.email.trim().toLowerCase()}` });
   if (existing) {
     // Keep what the coach already entered; only fill gaps and keep the message in the notes.
     await db

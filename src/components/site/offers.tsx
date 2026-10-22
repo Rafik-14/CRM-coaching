@@ -2,9 +2,9 @@ import { connection } from "next/server";
 import { formatMoney } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { getPublicOffers, type PublicOffer } from "@/server/queries/site";
-import { offerSlug } from "./content";
+import { offerColor, offerSlug } from "./content";
 import { bookingHref } from "./nav";
-import { ButtonLink, DotList, GoldLine } from "./ui";
+import { ButtonLink, DotList } from "./ui";
 
 /** « 170 € / 190 CHF · 1 séance » */
 export function priceLine(offer: Pick<PublicOffer, "priceEur" | "priceChf" | "sessionsCount">, withSessions = true) {
@@ -54,17 +54,18 @@ export async function OfferList() {
           <li
             key={offer.id}
             id={slug}
-            className="scroll-mt-28 rounded-[12px] border border-[var(--jg-light-gray)] bg-white p-7 md:p-12"
+            style={{ "--offer": offerColor(slug) } as React.CSSProperties}
+            className="scroll-mt-28 rounded-[12px] border border-t-4 border-[var(--jg-light-gray)] border-t-[var(--offer)] bg-white p-7 md:p-12"
           >
             <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
               <div>
-                <p className="font-heading text-[15px] font-semibold text-navy tabular-nums">
+                <p className="font-heading text-[15px] font-semibold text-[var(--offer)] tabular-nums">
                   {String(i + 1).padStart(2, "0")}
                 </p>
-                <GoldLine className="mt-3 w-8" />
+                <span aria-hidden className="mt-3 block h-0.5 w-8 bg-[var(--offer)]" />
                 <h2 className="jg-h3 mt-5 tracking-[0.03em] uppercase">{offer.name}</h2>
                 {offer.tagline && (
-                  <p className="mt-3 font-heading text-[1.1875rem] leading-snug font-medium text-navy">{offer.tagline}</p>
+                  <p className="mt-3 font-heading text-[1.1875rem] leading-snug font-semibold text-[var(--offer)]">{offer.tagline}</p>
                 )}
                 <p className="mt-6 font-heading text-[1.25rem] font-semibold text-navy">{priceLine(offer)}</p>
               </div>
@@ -88,6 +89,31 @@ export async function OfferList() {
           </li>
         );
       })}
+      <li
+        id="bilan-de-competences"
+        style={{ "--offer": offerColor("bilan-de-competences") } as React.CSSProperties}
+        className="scroll-mt-28 rounded-[12px] border border-t-4 border-[var(--jg-light-gray)] border-t-[var(--offer)] bg-white p-7 md:p-12"
+      >
+        <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
+          <div>
+            <p className="font-heading text-[13px] font-semibold tracking-[0.16em] text-[var(--offer)] uppercase">Une autre façon d’avancer</p>
+            <span aria-hidden className="mt-3 block h-0.5 w-8 bg-[var(--offer)]" />
+            <h2 className="jg-h3 mt-5 tracking-[0.03em] uppercase">Bilan de compétences</h2>
+            <p className="mt-3 font-heading text-[1.1875rem] leading-snug font-semibold text-[var(--offer)]">
+              Besoin de faire le point sur votre avenir professionnel ?
+            </p>
+          </div>
+          <div>
+            <p>
+              Le bilan de compétences vous permet d’analyser votre parcours, d’identifier vos compétences et vos motivations,
+              et de construire un projet professionnel cohérent avec vos aspirations.
+            </p>
+            <ButtonLink href="/bilan-de-competences" variant="secondary" className="mt-8">
+              Découvrir le bilan de compétences
+            </ButtonLink>
+          </div>
+        </div>
+      </li>
     </ol>
   );
 }

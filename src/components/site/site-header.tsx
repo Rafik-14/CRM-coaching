@@ -17,7 +17,7 @@ export function SiteHeader() {
       </a>
       <div className="mx-auto flex h-[72px] w-[calc(100%-40px)] max-w-[1240px] items-center gap-6 md:w-[calc(100%-48px)] xl:h-[84px] xl:gap-4">
         {/* Monogram + name and tagline as real text, so they stay readable in the bar.
-            With the desktop menu (≥ 1280 px): the name only, on two lines. On wide screens the logo moves
+            Desktop too: name on one line, « Révéler votre potentiel » underneath. On wide screens the logo moves
             into the left margin (16 px kept from the edge). */}
         <Link
           href="/"
@@ -26,10 +26,10 @@ export function SiteHeader() {
         >
           <Image src="/brand/jg-monogram.svg" alt="" width={48} height={51} unoptimized priority className="h-12 w-auto xl:h-[54px]" />
           <span className="grid leading-none">
-            <span className="font-heading text-[15px] font-semibold tracking-[0.16em] text-navy uppercase xl:w-[6.2em] xl:text-[13px] xl:leading-[1.25] xl:tracking-[0.14em]">
+            <span className="font-heading text-[15px] font-semibold tracking-[0.16em] text-navy uppercase xl:text-[14px] xl:tracking-[0.15em]">
               Jérémy Galéa
             </span>
-            <span className="mt-1.5 font-heading text-[10.5px] font-medium tracking-[0.2em] text-[var(--jg-anthracite)]/80 uppercase xl:hidden">
+            <span className="mt-1.5 font-heading text-[10.5px] font-medium tracking-[0.2em] text-[var(--jg-anthracite)]/80 uppercase xl:text-[10px]">
               Révéler votre potentiel
             </span>
           </span>

@@ -141,12 +141,15 @@ export function FinalCta({
   source,
   profil,
   label,
+  note,
 }: {
   title: React.ReactNode;
   children?: React.ReactNode;
   source: string;
   profil?: string;
   label?: string;
+  /** Small line under the button (« 20 minutes pour parler de votre situation… »). */
+  note?: string;
 }) {
   return (
     <Section tone="navy">
@@ -159,6 +162,7 @@ export function FinalCta({
           </div>
         )}
         <BookingButton source={source} profil={profil} label={label} variant="light" className="mt-10" />
+        {note && <p className="jg-small mt-3 max-w-[560px] text-white/80">{note}</p>}
       </Container>
     </Section>
   );

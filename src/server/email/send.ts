@@ -1,10 +1,11 @@
 import "server-only";
-import nodemailer, { type Transporter } from "nodemailer";
+import type { Transporter } from "nodemailer";
 import { eq } from "drizzle-orm";
 import { db } from "@/server/db";
 import { emailLog } from "@/server/db/schema";
 import { mailConfig } from "./config";
 import { renderEmail, type EmailContent } from "./layout";
+import { createSmtpTransport, deliver } from "./mailer";
 
 /** Marks e-mails « sent » in mode test (no SMTP configured): nothing really left the server. */
 export const DEV_PROVIDER_ID = "mode-test";
@@ -17,14 +18,12 @@ function transporter() {
   if (cached?.key !== key) {
     cached = {
       key,
-      transporter: nodemailer.createTransport({
+      transporter: createSmtpTransport({
         host: c.host!,
         port: c.port,
         secure: c.secure,
-        auth: { user: c.user!, pass: process.env.SMTP_PASSWORD!.trim() },
-        connectionTimeout: 15_000,
-        greetingTimeout: 15_000,
-        socketTimeout: 30_000,
+        user: c.user!,
+        pass: process.env.SMTP_PASSWORD!.trim(),
       }),
     };
   }
@@ -68,7 +67,7 @@ export async function sendEmail(input: SendEmailInput): Promise<{ ok: boolean; i
     const { html, text } = renderEmail(input.content);
     let providerId = DEV_PROVIDER_ID;
     if (c.configured) {
-      const info = await transporter().sendMail({
+      providerId = await deliver(transporter(), {
         from: c.from,
         to: realTo,
         replyTo: input.replyTo ?? c.replyTo ?? undefined,
@@ -77,7 +76,6 @@ export async function sendEmail(input: SendEmailInput): Promise<{ ok: boolean; i
         text,
         attachments: input.attachments,
       });
-      providerId = info.messageId;
     } else {
       console.info(`[e-mail · mode test] ${input.templateKey} → ${realTo} : ${subject}`);
     }

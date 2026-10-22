@@ -130,7 +130,7 @@ async function Calendar({ searchParams }: { searchParams: PageProps<"/calendrier
                 <div
                   className={cn(
                     "mb-1 flex size-6 items-center justify-center rounded-full text-xs tabular-nums",
-                    other ? "text-muted-foreground/60" : "text-muted-foreground",
+                    "text-muted-foreground",
                     key(d) === todayKey && "bg-primary font-semibold text-primary-foreground",
                   )}
                 >

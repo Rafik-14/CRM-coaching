@@ -18,7 +18,7 @@ import { formatMoney, fullName, initials } from "@/lib/format";
 import { segmentLabel } from "@/lib/jg";
 import type { ContactRow } from "@/server/queries/contacts";
 
-const avatarTones = ["bg-primary/20 text-primary", "bg-info/20 text-info", "bg-success/20 text-success", "bg-warning/20 text-warning"];
+const avatarTones = ["bg-primary/20 text-primary", "bg-info/20 text-info", "bg-success/20 text-success", "bg-warning/15 text-warning"];
 
 /** `lastActivityLabel` is computed on the server so the text matches during hydration. */
 export function ContactsTable({

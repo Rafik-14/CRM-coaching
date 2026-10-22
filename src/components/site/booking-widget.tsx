@@ -71,7 +71,7 @@ export function BookingWidget({
       {/* 3 — details */}
       <fieldset className="grid gap-6">
         <legend className="mb-4 font-heading text-[1.125rem] font-semibold text-navy">
-          <span className="text-gold" aria-hidden>
+          <span className="text-[var(--jg-gold-ink)]" aria-hidden>
             03 —{" "}
           </span>
           Vos coordonnées

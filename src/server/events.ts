@@ -71,12 +71,22 @@ export type RegisterInput = {
 };
 
 export type RegisterResult =
-  | { ok: true; registration: RegistrationRow; status: "confirmed" | "waitlist"; updated: boolean }
+  | {
+      ok: true;
+      registration: RegistrationRow;
+      status: "confirmed" | "waitlist";
+      updated: boolean;
+      /** Website form, e-mail already registered: nothing changed (see registerForEvent). */
+      duplicate?: boolean;
+    }
   | { ok: false; reason: "not_found" | "closed" | "too_many" | "full" };
 
 /**
- * Books seats. The same e-mail registering again for the same event updates its booking (no duplicates).
- * No seat left: waiting list if the event has one, otherwise « full ».
+ * Books seats. No seat left: waiting list if the event has one, otherwise « full ».
+ * The same e-mail registering again never creates a second booking:
+ * - from the website, the existing booking is left untouched (`duplicate`): typing someone else's e-mail must
+ *   not let a stranger change or see their booking — the caller e-mails the link to that address instead;
+ * - added by the coach, the booking is updated (seats, phone…).
  */
 export async function registerForEvent(db: AnyDb, input: RegisterInput, now = new Date()): Promise<RegisterResult> {
   const email = input.email.trim().toLowerCase();
@@ -98,6 +108,9 @@ export async function registerForEvent(db: AnyDb, input: RegisterInput, now = ne
       )
       .limit(1);
 
+    if (existing && input.source === "site") {
+      return { ok: true, registration: existing, status: existing.status as "confirmed" | "waitlist", updated: false, duplicate: true } as const;
+    }
     const free = freeSeats(ev.capacity, await seatsTaken(tx, ev.id, existing?.id));
     const fits = free == null || input.seats <= free || input.source === "manual";
     let status: "confirmed" | "waitlist";

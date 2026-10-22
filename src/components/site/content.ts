@@ -32,3 +32,15 @@ export const BOOK = {
   amazon: "https://www.amazon.fr/dp/B0FNBRGLL7",
   trailer: "https://www.youtube.com/watch?v=4wdIefCVASw",
 } as const;
+
+/**
+ * One colour per offer (home page cards, Accompagnements), so each formula is recognised at a glance.
+ * Used as a CSS variable: style={{ "--offer": offerColor(slug) }} then text-[var(--offer)], border-[var(--offer)]…
+ */
+export const OFFER_COLORS: Record<string, string> = {
+  "architecture-identitaire": "var(--jg-offer-architecture)",
+  "accompagnement-decisif": "var(--jg-offer-decisif)",
+  "parcours-signature": "var(--jg-offer-signature)",
+  "bilan-de-competences": "var(--jg-offer-bilan)",
+};
+export const offerColor = (slug: string) => OFFER_COLORS[slug] ?? "var(--jg-navy)";

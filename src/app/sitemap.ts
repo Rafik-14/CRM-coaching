@@ -7,6 +7,7 @@ const PAGES: { path: string; priority: number }[] = [
   { path: "/methode", priority: 0.9 },
   { path: "/accompagnements", priority: 0.9 },
   { path: "/accompagnements/parcours-signature", priority: 0.8 },
+  { path: "/bilan-de-competences", priority: 0.8 },
   { path: "/pour-qui", priority: 0.8 },
   { path: "/transformations", priority: 0.8 },
   { path: "/evenements", priority: 0.8 },

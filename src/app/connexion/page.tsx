@@ -17,8 +17,8 @@ export default function LoginPage() {
 
         <div className="flex flex-1 items-center justify-center py-10">
           <div className="w-full max-w-sm">
-            <Image src="/brand/jg-logo.svg" alt="Jérémy Galéa — Révéler votre potentiel" width={190} height={136} unoptimized priority className="dark:hidden" />
-            <Image src="/brand/jg-logo-white.svg" alt="Jérémy Galéa — Révéler votre potentiel" width={190} height={136} unoptimized priority className="hidden dark:block" />
+            <Image src="/brand/jg-logo.svg" alt="Jérémy Galéa — Révéler votre potentiel" width={190} height={136} unoptimized priority className="h-auto dark:hidden" />
+            <Image src="/brand/jg-logo-white.svg" alt="Jérémy Galéa — Révéler votre potentiel" width={190} height={136} unoptimized priority className="hidden h-auto dark:block" />
             <h1 className="mt-10 text-2xl font-semibold tracking-tight">Bon retour</h1>
             <span aria-hidden className="mt-2 block h-0.5 w-10 rounded-full bg-gold" />
             <p className="mt-3 mb-8 text-sm text-muted-foreground">

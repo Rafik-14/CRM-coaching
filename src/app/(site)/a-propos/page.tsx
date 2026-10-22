@@ -4,6 +4,7 @@ import { SectionHeading, Statement } from "@/components/site/blocks";
 import { BookingButton, ButtonLink, Container, Eyebrow, GoldLine, Section } from "@/components/site/ui";
 import apropos from "@/assets/site/apropos.webp";
 import branding from "@/assets/site/branding.webp";
+import futsal from "@/assets/site/apropos-futsal.webp";
 
 export const metadata: Metadata = {
   title: "À propos",
@@ -147,6 +148,13 @@ export default function AProposPage() {
             <Eyebrow>Une capacité construite sur le terrain</Eyebrow>
             <GoldLine className="mt-4" />
             <h2 className="jg-h2 mt-6">Deux univers différents, mais une même conviction.</h2>
+            <Image
+              src={futsal}
+              alt="Jérémy Galéa avec une équipe de futsal qu’il entraînait, après la victoire en finale, trophée au premier plan"
+              placeholder="blur"
+              sizes="(min-width: 1024px) 560px, 100vw"
+              className="mt-8 h-auto w-full rounded-[12px]"
+            />
           </div>
           <div className="lg:pt-14">
             <div className="jg-prose text-white/85">

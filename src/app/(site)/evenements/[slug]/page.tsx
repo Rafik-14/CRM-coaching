@@ -60,7 +60,7 @@ async function EventDetail({ params }: { params: PageProps<"/evenements/[slug]">
 
   return (
     <>
-      {!past && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />}
+      {!past && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />}
       <Section className="pt-10 md:pt-16 lg:pt-20">
         <Container>
           <ArrowLink href="/evenements" className="mb-6 text-[14px]">
@@ -98,8 +98,8 @@ async function EventDetail({ params }: { params: PageProps<"/evenements/[slug]">
         <Section tone="ivory">
           <Container className="grid gap-12 lg:grid-cols-[1.15fr_0.85fr] lg:gap-16">
             <div className="jg-prose max-w-[680px]">
-              {paragraphs(event.description).map((p) => (
-                <p key={p}>{p}</p>
+              {paragraphs(event.description).map((p, i) => (
+                <p key={i}>{p}</p>
               ))}
               {!event.description && <p>Toutes les informations pratiques vous sont envoyées par e-mail après votre inscription.</p>}
             </div>
@@ -151,8 +151,8 @@ function PastRecap({ event, paragraphs }: { event: Awaited<ReturnType<typeof get
     <Section tone="ivory">
       <Container className="grid gap-12">
         <div className="jg-prose max-w-[760px]">
-          {(recap.length ? recap : description).map((p) => (
-            <p key={p}>{p}</p>
+          {(recap.length ? recap : description).map((p, i) => (
+            <p key={i}>{p}</p>
           ))}
           {!recap.length && !description.length && <p>Merci à toutes les personnes présentes pour ce moment partagé.</p>}
           {event.showRecap && event.videoUrl && (

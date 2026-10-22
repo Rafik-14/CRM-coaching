@@ -165,3 +165,34 @@ export async function sendEventMessage(event: EventRow, reg: RegistrationRow, su
     },
   });
 }
+
+/** The coach changed the date, time or place: everyone registered gets the new details and an updated calendar file. */
+export async function sendEventChanged(event: EventRow, reg: RegistrationRow) {
+  const when = capitalize(dateFmt.format(event.startsAt));
+  const place = eventPlace(event);
+  const confirmed = reg.status === "confirmed";
+  return sendEmail({
+    to: reg.email,
+    contactId: reg.contactId,
+    templateKey: "event_changed",
+    subject: `Changement : ${event.title}`,
+    content: {
+      preheader: `Nouvelles informations : ${when} à ${timeFmt.format(event.startsAt)}`,
+      heading: `Bonjour ${reg.firstName},`,
+      paragraphs: [
+        `Les informations de « ${event.title} » ont changé. Voici les détails à jour${confirmed ? " ; le fichier joint met à jour votre agenda" : ""}.`,
+        "Si vous ne pouvez plus venir, annulez depuis le lien ci-dessous : votre place reviendra à quelqu’un d’autre.",
+      ],
+      details: [
+        ["Date", when],
+        ["Heure (Paris / Genève)", `${timeFmt.format(event.startsAt)} – ${timeFmt.format(event.endsAt)}`],
+        ...(place ? ([["Lieu", place]] as [string, string][]) : []),
+        ...(confirmed && event.onlineUrl ? ([["Lien de connexion", event.onlineUrl]] as [string, string][]) : []),
+      ],
+      cta: { label: "Voir ou annuler mon inscription", url: await registrationLink(reg.id, event) },
+    },
+    ...(confirmed && {
+      attachments: [{ filename: "evenement.ics", contentType: "text/calendar; charset=utf-8; method=PUBLISH", content: eventIcs(event, reg.id) }],
+    }),
+  });
+}
