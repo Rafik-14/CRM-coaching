@@ -5,6 +5,7 @@ import { SectionHeading } from "@/components/site/blocks";
 import { ContactForm, ContactFormFields } from "@/components/site/contact-form";
 import { DOMAINS } from "@/components/site/content";
 import { BookingButton, Container, DotList, Eyebrow, GoldLine, Section } from "@/components/site/ui";
+import { WHATSAPP, WhatsAppButton } from "@/components/site/whatsapp";
 
 export const metadata: Metadata = {
   title: "Contact",
@@ -64,6 +65,11 @@ export default function ContactPage() {
             <p className="font-heading text-[1.0625rem] font-semibold text-navy">Créateur de la Méthode JG®</p>
             <DotList items={DOMAINS} className="jg-small mt-4" />
             <p className="mt-6 font-heading text-[15px] font-medium tracking-[0.08em] text-navy">France • Suisse</p>
+            <div className="mt-8 border-t border-[var(--jg-light-gray)] pt-6">
+              <p className="font-semibold text-navy">WhatsApp</p>
+              <p className="jg-small mt-1">{WHATSAPP.display}</p>
+              <WhatsAppButton className="mt-4 w-full" />
+            </div>
           </aside>
         </Container>
       </Section>
