@@ -6,14 +6,17 @@ import { offerColor, offerSlug } from "./content";
 import { bookingHref } from "./nav";
 import { ButtonLink, DotList } from "./ui";
 
-/** « 170 € / 190 CHF · 1 séance » */
+/** Length of every session, shown after the number of sessions (« 1 séance de 75 min »). */
+const SESSION_LENGTH = "75 min";
+
+/** « 160 € / 180 CHF · 1 séance de 75 min » */
 export function priceLine(offer: Pick<PublicOffer, "priceEur" | "priceChf" | "sessionsCount">, withSessions = true) {
   const prices = [formatMoney(offer.priceEur, "EUR"), offer.priceChf != null && formatMoney(offer.priceChf, "CHF")]
     .filter(Boolean)
     .join(" / ");
   if (!withSessions) return prices;
   // No-break spaces keep « · 3 séances » together when the line wraps.
-  return `${prices} · ${offer.sessionsCount} séance${offer.sessionsCount > 1 ? "s" : ""}`;
+  return `${prices} · ${offer.sessionsCount} séance${offer.sessionsCount > 1 ? "s" : ""} de ${SESSION_LENGTH}`;
 }
 
 /** Site wording that is not stored in the CRM (who the offer is for, button), keyed by offer anchor. */

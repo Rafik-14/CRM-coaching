@@ -142,6 +142,8 @@ export function FinalCta({
   profil,
   label,
   note,
+  glow,
+  closing,
 }: {
   title: React.ReactNode;
   children?: React.ReactNode;
@@ -150,18 +152,25 @@ export function FinalCta({
   label?: string;
   /** Small line under the button (« 20 minutes pour parler de votre situation… »). */
   note?: string;
+  /** « Surbrillance » behind the title and subtitle (pages where Jérémy asked for it). */
+  glow?: boolean;
+  /** Extra block between the subtitle and the button. */
+  closing?: React.ReactNode;
 }) {
   return (
     <Section tone="navy">
       <Container>
         <GoldLine />
-        <h2 className="jg-h2 mt-6 max-w-[820px]">{title}</h2>
-        {children && (
-          <div className="mt-5 max-w-[720px] font-heading text-[1.25rem] leading-snug font-medium text-white/85 md:text-[1.375rem]">
-            {children}
-          </div>
-        )}
-        <BookingButton source={source} profil={profil} label={label} variant="light" className="mt-10" />
+        <div className={cn("mt-6", glow && "jg-glow")}>
+          <h2 className="jg-h2 max-w-[820px]">{title}</h2>
+          {children && (
+            <div className="mt-5 max-w-[720px] font-heading text-[1.25rem] leading-snug font-medium text-white/85 md:text-[1.375rem]">
+              {children}
+            </div>
+          )}
+        </div>
+        {closing}
+        <BookingButton source={source} profil={profil} label={label} variant="accent" className="mt-10" />
         {note && <p className="jg-small mt-3 max-w-[560px] text-white/80">{note}</p>}
       </Container>
     </Section>

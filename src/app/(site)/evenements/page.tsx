@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { connection } from "next/server";
 import { FinalCta, SectionHeading } from "@/components/site/blocks";
@@ -8,6 +9,13 @@ import { BookingButton, Container, Section } from "@/components/site/ui";
 import { listPublicEvents } from "@/server/queries/events";
 import { EVENT_AUDIENCE_LABEL, EVENT_KINDS, EVENT_KIND_LABEL, type EventAudience } from "@/lib/events";
 import { cn } from "@/lib/utils";
+import photoJeremy from "@/assets/site/evenements-jeremy.webp";
+import photoAmphi from "@/assets/site/evenements-amphi.webp";
+import photoAtelier from "@/assets/site/evenements-atelier.webp";
+import affiche from "@/assets/site/affiche-et-si-nos-mots.webp";
+
+/** Poster of the 26 November 2026 workshop (Le Juvénat), shown with the upcoming events until that day. */
+const POSTER = { image: affiche, until: "2026-11-27" };
 
 export const metadata: Metadata = {
   title: "Conférences et ateliers",
@@ -24,13 +32,37 @@ export default function EventsPage({ searchParams }: PageProps<"/evenements">) {
   return (
     <>
       <Section className="pt-10 md:pt-16 lg:pt-20">
-        <Container>
+        <Container className="grid items-center gap-12 lg:grid-cols-[1.15fr_0.85fr] lg:gap-20">
           <SectionHeading as="h1" eyebrow="Conférences & ateliers" title="Venez vivre la Méthode JG® en direct.">
             <p>
               Des conférences pour comprendre ce qui rend une valeur évidente, des ateliers pour la travailler concrètement. Réservez votre place en
               quelques secondes.
             </p>
           </SectionHeading>
+          <Image
+            src={photoJeremy}
+            alt="Jérémy Galéa en pleine intervention"
+            priority
+            placeholder="blur"
+            sizes="(min-width: 1024px) 440px, 100vw"
+            className="h-auto w-full max-w-[420px] rounded-[12px] lg:justify-self-end"
+          />
+          <div className="grid gap-6 sm:grid-cols-2 lg:col-span-2">
+            <Image
+              src={photoAmphi}
+              alt="Jérémy Galéa lors d’une conférence dans un amphithéâtre"
+              placeholder="blur"
+              sizes="(min-width: 1240px) 600px, (min-width: 640px) 50vw, 100vw"
+              className="h-auto w-full rounded-[12px]"
+            />
+            <Image
+              src={photoAtelier}
+              alt="Jérémy Galéa animant un atelier « Osez prendre la parole » avec un groupe de jeunes"
+              placeholder="blur"
+              sizes="(min-width: 1240px) 600px, (min-width: 640px) 50vw, 100vw"
+              className="h-auto w-full rounded-[12px]"
+            />
+          </div>
         </Container>
       </Section>
       <Suspense fallback={<Container className="h-96 animate-pulse rounded-[12px] bg-ivory" />}>
@@ -52,6 +84,7 @@ async function EventLists({ searchParams }: { searchParams: PageProps<"/evenemen
   const { upcoming, past } = await listPublicEvents();
 
   const upcomingShown = upcoming.filter((e) => !type || e.kind === type);
+  const showPoster = new Date() < new Date(POSTER.until);
   const pastFiltered = past.filter((e) => (!type || e.kind === type) && (!audience || e.audience === audience));
   const showFilters = past.length >= FILTERS_FROM || (upcoming.length > 0 && past.length > 0 && new Set([...upcoming, ...past].map((e) => e.kind)).size > 1);
   const href = (patch: Record<string, string | null>) => {
@@ -79,8 +112,19 @@ async function EventLists({ searchParams }: { searchParams: PageProps<"/evenemen
             </nav>
           )}
           <h2 className="jg-h2">Prochains événements</h2>
-          {upcomingShown.length ? (
+          {upcomingShown.length || showPoster ? (
             <ul className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {showPoster && (
+                <li>
+                  <Image
+                    src={POSTER.image}
+                    alt="Affiche de l’atelier « Et si nos mots changeaient tout ? » : comprendre comment notre façon de parler influence nos émotions, nos comportements et nos relations. Intervenant : Jérémy Galéa. Jeudi 26 novembre 2026 à 20 h, École Collège Lycée Saint François, 19 rue Fernand David, 74100 Ville-la-Grand. Ouvert à tous : parents, élèves, professeurs et toute personne intéressée. Entrée gratuite. Un événement organisé par l’association des parents d’élèves."
+                    placeholder="blur"
+                    sizes="(min-width: 1024px) 400px, (min-width: 768px) 50vw, 100vw"
+                    className="h-auto w-full rounded-[12px] border border-[var(--jg-light-gray)]"
+                  />
+                </li>
+              )}
               {upcomingShown.map((e) => (
                 <li key={e.id}>
                   <UpcomingEventCard e={e} />

@@ -21,8 +21,8 @@ export const CASES = [
     teaser: "Je sais ce que je fais, mais j’ai du mal à expliquer ce qui me correspond vraiment.",
   },
   {
-    slug: "jean-gabriel",
-    name: "Jean-Gabriel",
+    slug: "alexandre",
+    name: "Alexandre",
     domain: "Data, BI & transformation des organisations",
     teaser: "Je sais parfaitement ce que je fais. Mais j’ai du mal à expliquer clairement ce que j’apporte réellement.",
   },

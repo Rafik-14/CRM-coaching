@@ -238,11 +238,13 @@ export default function HomePage() {
             <Eyebrow>Le territoire JG®</Eyebrow>
           </div>
           <GoldLine className="mt-4 max-md:hidden" />
-          <h2 className="jg-h2 mt-3 max-w-[880px] md:mt-6">
-            Savoir ce que vous valez est une force.
-            <br />
-            Savoir le rendre évident est un pouvoir.
-          </h2>
+          <div className="jg-glow mt-3 md:mt-6">
+            <h2 className="jg-h2 max-w-[880px]">
+              Savoir ce que vous valez est une force.
+              <br />
+              Savoir le rendre évident est un pouvoir.
+            </h2>
+          </div>
           <div className="mt-10 grid gap-10 lg:grid-cols-2 lg:gap-20">
             <div className="jg-prose text-white/85">
               <p>Votre valeur ne se joue pas seulement dans ce que vous êtes.</p>
@@ -466,20 +468,12 @@ export default function HomePage() {
                   href={`/transformations#${c.slug}`}
                   className="group flex h-full flex-col rounded-[12px] border border-[var(--jg-light-gray)] bg-white p-7 transition-[border-color,translate] duration-200 hover:-translate-y-px hover:border-navy md:p-9"
                 >
-                  <span className="flex items-center gap-4">
-                    <span
-                      aria-hidden
-                      className="flex size-14 shrink-0 items-center justify-center rounded-full bg-navy font-heading text-[1.25rem] font-semibold text-white"
-                    >
-                      {c.name[0]}
-                    </span>
-                    <span>
-                      <span className="jg-h4 block font-heading font-semibold text-navy">{c.name}</span>
-                      <span className="jg-small block">{c.domain}</span>
-                    </span>
+                  <span>
+                    <span className="jg-h4 block font-heading font-semibold text-navy">{c.name}</span>
+                    <span className="jg-small block">{c.domain}</span>
                   </span>
                   <span className="mt-6 block font-heading text-[13px] font-semibold tracking-[0.16em] uppercase">
-                    Avant
+                    Situation de départ
                   </span>
                   <span className="mt-2 block italic">« {c.teaser} »</span>
                   <span className="mt-auto inline-flex items-center gap-2 pt-6 font-heading text-[15px] font-semibold text-navy underline decoration-gold decoration-2 underline-offset-[6px]">
@@ -531,6 +525,7 @@ export default function HomePage() {
       <FinalCta
         title="La prochaine décision vous appartient."
         source="accueil-final"
+        glow
         note="20 minutes pour parler de votre situation et identifier les prochaines étapes possibles. Sans engagement."
       >
         Votre valeur mérite d’être évidente.

@@ -4,11 +4,12 @@ import { FinalCta, SectionHeading, Statement } from "@/components/site/blocks";
 import { CaseBlock, CaseHeader, CaseQuote, ChangeList, KeyPiece } from "@/components/site/case-study";
 import { Container, GoldLine, Section } from "@/components/site/ui";
 import yannick from "@/assets/site/yannick.webp";
+import logoTransformations from "@/assets/site/logo-transformations.webp";
 
 export const metadata: Metadata = {
   title: "Transformations",
   description:
-    "Quand on comprend mieux son parcours, on ne se présente plus de la même manière. Deux cas pratiques de la Méthode JG® : Yannick et Jean-Gabriel.",
+    "Quand on comprend mieux son parcours, on ne se présente plus de la même manière. Deux cas pratiques de la Méthode JG® : Yannick et Alexandre.",
   alternates: { canonical: "/transformations" },
 };
 
@@ -99,17 +100,17 @@ export default function TransformationsPage() {
         </Container>
       </Section>
 
-      {/* Jean-Gabriel */}
-      <Section id="jean-gabriel" className="scroll-mt-20">
+      {/* Alexandre */}
+      <Section id="alexandre" className="scroll-mt-20">
         <Container>
-          <CaseHeader name="Jean-Gabriel" domain="Data, BI & transformation des organisations" />
+          <CaseHeader name="Alexandre" domain="Data, BI & transformation des organisations" />
           <div className="mt-12 grid gap-10">
             <CaseBlock label="Avant">
               <CaseQuote>
                 Je sais parfaitement ce que je fais. Mais j’ai du mal à expliquer clairement ce que j’apporte réellement.
               </CaseQuote>
               <p>
-                Après près de 30 ans de carrière dans l’industrie et la recherche, Jean-Gabriel disposait d’une expertise
+                Après près de 30 ans de carrière dans l’industrie et la recherche, Alexandre disposait d’une expertise
                 riche : données, modélisation, BI, analyse, processus et accompagnement des organisations.
               </p>
               <p>
@@ -150,7 +151,7 @@ export default function TransformationsPage() {
               </KeyPiece>
               <p>Le changement n’est pas simplement lexical.</p>
               <p>
-                Jean-Gabriel commence à passer d’une présentation centrée sur ses outils et ses compétences à une
+                Alexandre commence à passer d’une présentation centrée sur ses outils et ses compétences à une
                 formulation centrée sur la valeur qu’il crée pour l’organisation.
               </p>
               <p>Il ne s’agit plus seulement de dire ce qu’il maîtrise.</p>
@@ -171,7 +172,8 @@ export default function TransformationsPage() {
       </Section>
 
       <Section tone="ivory">
-        <Container>
+        <Container className="grid items-center gap-12 lg:grid-cols-[1.2fr_0.8fr] lg:gap-20">
+          <div>
           <GoldLine />
           <h2 className="jg-h2 mt-6 max-w-[860px]">Deux parcours. Deux points de départ. Une même logique.</h2>
           <p className="mt-6 font-heading text-[1.25rem] font-semibold tracking-[0.08em] text-navy uppercase">
@@ -181,6 +183,14 @@ export default function TransformationsPage() {
             <p>La Méthode JG® ne cherche pas à créer une nouvelle identité.</p>
             <p className="mt-1">Elle permet de rendre visible ce qui était déjà là.</p>
           </Statement>
+          </div>
+          <Image
+            src={logoTransformations}
+            alt="Logo de la Méthode JG® : deux cercles, bleu nuit et or, reliés par un fil"
+            placeholder="blur"
+            sizes="(min-width: 1024px) 420px, 80vw"
+            className="mx-auto h-auto w-full max-w-[420px] rounded-[12px] lg:justify-self-end"
+          />
         </Container>
       </Section>
 
