@@ -7,7 +7,7 @@ import { BookingButton, Container, Section } from "@/components/site/ui";
 export const metadata: Metadata = {
   title: "Accompagnements",
   description:
-    "Architecture Identitaire JG®, Accompagnement Décisif JG®, Parcours Signature JG® : trois niveaux d’accompagnement, une même ambition — rendre votre valeur évidente.",
+    "Architecture Identitaire JG®, Accompagnement Décisif JG®, Parcours Signature JG® : trois accompagnements, une même ambition — rendre votre valeur évidente.",
   alternates: { canonical: "/accompagnements" },
 };
 
@@ -17,7 +17,7 @@ export default function AccompagnementsPage() {
       <Section className="pt-10 md:pt-16 lg:pt-20">
         <Container className="grid gap-10 lg:grid-cols-[1.2fr_0.8fr] lg:items-end lg:gap-20">
           <SectionHeading as="h1" eyebrow="Accompagnements" title="Quel que soit votre enjeu, commencez au bon endroit.">
-            <p>Trois niveaux d’accompagnement. Une même ambition : rendre votre valeur évidente.</p>
+            <p>Trois accompagnements. Une même ambition : rendre votre valeur évidente.</p>
           </SectionHeading>
           <Statement>
             <p>Votre situation détermine le point de départ.</p>
@@ -31,6 +31,10 @@ export default function AccompagnementsPage() {
           <Suspense fallback={<OfferListSkeleton />}>
             <OfferList />
           </Suspense>
+          <p className="jg-small mt-8 max-w-[760px]">
+            Les tarifs sont indiqués en euros et en francs suisses selon la zone de facturation. Les montants sont définis
+            séparément et ne correspondent pas à une conversion au taux de change en vigueur.
+          </p>
         </Container>
       </Section>
 
@@ -38,7 +42,10 @@ export default function AccompagnementsPage() {
         <Container className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-center lg:gap-20">
           <SectionHeading title="Vous ne savez pas quel accompagnement choisir ?">
             <p>Vous n’avez pas besoin de le savoir avant de commencer.</p>
-            <p>Parlons de votre situation et déterminons ensemble le point de départ le plus pertinent.</p>
+            <p>
+              Parlons de votre situation, de vos objectifs et de ce qui compte pour vous. Nous déterminerons ensemble le
+              point de départ le plus pertinent.
+            </p>
           </SectionHeading>
           <div className="lg:justify-self-end">
             <BookingButton source="accompagnements" />

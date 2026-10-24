@@ -281,6 +281,21 @@
   .jg-prose > * + * {
     margin-top: 1em;
   }
+  /* « Surbrillance » (Jérémy's example): a soft light halo behind a key sentence on navy. Stays inside the gutters. */
+  .jg-glow {
+    position: relative;
+    isolation: isolate;
+    width: fit-content;
+    max-width: 100%;
+  }
+  .jg-glow::before {
+    content: "";
+    position: absolute;
+    inset: -3rem -1rem;
+    z-index: -1;
+    pointer-events: none;
+    background: radial-gradient(closest-side, rgb(96 128 170 / 0.5), rgb(96 128 170 / 0.18) 60%, transparent);
+  }
   /* Visible focus: navy ring on light backgrounds, white on navy. */
   .jg-site :focus-visible {
     outline: 2px solid var(--jg-navy);

@@ -10,45 +10,45 @@ import branding from "@/assets/site/branding.webp";
 export const metadata: Metadata = {
   title: "Parcours Signature JG®",
   description:
-    "Votre valeur mérite plus qu’un moment de préparation. 8 séances individuelles, le Workbook Signature JG® et des exercices entre les séances.",
+    "Votre valeur mérite plus qu’un moment de préparation. 6 séances individuelles, le Workbook Signature JG® et des exercices interséances.",
   alternates: { canonical: "/accompagnements/parcours-signature" },
 };
 
 const AXES = [
   {
     title: "Votre identité",
-    text: "Comprendre ce qui vous caractérise réellement et ce qui donne de la cohérence à votre parcours.",
+    text: "Comprendre ce qui vous caractérise réellement et donne sa cohérence à votre parcours.",
   },
   {
     title: "Votre valeur",
-    text: "Identifier ce que vous apportez, ce qui vous distingue et ce qui mérite d’être davantage reconnu.",
+    text: "Identifier vos forces distinctives, ce que vous apportez et ce qui mérite d’être mieux exprimé.",
   },
   {
     title: "Votre positionnement",
-    text: "Clarifier la place que vous souhaitez occuper et la manière dont vous souhaitez être perçu.",
+    text: "Définir la place que vous souhaitez occuper et la contribution que vous voulez y apporter.",
   },
   {
     title: "Votre posture",
-    text: "Transformer cette nouvelle compréhension en une manière plus juste d’agir, de décider et de vous présenter.",
+    text: "Traduire cette compréhension en une manière plus juste d’agir, de décider et de vous présenter.",
   },
   {
     title: "Votre impact",
-    text: "Faire en sorte que ce que vous êtes capable d’apporter soit compris, reconnu et perceptible.",
+    text: "Faire comprendre ce qui vous distingue et rendre votre contribution plus lisible dans vos interactions professionnelles.",
   },
 ] as const;
 
 const BENEFITS = [
-  "8 séances individuelles",
-  "Workbook Signature JG®",
-  "Exercices et mises en pratique entre les séances",
-  "Un travail progressif sur votre identité, votre valeur, votre positionnement et votre incarnation",
+  "6 séances individuelles",
+  "Le Workbook Signature JG®",
+  "Des Exercices et mises en pratique entre les séances",
+  "Un travail progressif sur votre identité, votre valeur, votre positionnement et votre posture",
 ] as const;
 
 const SIGNS = [
   "votre situation actuelle ne correspond plus à ce que vous êtes devenu(e) ;",
   "vous avez du mal à donner une direction claire à la suite de votre parcours ;",
   "vous sentez que votre potentiel dépasse ce que vous exprimez aujourd’hui ;",
-  "vous souhaitez repositionner votre identité professionnelle ;",
+  "Vous souhaitez redéfinir votre identité et votre positionnement professionnels ;",
   "vous êtes prêt(e) à prendre une nouvelle place, mais vous ne savez pas encore comment l’incarner.",
 ] as const;
 
@@ -72,7 +72,7 @@ export default function ParcoursSignaturePage() {
               <OfferPrice slug="parcours-signature" className="mt-8" />
             </Suspense>
             <DotList
-              items={["8 séances individuelles", "Workbook Signature JG®", "Exercices entre les séances"]}
+              items={["6 séances individuelles", "Workbook Signature JG®", "Exercices interséances"]}
               className="jg-small mt-2 font-medium text-navy"
             />
             <BookingButton source="parcours-signature-hero" className="mt-10" />
@@ -107,10 +107,8 @@ export default function ParcoursSignaturePage() {
               <strong>Le Parcours Signature JG® commence là où un simple ajustement ne suffit plus.</strong>
             </p>
             <Statement className="mt-8">
-              <p>Il ne s’agit pas de repartir de zéro.</p>
-              <p className="mt-1">
-                Il s’agit de comprendre ce qui est déjà là pour construire la suite avec davantage de clarté.
-              </p>
+              Il ne s’agit pas de repartir de zéro, mais de comprendre ce qui fait votre singularité pour construire la
+              suite avec davantage de clarté et de cohérence.
             </Statement>
           </div>
         </Container>
@@ -136,11 +134,11 @@ export default function ParcoursSignaturePage() {
       <Section tone="navy">
         <Container className="grid gap-10 lg:grid-cols-2 lg:gap-20">
           <div>
-            <Eyebrow>8 séances pour construire durablement</Eyebrow>
-            <GoldLine className="mt-4" />
-            <h2 className="jg-h2 mt-6">Chaque séance fait avancer la suivante.</h2>
+            <GoldLine />
+            <h2 className="jg-h2 mt-6">6 séances pour construire durablement</h2>
             <p className="mt-6 text-white/85">
-              Le Parcours Signature JG® est un accompagnement individuel structuré autour de la Méthode JG®.
+              Un accompagnement individuel structuré autour de la Méthode JG®, pour passer de la compréhension de soi à une
+              expression plus juste et plus cohérente de sa valeur.
             </p>
           </div>
           <div className="lg:pt-14">
@@ -154,11 +152,15 @@ export default function ParcoursSignaturePage() {
               ))}
             </ul>
             <div className="jg-prose mt-10 text-white/85">
-              <p>L’objectif n’est pas simplement de résoudre votre situation actuelle.</p>
+              <p>
+                Chaque séance s’inscrit dans une progression pensée pour faire émerger des prises de conscience et les
+                traduire en actions concrètes.
+              </p>
+              <p>L’objectif n’est pas seulement de faire évoluer votre situation actuelle.</p>
               <p>
                 <strong>
-                  C’est de vous donner une lecture plus claire de votre valeur pour pouvoir l’incarner bien au-delà de
-                  l’accompagnement.
+                  C’est de vous donner des repères solides pour prendre vos décisions, affirmer votre positionnement et
+                  exprimer votre valeur bien au-delà de l’accompagnement.
                 </strong>
               </p>
             </div>
@@ -173,24 +175,25 @@ export default function ParcoursSignaturePage() {
             className="mt-12"
             pairs={[
               {
-                before: "Je sais que je peux apporter davantage, mais je ne sais pas toujours comment le traduire.",
-                after: "Je comprends ce qui fait ma valeur et je sais comment l’incarner.",
+                before: "Je sais que je peux apporter davantage, mais j’ai du mal à le traduire concrètement.",
+                after: "Je comprends ce qui me distingue et je sais comment l’exprimer.",
               },
               {
                 before: "Je cherche encore ma place.",
                 after: "Je sais quelle place je veux occuper et ce que je veux y apporter.",
               },
               {
-                before: "Je dois encore prouver ma valeur.",
-                after: "Je sais ce que je veux faire percevoir et comment le rendre évident.",
+                before: "Je ressens le besoin de prouver ma valeur.",
+                after: "Je sais ce que je veux faire comprendre et comment rendre ma contribution plus lisible.",
               },
             ]}
           />
         </Container>
       </Section>
 
-      <FinalCta title="Ce n’est pas un parcours pour devenir quelqu’un d’autre." source="parcours-signature">
-        Il est là pour réduire l’écart entre ce que vous êtes, ce que vous exprimez et ce que les autres perçoivent.
+      <FinalCta title="Il ne s’agit pas de devenir quelqu’un d’autre." source="parcours-signature">
+        <p>Il s’agit de réduire l’écart entre ce que vous êtes, ce que vous exprimez et ce que les autres perçoivent.</p>
+        <p className="mt-3">Pour avancer avec plus de clarté, de cohérence et de justesse dans votre vie professionnelle.</p>
       </FinalCta>
     </>
   );

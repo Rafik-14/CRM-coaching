@@ -46,7 +46,7 @@ export function SiteFooter() {
             Parlons de votre situation
           </p>
           <p className="jg-small mt-4 text-white/80">20 minutes pour parler de votre situation. Sans engagement.</p>
-          <BookingButton source="pied-de-page" variant="light" className="mt-6 w-full sm:w-auto lg:w-full" />
+          <BookingButton source="pied-de-page" variant="accent" className="mt-6 w-full sm:w-auto lg:w-full" />
           <p className="mt-8 font-heading text-[13px] font-semibold tracking-[0.16em] text-white uppercase">
             Informations
           </p>

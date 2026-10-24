@@ -1,41 +1,42 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import { BeforeAfter, FinalCta, FlowLine, SectionHeading, Statement, Steps, WideFigure } from "@/components/site/blocks";
+import { FinalCta, SectionHeading, Statement, Steps, WideFigure } from "@/components/site/blocks";
 import { Container, Eyebrow, GoldLine, Section } from "@/components/site/ui";
 import methode from "@/assets/site/methode.webp";
-import schemaMethode from "@/assets/site/schema-methode.webp";
+import schemaModele from "@/assets/site/schema-modele-jg.webp";
 
 export const metadata: Metadata = {
   title: "La Méthode JG®",
   description:
-    "Révéler ce qui est déjà là. Incarner ce qui fait votre valeur. Relier, révéler, incarner : la Méthode JG® de Jérémy Galéa.",
+    "Révéler ce qui est déjà là. Incarner ce qui fait votre valeur. Clarifier, révéler, incarner : la Méthode JG® de Jérémy Galéa.",
   alternates: { canonical: "/methode" },
 };
 
+/** Texts: « Site web JG_brutV2 », onglet LA MÉTHODE JG® (Jérémy, Oct. 2026). */
 const MODEL = [
   {
-    title: "Relier",
-    caption: "Comprendre",
-    text: "Mettre en lumière les liens entre vos expériences, vos choix et ce qui vous anime.",
+    title: "Clarifier",
+    caption: "Comprendre où vous en êtes.",
+    text: "Explorer votre parcours, vos motivations et vos priorités pour faire le point.",
   },
   {
     title: "Révéler",
-    caption: "Donner du sens",
-    text: "Faire émerger votre singularité et ce qui crée réellement votre valeur.",
+    caption: "Découvrir ce qui vous distingue.",
+    text: "Faire émerger vos forces, votre singularité et ce qui crée réellement votre valeur.",
   },
   {
     title: "Incarner",
-    caption: "Rendre visible",
-    text: "Transformer cette compréhension en posture, discours et décisions.",
+    caption: "Savoir l’exprimer.",
+    text: "Traduire cette compréhension en posture, discours et décisions concrètes.",
   },
 ] as const;
 
-const TRANSFORMS = [
-  { title: "Compréhension", text: "Comprendre ce qui vous anime et ce qui donne de la cohérence à votre parcours." },
-  { title: "Expression", text: "Trouver les mots justes pour exprimer ce que vous apportez et ce qui vous distingue." },
-  { title: "Posture", text: "Incarner votre valeur avec davantage de justesse et de cohérence." },
-  { title: "Décisions", text: "Disposer d’une lecture plus claire pour choisir votre prochaine direction." },
-  { title: "Impact", text: "Rendre votre valeur plus facilement comprise, reconnue et choisie." },
+const EVOLUTIONS = [
+  { title: "Compréhension", text: "Une lecture plus claire de votre parcours." },
+  { title: "Singularité", text: "Vos forces distinctives mises en lumière." },
+  { title: "Expression", text: "Des mots justes et percutants." },
+  { title: "Posture", text: "Plus de cohérence et d’alignement." },
+  { title: "Impact", text: "Une valeur plus lisible et plus facilement reconnue." },
 ] as const;
 
 export default function MethodePage() {
@@ -55,11 +56,9 @@ export default function MethodePage() {
             <div className="jg-prose mt-8 max-w-[620px]">
               <p>Vous n’avez pas besoin de devenir quelqu’un d’autre pour être reconnu à votre juste valeur.</p>
               <p>
-                Vous avez besoin de comprendre ce qui fait votre singularité, de mettre des mots dessus et de savoir
-                l’incarner.
-              </p>
-              <p>
-                <strong>C’est précisément ce que fait la Méthode JG®.</strong>
+                <strong>
+                  Vous avez besoin de comprendre ce qui vous distingue et de savoir l’exprimer avec justesse.
+                </strong>
               </p>
             </div>
           </div>
@@ -77,33 +76,31 @@ export default function MethodePage() {
       {/* Prise de conscience */}
       <Section tone="ivory">
         <Container className="grid gap-10 lg:grid-cols-2 lg:gap-20">
-          <SectionHeading title="Et si votre parcours racontait plus que vous ne le pensez ?" />
-          <div className="lg:pt-14">
-            <div className="jg-prose max-w-[640px]">
-              <p>Vos expériences, vos choix et votre manière d’agir ne sont pas des éléments isolés.</p>
-              <p>Ils révèlent des constantes, des motivations et des logiques qui donnent du sens à votre parcours.</p>
-              <p>
-                La Méthode JG® consiste à relier ces éléments pour faire émerger ce que vous ne voyez pas toujours
-                vous-même : votre fil conducteur, votre singularité et ce qui fait réellement votre valeur.
-              </p>
-            </div>
-            <Statement className="mt-10">
-              <p>Pas pour inventer une identité.</p>
-              <p className="mt-1">Pour révéler celle qui existe déjà.</p>
-            </Statement>
+          <SectionHeading title="Votre parcours a plus de cohérence que vous ne le pensez." />
+          <div className="jg-prose max-w-[640px] lg:pt-14">
+            <p>Vos expériences, vos choix et votre manière d’agir révèlent des constantes qui racontent quelque chose de vous.</p>
+            <p>
+              <strong>
+                La Méthode JG® vous aide à les relier, à faire émerger votre singularité et à transformer cette compréhension
+                en une valeur que vous savez exprimer.
+              </strong>
+            </p>
           </div>
         </Container>
       </Section>
 
-      {/* Mécanisme */}
+      {/* Le modèle JG® */}
       <Section>
         <Container>
-          <SectionHeading eyebrow="Le modèle JG®" title="Relier → Révéler → Incarner" />
+          <SectionHeading
+            eyebrow="Le modèle JG®"
+            title="Comprendre où vous en êtes → Découvrir ce qui vous distingue → Savoir l’exprimer"
+          />
           <Steps steps={MODEL} className="mt-12" />
-          <WideFigure label="Schéma de la Méthode JG®" className="mt-14 md:mt-20">
+          <WideFigure label="Le modèle JG® en trois étapes" className="mt-14 md:mt-20">
             <Image
-              src={schemaMethode}
-              alt="Ma méthode en trois étapes : comprendre, donner du sens, rendre visible. Mettre en lumière ce que vous êtes réellement, structurer votre valeur et la formuler clairement, puis adopter la posture, les messages et les supports qui la rendent évidente."
+              src={schemaModele}
+              alt="Le modèle JG® en trois étapes. 01, Clarifier : comprendre où vous en êtes, explorer votre parcours, vos motivations et vos priorités pour faire le point. 02, Révéler : découvrir ce qui vous distingue, faire émerger vos forces, votre singularité et ce qui crée réellement votre valeur. 03, Incarner : savoir l’exprimer, traduire cette compréhension en posture, discours et décisions concrètes."
               placeholder="blur"
               sizes="(min-width: 1240px) 1240px, (min-width: 768px) 100vw, 760px"
               className="rounded-[12px]"
@@ -112,39 +109,25 @@ export default function MethodePage() {
         </Container>
       </Section>
 
-      {/* Architecture identitaire */}
+      {/* De la valeur réelle à la valeur perçue */}
       <Section tone="navy">
         <Container className="grid gap-10 lg:grid-cols-2 lg:gap-20">
           <div>
-            <Eyebrow>L’Architecture Identitaire JG®</Eyebrow>
-            <GoldLine className="mt-4" />
-            <h2 className="jg-h2 mt-6">Ce que vous faites ne raconte jamais toute votre histoire.</h2>
+            <GoldLine />
+            <h2 className="jg-h2 mt-6">De la valeur réelle à la valeur perçue</h2>
           </div>
-          <div className="lg:pt-14">
-            <div className="jg-prose max-w-[640px] text-white/85">
-              <p>
-                Vos choix, vos expériences et votre manière d’agir révèlent parfois des constantes que vous n’aviez
-                jamais mises en lien.
-              </p>
-              <p>
-                L’Architecture Identitaire JG® consiste à les observer, les relier et les mettre en cohérence pour faire
-                émerger votre identité professionnelle.
-              </p>
-            </div>
-            <Statement className="mt-10">
-              <p>Ce n’est pas une identité que l’on invente.</p>
-              <p className="mt-1">C’est une identité que l’on révèle.</p>
-            </Statement>
-          </div>
+          <Statement className="lg:mt-14">
+            Réduire l’écart entre ce que vous êtes, ce que vous exprimez et ce que les autres peuvent en comprendre.
+          </Statement>
         </Container>
       </Section>
 
-      {/* Ce que la méthode transforme */}
+      {/* Ce que la méthode fait évoluer */}
       <Section>
         <Container>
-          <SectionHeading title="Ce que la Méthode JG® transforme" />
+          <SectionHeading title="Ce que la Méthode JG® fait évoluer" />
           <ul className="mt-12 grid gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-5">
-            {TRANSFORMS.map((t) => (
+            {EVOLUTIONS.map((t) => (
               <li key={t.title} className="border-t-2 border-navy pt-5">
                 <h3 className="jg-h4 tracking-[0.06em] uppercase">{t.title}</h3>
                 <p className="mt-3">{t.text}</p>
@@ -154,47 +137,22 @@ export default function MethodePage() {
         </Container>
       </Section>
 
-      {/* Avant / après */}
-      <Section tone="ivory">
-        <Container>
-          <SectionHeading title="Le véritable changement" />
-          <BeforeAfter
-            className="mt-12"
-            pairs={[
-              {
-                before: "Je sais que j’ai de la valeur, mais j’ai du mal à l’expliquer.",
-                after: "Je comprends ce qui fait ma valeur et je sais la rendre évidente.",
-              },
-              { before: "Je cherche à convaincre.", after: "J’incarne ma valeur avec justesse." },
-            ]}
-          />
-        </Container>
-      </Section>
-
-      {/* Synthèse */}
-      <Section>
-        <Container>
-          <div className="max-w-[860px]">
-            <GoldLine />
-            <h2 className="jg-h2 mt-6">La Méthode JG® ne vous apprend pas à jouer un rôle.</h2>
-            <p className="mt-6">Elle réduit l’écart entre :</p>
-          </div>
-          <FlowLine
-            strong
-            items={["Ce que vous êtes", "Ce que vous exprimez", "Ce que les autres perçoivent"]}
-            className="mt-8"
-          />
-          <div className="mt-12 max-w-[720px]">
+      <FinalCta
+        title="Et si vous n’aviez pas besoin de changer ?"
+        source="methode"
+        glow
+        closing={
+          <div className="mt-12">
             <Statement>
-              <p>L’objectif n’est pas de construire une image.</p>
-              <p className="mt-1">L’objectif est de rendre votre identité lisible.</p>
+              <p>Clarifier ce que vous êtes.</p>
+              <p className="mt-1">Révéler ce qui vous distingue.</p>
+              <p className="mt-1">Incarner ce qui fait votre valeur.</p>
             </Statement>
+            <Eyebrow className="mt-6">La Méthode JG®</Eyebrow>
           </div>
-        </Container>
-      </Section>
-
-      <FinalCta title="Et si vous n’aviez pas besoin de changer ?" source="methode">
-        Et si vous aviez surtout besoin de comprendre ce qui était déjà là ?
+        }
+      >
+        Et si vous aviez surtout besoin de comprendre ce qui est déjà là, de lui donner du sens et de savoir l’exprimer ?
       </FinalCta>
     </>
   );
