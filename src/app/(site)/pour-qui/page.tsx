@@ -169,7 +169,7 @@ export default function PourQuiPage() {
                   >
                     <Image src={a.logo} alt="" sizes="112px" className="size-24 rounded-full md:size-28" />
                     <span className="font-heading text-[15px] leading-snug font-semibold text-navy">
-                      <span className="block text-[13px] text-gold tabular-nums">{String(i + 1).padStart(2, "0")}</span>
+                      <span className="block text-[13px] text-navy tabular-nums">{String(i + 1).padStart(2, "0")}</span>
                       {a.label}
                     </span>
                   </a>
