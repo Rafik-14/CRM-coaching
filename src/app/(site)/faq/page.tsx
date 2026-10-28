@@ -5,6 +5,7 @@ import { connection } from "next/server";
 import { Plus } from "lucide-react";
 import { FinalCta, SectionHeading } from "@/components/site/blocks";
 import { priceLine } from "@/components/site/offers";
+import { LEGAL_PAGES_PUBLISHED } from "@/components/site/nav";
 import { Container, Section } from "@/components/site/ui";
 import { getPublicOffers } from "@/server/queries/site";
 
@@ -105,6 +106,10 @@ const QUESTIONS: { q: string; a: React.ReactNode }[] = [
         </Suspense>
         <p>Vous n’avez donc pas besoin de vous engager immédiatement dans un parcours long.</p>
         <p>Nous déterminons d’abord ce dont votre situation a réellement besoin.</p>
+        <p className="jg-small">
+          Les tarifs sont indiqués en euros et en francs suisses selon la zone de facturation. Les montants sont définis
+          séparément et ne correspondent pas à une conversion au taux de change en vigueur.
+        </p>
       </>
     ),
   },
@@ -160,6 +165,25 @@ const QUESTIONS: { q: string; a: React.ReactNode }[] = [
     ),
   },
   {
+    q: "Comment se déroulent les accompagnements ?",
+    a: (
+      <>
+        <p>
+          Les accompagnements individuels se déroulent en présentiel, dans un cadre propice à l’échange et à la réflexion,
+          ou à distance en visioconférence.
+        </p>
+        <p>
+          Chaque séance est conçue pour vous offrir un accompagnement personnalisé, adapté à vos besoins et à vos
+          objectifs.
+        </p>
+        <p>
+          Les modalités sont précisées lors de notre premier échange, afin de vous proposer le format le plus adapté à
+          votre situation.
+        </p>
+      </>
+    ),
+  },
+  {
     q: "Comment fonctionne le paiement des accompagnements ?",
     a: (
       <>
@@ -174,9 +198,13 @@ const QUESTIONS: { q: string; a: React.ReactNode }[] = [
         </p>
         <p>
           Pour connaître l’ensemble des conditions applicables, vous pouvez consulter les{" "}
-          <Link href="/cgv" className="font-semibold text-navy underline underline-offset-2">
-            CGV
-          </Link>
+          {LEGAL_PAGES_PUBLISHED ? (
+            <Link href="/cgv" className="font-semibold text-navy underline underline-offset-2">
+              CGV
+            </Link>
+          ) : (
+            "CGV"
+          )}
           .
         </p>
       </>

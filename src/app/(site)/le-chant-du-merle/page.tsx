@@ -31,44 +31,64 @@ function AmazonLink({ onNavy = false, children }: { onNavy?: boolean; children: 
   );
 }
 
-/** Readers' photos of the book around the world (Jérémy, Oct. 2026), shown as a rosette around the JG® monogram. */
-const TRAVELS: { src: StaticImageData; alt: string; focus: string }[] = [
-  { src: merleGeneve, alt: "Le livre à l’aéroport de Genève, avant l’embarquement", focus: "object-[50%_60%]" },
-  { src: merlePlage, alt: "Le livre au bord de la mer, au pied des falaises", focus: "object-[50%_78%]" },
-  { src: merleCappadoce, alt: "Le livre sur une terrasse en Cappadoce", focus: "object-[50%_78%]" },
-  { src: merleCannes, alt: "Le livre à Cannes, devant le Palais des festivals", focus: "object-[50%_50%]" },
-  { src: merleDesert, alt: "Le livre dans les dunes du désert", focus: "object-[50%_62%]" },
-  { src: merleTerrasse, alt: "Le livre sur une table, face à la mer", focus: "object-[50%_58%]" },
+/**
+ * Readers' photos of the book around the world (Jérémy, Oct. 2026), in travel order: a collection of postcards,
+ * the book being the thread of the journey. Places are as seen in the photos, to be confirmed by Jérémy.
+ */
+const TRAVELS: { src: StaticImageData; place: string; alt: string; focus: string; tilt: string }[] = [
+  { src: merleGeneve, place: "Genève, Suisse", alt: "Le livre à l’aéroport de Genève, avant l’embarquement", focus: "object-[50%_60%]", tilt: "md:-rotate-2" },
+  { src: merleCannes, place: "Cannes, France", alt: "Le livre à Cannes, devant le Palais des festivals", focus: "object-[50%_50%]", tilt: "md:rotate-[1.5deg]" },
+  { src: merlePlage, place: "Capri, Italie", alt: "Le livre au bord de la mer, au pied des falaises", focus: "object-[50%_78%]", tilt: "md:-rotate-1" },
+  { src: merleCappadoce, place: "Cappadoce, Turquie", alt: "Le livre sur une terrasse en Cappadoce", focus: "object-[50%_78%]", tilt: "md:rotate-2" },
+  { src: merleDesert, place: "Désert du Sahara", alt: "Le livre dans les dunes du désert", focus: "object-[50%_62%]", tilt: "md:-rotate-[1.5deg]" },
+  { src: merleTerrasse, place: "Au bord de la mer", alt: "Le livre sur une table, face à la mer", focus: "object-[50%_58%]", tilt: "md:rotate-1" },
 ];
 
-/** Six round photos on a circle (every 60°), joined by a thin gold ring: the book « travels ». */
-function BookRosette() {
+/** Travel notebook: six postcards with a numbered stamp, linked on larger screens by a dotted gold route. */
+function BookPostcards() {
   return (
-    <div className="relative mx-auto aspect-square w-full max-w-[560px]">
-      <span aria-hidden className="absolute inset-[16%] rounded-full border border-gold" />
-      <span className="absolute top-1/2 left-1/2 flex size-[26%] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-navy">
-        <Image src="/brand/jg-monogram-white.svg" alt="" width={64} height={64} unoptimized className="h-auto w-1/2" />
-      </span>
-      <ul>
-        {TRAVELS.map((photo, i) => {
-          const angle = ((i * 60 - 90) * Math.PI) / 180;
-          return (
-            <li
-              key={photo.alt}
-              className="absolute size-[31%] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full border-[3px] border-white bg-ivory shadow-[0_0_0_1px_var(--jg-gold)]"
-              style={{ left: `${50 + 34 * Math.cos(angle)}%`, top: `${50 + 34 * Math.sin(angle)}%` }}
-            >
+    <div className="relative mt-12 md:mt-16">
+      <svg
+        aria-hidden
+        viewBox="0 0 100 100"
+        preserveAspectRatio="none"
+        className="pointer-events-none absolute inset-0 hidden size-full md:block"
+      >
+        <path
+          d="M 8 22 C 30 2, 55 42, 92 22 S 70 70, 50 76 S 12 70, 8 82"
+          fill="none"
+          stroke="var(--jg-gold)"
+          strokeWidth="2"
+          strokeDasharray="2 7"
+          strokeLinecap="round"
+          vectorEffect="non-scaling-stroke"
+        />
+      </svg>
+      <ol className="relative grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-3 md:gap-x-10 md:gap-y-14">
+        {TRAVELS.map((t, i) => (
+          <li key={t.place} className={cn("relative", t.tilt)}>
+            <figure className="rounded-[4px] border border-[var(--jg-light-gray)] bg-white p-2 pb-3 shadow-[0_6px_18px_rgba(23,37,54,0.1)] md:p-3 md:pb-4">
               <Image
-                src={photo.src}
-                alt={photo.alt}
+                src={t.src}
+                alt={t.alt}
                 placeholder="blur"
-                sizes="(min-width: 1024px) 180px, 31vw"
-                className={cn("size-full object-cover", photo.focus)}
+                sizes="(min-width: 1240px) 360px, (min-width: 768px) 30vw, 46vw"
+                className={cn("aspect-[4/5] w-full rounded-[2px] object-cover", t.focus)}
               />
-            </li>
-          );
-        })}
-      </ul>
+              <figcaption className="mt-3 font-heading text-[12px] font-semibold tracking-[0.14em] text-navy uppercase md:text-[13px]">
+                {t.place}
+              </figcaption>
+            </figure>
+            {/* Postmark: the step of the journey. */}
+            <span
+              aria-hidden
+              className="absolute -top-3 -right-2 flex size-11 rotate-12 items-center justify-center rounded-full border-2 border-dashed border-gold bg-white font-heading text-[13px] font-bold text-[var(--jg-gold-ink)] tabular-nums md:size-14 md:text-[15px]"
+            >
+              {String(i + 1).padStart(2, "0")}
+            </span>
+          </li>
+        ))}
+      </ol>
     </div>
   );
 }
@@ -152,21 +172,19 @@ export default function ChantDuMerlePage() {
         </Container>
       </Section>
 
-      <Section>
-        <Container className="grid items-center gap-12 lg:grid-cols-2 lg:gap-20">
-          <div>
-            <SectionHeading title="Un livre, mille voyages intérieurs">
-              <p>De pays en pays, Le Chant du Merle poursuit son chemin.</p>
-              <p>
-                <strong>Et si le prochain voyage était le vôtre ?</strong>
-              </p>
-              <p>Parfois, un livre ne se contente pas de nous emmener ailleurs. Il nous invite aussi à nous découvrir autrement.</p>
-            </SectionHeading>
-            <div className="mt-10">
-              <AmazonLink>Découvrir Le Chant du Merle sur Amazon</AmazonLink>
-            </div>
+      <Section tone="ivory">
+        <Container>
+          <SectionHeading title="Un livre, mille voyages intérieurs">
+            <p>De pays en pays, Le Chant du Merle poursuit son chemin.</p>
+            <p>
+              <strong>Et si le prochain voyage était le vôtre ?</strong>
+            </p>
+            <p>Parfois, un livre ne se contente pas de nous emmener ailleurs. Il nous invite aussi à nous découvrir autrement.</p>
+          </SectionHeading>
+          <BookPostcards />
+          <div className="mt-12 md:mt-16">
+            <AmazonLink>Découvrir Le Chant du Merle sur Amazon</AmazonLink>
           </div>
-          <BookRosette />
         </Container>
       </Section>
     </>

@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import Image from "next/image";
+import Image, { type StaticImageData } from "next/image";
 import Link from "next/link";
 import { ArrowRight, Plus } from "lucide-react";
 import { Card, FinalCta, FlowLine, SectionHeading, SectionNumber, Statement, WideFigure } from "@/components/site/blocks";
-import { FloatingBooking } from "@/components/site/floating-booking";
 import { HomeEvents } from "@/components/site/home-events";
 import { CASES, DOMAINS, offerColor } from "@/components/site/content";
+import yannick from "@/assets/site/yannick.webp";
+import alexandre from "@/assets/site/alexandre.webp";
 import { ArrowLink, BookingButton, Container, DotList, Eyebrow, GoldLine, Section } from "@/components/site/ui";
 import hero from "@/assets/site/hero.webp";
 import methode from "@/assets/site/methode.webp";
@@ -21,7 +22,7 @@ import { cn } from "@/lib/utils";
 export const metadata: Metadata = {
   title: { absolute: "Jérémy Galéa · Méthode JG® — Révéler votre potentiel" },
   description:
-    "Votre valeur ne se résume pas à ce que vous savez faire. Coach & formateur, Jérémy Galéa vous aide à clarifier votre identité professionnelle et à rendre votre valeur visible. France • Suisse.",
+    "Faites la différence quand ça compte. Coach & formateur, Jérémy Galéa vous aide à faire reconnaître votre valeur au moment où une décision se prend. France • Suisse.",
   alternates: { canonical: "/" },
 };
 
@@ -55,7 +56,13 @@ const STEPS = [
   },
 ] as const;
 
-const HERO_DOMAINS = ["Identité professionnelle", "Positionnement", "Évolution de carrière", "Leadership", "Recrutement", "Prise de parole"] as const;
+/** Small round photo on each case-study card (Jérémy, V4). */
+const CASE_PHOTOS: Record<(typeof CASES)[number]["slug"], StaticImageData> = { yannick, alexandre };
+
+/** Each formula's link takes its colour (text and underline), like its name and side line. */
+const OFFER_LINK = "text-[var(--offer)] [&_span]:decoration-[var(--offer)]";
+
+const HERO_DOMAINS = ["Identité professionnelle", "Positionnement", "Évolution de carrière", "Leadership", "Entretiens & recrutement", "Prise de parole"] as const;
 
 /** The four formulas of the home page; each keeps its colour (OFFER_COLORS) on Accompagnements too. */
 const OFFERS = [
@@ -99,7 +106,7 @@ const OFFERS = [
       "Le Parcours Signature JG® vous accompagne en profondeur pour relier votre parcours, vos forces et vos aspirations, clarifier ce qui vous distingue et transformer cette compréhension en une posture, un discours et une trajectoire professionnelle assumés.",
     ],
     label: "Votre accompagnement comprend :",
-    items: ["8 séances individuelles", "Le Workbook Signature JG®", "Des exercices entre les séances"],
+    items: ["6 séances individuelles", "Le Workbook Signature JG®", "Des exercices entre les séances"],
     note: null,
     link: "Découvrir le Parcours Signature JG®",
     href: "/accompagnements/parcours-signature",
@@ -158,9 +165,9 @@ export default function HomePage() {
           <div className="relative z-10 col-start-1 row-start-1 self-end pb-8 md:pb-0 lg:self-end">
             <Eyebrow className="max-md:text-gold">Jérémy Galéa · Méthode JG®</Eyebrow>
             <GoldLine className="mt-4 max-md:hidden" />
-            <h1 className="jg-h1 mt-3 max-md:text-white md:mt-6">Votre valeur ne se résume pas à ce que vous savez faire.</h1>
+            <h1 className="jg-h1 mt-3 max-md:text-white md:mt-6">Faites la différence quand ça compte.</h1>
             <p className="mt-4 font-heading text-[1.125rem] leading-snug font-medium text-navy max-md:text-white/90 md:mt-6 md:text-[1.375rem]">
-              Elle se joue aussi dans la façon dont elle est perçue.
+              Identifiez ce qui vous distingue. Exprimez votre valeur. Incarnez-la avec impact.
             </p>
             <div className="mt-6 md:hidden">
               <BookingButton source="accueil-hero" variant="accent" block />
@@ -168,21 +175,15 @@ export default function HomePage() {
             </div>
           </div>
           <div className="col-start-1 row-start-2 mt-8 md:mt-6 lg:self-start">
-            <div className="jg-prose max-w-[600px]">
-              <p>
-                Vous avez des compétences, de l’expérience et un potentiel. Mais savez-vous les exprimer de façon à être
-                compris, reconnu et choisi ?
-              </p>
-              <p className="max-md:hidden">
-                <strong>
-                  Je vous accompagne pour clarifier votre identité professionnelle, affirmer votre positionnement et rendre
-                  votre valeur visible dans les moments où une décision se prend.
-                </strong>
-              </p>
-            </div>
-            <Statement className="mt-6 md:hidden">
-              Je vous accompagne pour clarifier votre identité professionnelle, affirmer votre positionnement et rendre votre
-              valeur visible dans les moments où une décision se prend.
+            <p className="jg-glow max-w-[600px] max-md:hidden">
+              <strong>
+                Que ce soit pour évoluer, vous repositionner, convaincre ou prendre la parole, je vous aide à faire
+                reconnaître votre valeur au moment où une décision se prend.
+              </strong>
+            </p>
+            <Statement className="jg-glow md:hidden">
+              Que ce soit pour évoluer, vous repositionner, convaincre ou prendre la parole, je vous aide à faire reconnaître
+              votre valeur au moment où une décision se prend.
             </Statement>
             <DotList items={HERO_DOMAINS} className="jg-small mt-8 font-medium text-navy" />
             <div className="mt-10 hidden flex-col gap-3 sm:flex-row sm:items-center sm:gap-5 md:flex">
@@ -203,10 +204,10 @@ export default function HomePage() {
               qui vous sont propres.
             </p>
             <p>Un fil conducteur relie parfois ce que vous avez construit sans que vous l’ayez encore identifié.</p>
-            <p>
+            <p className="jg-glow">
               <strong>
-                Mon rôle est de faire émerger ce fil conducteur pour vous aider à comprendre ce qui vous distingue et à
-                construire un positionnement professionnel qui vous ressemble.
+                Mon rôle est de faire émerger ce fil conducteur pour révéler les forces, les ressources et les expériences qui
+                donnent du sens à votre parcours.
               </strong>
             </p>
           </div>
@@ -372,7 +373,7 @@ export default function HomePage() {
                     {offer.eyebrow ? "+" : String(i + 1).padStart(2, "0")}
                   </span>
                   <span className="flex-1">
-                    <span className="block font-heading text-[15px] font-semibold tracking-[0.04em] text-navy uppercase">{offer.name}</span>
+                    <span className="block font-heading text-[15px] font-semibold tracking-[0.04em] text-[var(--offer)] uppercase">{offer.name}</span>
                     <span className="mt-0.5 block font-heading text-[15px] leading-snug font-medium text-[var(--offer)]">{offer.tagline}</span>
                   </span>
                   <Plus aria-hidden className="mt-0.5 size-5 shrink-0 text-navy transition-transform duration-200 group-open:rotate-45" />
@@ -390,7 +391,7 @@ export default function HomePage() {
                       {offer.note && <p className="mt-3">{offer.note}</p>}
                     </div>
                   )}
-                  <ArrowLink href={offer.href} className="mt-2">
+                  <ArrowLink href={offer.href} className={cn("mt-2", OFFER_LINK)}>
                     {offer.link}
                   </ArrowLink>
                 </div>
@@ -401,12 +402,12 @@ export default function HomePage() {
           <ul className="mt-12 hidden gap-6 md:grid md:grid-cols-2">
             {OFFERS.map((offer, i) => (
               <li key={offer.name} style={{ "--offer": offerColor(offer.slug) } as React.CSSProperties}>
-                <Card className="flex h-full flex-col border-t-4 border-t-[var(--offer)]">
+                <Card className="flex h-full flex-col border-l-4 border-l-[var(--offer)]">
                   <p className="font-heading text-[15px] font-semibold text-[var(--offer)] tabular-nums">
                     {offer.eyebrow ? <span className="text-[13px] tracking-[0.16em] uppercase">{offer.eyebrow}</span> : String(i + 1).padStart(2, "0")}
                   </p>
                   <span aria-hidden className="mt-3 block h-0.5 w-8 bg-[var(--offer)]" />
-                  <h3 className="jg-h4 mt-5 tracking-[0.04em] uppercase">{offer.name}</h3>
+                  <h3 className="jg-h4 mt-5 tracking-[0.04em] text-[var(--offer)] uppercase">{offer.name}</h3>
                   <p className="mt-3 font-heading text-[1.125rem] leading-snug font-semibold text-[var(--offer)]">{offer.tagline}</p>
                   {offer.paragraphs.map((p, k) => (
                     <p key={k} className="mt-4">
@@ -420,7 +421,7 @@ export default function HomePage() {
                       {offer.note && <p className="mt-3">{offer.note}</p>}
                     </div>
                   )}
-                  <ArrowLink href={offer.href} className="mt-auto self-start pt-6">
+                  <ArrowLink href={offer.href} className={cn("mt-auto self-start pt-6", OFFER_LINK)}>
                     {offer.link}
                   </ArrowLink>
                 </Card>
@@ -468,9 +469,18 @@ export default function HomePage() {
                   href={`/transformations#${c.slug}`}
                   className="group flex h-full flex-col rounded-[12px] border border-[var(--jg-light-gray)] bg-white p-7 transition-[border-color,translate] duration-200 hover:-translate-y-px hover:border-navy md:p-9"
                 >
-                  <span>
-                    <span className="jg-h4 block font-heading font-semibold text-navy">{c.name}</span>
-                    <span className="jg-small block">{c.domain}</span>
+                  <span className="flex items-center justify-between gap-4">
+                    <span>
+                      <span className="jg-h4 block font-heading font-semibold text-navy">{c.name}</span>
+                      <span className="jg-small block">{c.domain}</span>
+                    </span>
+                    <Image
+                      src={CASE_PHOTOS[c.slug]}
+                      alt=""
+                      placeholder="blur"
+                      sizes="64px"
+                      className="size-14 shrink-0 rounded-full border-2 border-gold object-cover object-[50%_20%] md:size-16"
+                    />
                   </span>
                   <span className="mt-6 block font-heading text-[13px] font-semibold tracking-[0.16em] uppercase">
                     Situation de départ
@@ -530,7 +540,6 @@ export default function HomePage() {
       >
         Votre valeur mérite d’être évidente.
       </FinalCta>
-      <FloatingBooking source="accueil-flottant" />
     </>
   );
 }

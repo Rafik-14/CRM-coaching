@@ -33,7 +33,7 @@ export const visitorFields = {
     .regex(/^[a-z0-9-]*$/)
     .optional()
     .catch(undefined),
-  consent: z.literal("on", "Merci d’accepter la politique de confidentialité."),
+  consent: z.literal("on", "Merci d’accepter l’utilisation de vos informations (case ci-dessus)."),
   /** Honeypot: real visitors leave it empty. */
   website: z.string().max(500).optional(),
 };

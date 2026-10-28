@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import { LEGAL_PAGES_PUBLISHED } from "@/components/site/nav";
 import { LegalPage, LegalSection, ToComplete } from "@/components/site/legal";
 
 export const metadata: Metadata = {
@@ -8,6 +10,7 @@ export const metadata: Metadata = {
 };
 
 export default function CgvPage() {
+  if (!LEGAL_PAGES_PUBLISHED) notFound();
   return (
     <LegalPage title="Conditions générales de vente">
       <LegalSection title="1. Objet">
@@ -42,7 +45,7 @@ export default function CgvPage() {
       </LegalSection>
       <LegalSection title="6. Droit de rétractation">
         <p>
-          <ToComplete>conditions pour les clients particuliers (France : 14 jours), renonciation si la prestation commence avant la fin du délai</ToComplete>
+          <ToComplete>conditions pour les clients particuliers (France : 14 jours), renonciation si la prestation commence avant la fin du délai</ToComplete>
         </p>
       </LegalSection>
       <LegalSection title="7. Nature de l’accompagnement">
@@ -52,8 +55,8 @@ export default function CgvPage() {
       </LegalSection>
       <LegalSection title="8. Confidentialité et données personnelles">
         <p>
-          Les échanges menés pendant l’accompagnement sont confidentiels. Le traitement des données est décrit dans la
-          politique de confidentialité.
+          Les échanges menés pendant l’accompagnement sont confidentiels. Le traitement des données est décrit dans la rubrique « Données personnelles » des
+          mentions légales.
         </p>
       </LegalSection>
       <LegalSection title="9. Droit applicable et litiges">

@@ -1,7 +1,7 @@
 import { SiteFooter } from "@/components/site/site-footer";
 import { SiteHeader } from "@/components/site/site-header";
 import { SiteTheme } from "@/components/site/site-theme";
-import { WhatsAppFloat } from "@/components/site/whatsapp";
+import { ContactFab } from "@/components/site/contact-fab";
 
 /** Public website: own header and footer, always in the light JG® palette. */
 export default function SiteLayout({ children }: LayoutProps<"/">) {
@@ -13,7 +13,7 @@ export default function SiteLayout({ children }: LayoutProps<"/">) {
         {children}
       </main>
       <SiteFooter />
-      <WhatsAppFloat />
+      <ContactFab />
     </div>
   );
 }

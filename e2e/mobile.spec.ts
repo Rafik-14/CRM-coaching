@@ -23,13 +23,16 @@ test.describe("téléphone", () => {
 
   test("accueil : photo d’ouverture, accompagnements dépliables, bouton flottant", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText(/Votre valeur ne se résume pas à ce que vous savez faire/);
-    // Floating button: hidden at the top, shown after scrolling past the photo.
-    // Hidden from assistive tech while invisible, so it is found by its link rather than its role.
-    const floating = page.locator('a[href*="source=accueil-flottant"]');
-    await expect(floating).toHaveCSS("opacity", "0");
-    await page.mouse.wheel(0, 1400);
-    await expect(floating).toHaveCSS("opacity", "1");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(/Faites la différence quand ça compte/);
+    // Floating action button: one round button that opens « Réserver un échange » and « WhatsApp ».
+    const fab = page.getByRole("button", { name: /Contacter Jérémy Galéa/ });
+    const actions = page.locator("#contact-fab-actions");
+    await expect(actions).toBeHidden();
+    await fab.click();
+    await expect(actions.getByRole("link", { name: "Réserver un échange" })).toHaveAttribute("href", /source=bouton-flottant/);
+    await expect(actions.getByRole("link", { name: /^WhatsApp/ })).toHaveAttribute("href", "https://wa.me/41783251318");
+    await page.keyboard.press("Escape");
+    await expect(actions).toBeHidden();
     // Fold-out list: the first offer is open, the second opens on tap.
     const offers = page.locator("details");
     await expect(offers.first()).toHaveAttribute("open", "");

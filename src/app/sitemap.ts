@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { LEGAL_PAGES_PUBLISHED } from "@/components/site/nav";
 import { SITE_URL } from "@/lib/site";
 
 /** Public pages of the website (the CRM is private and left out). */
@@ -16,10 +17,12 @@ const PAGES: { path: string; priority: number }[] = [
   { path: "/reserver", priority: 0.9 },
   { path: "/contact", priority: 0.7 },
   { path: "/faq", priority: 0.6 },
-  { path: "/cgv", priority: 0.2 },
-  { path: "/mentions-legales", priority: 0.2 },
-  { path: "/confidentialite", priority: 0.2 },
-  { path: "/cookies", priority: 0.2 },
+  ...(LEGAL_PAGES_PUBLISHED
+    ? [
+        { path: "/cgv", priority: 0.2 },
+        { path: "/mentions-legales", priority: 0.2 },
+      ]
+    : []),
 ];
 
 export default function sitemap(): MetadataRoute.Sitemap {

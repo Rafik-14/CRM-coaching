@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import Link from "next/link";
+import { LEGAL_PAGES_PUBLISHED } from "./nav";
 import { CircleCheck, Send } from "lucide-react";
 import type { Question } from "@/lib/questionnaire";
 import { cn } from "@/lib/utils";
@@ -111,11 +112,15 @@ export function QuestionnaireForm({ token, questions }: { token: string; questio
         <label className="flex cursor-pointer items-start gap-3">
           <input type="checkbox" name="consent" defaultChecked={text("consent") === "on"} aria-invalid={!!err("consent") || undefined} className="mt-1 size-5 shrink-0 accent-[var(--jg-navy)]" />
           <span className="jg-small">
-            J’accepte que mes réponses soient conservées pour préparer mon accompagnement, conformément à la{" "}
-            <Link href="/confidentialite" className="font-semibold text-navy underline underline-offset-2">
-              politique de confidentialité
-            </Link>
-            .
+            J’accepte que mes réponses soient conservées pour préparer mon accompagnement{LEGAL_PAGES_PUBLISHED && (
+            <>
+              , conformément à la rubrique{" "}
+              <Link href="/mentions-legales#donnees-personnelles" className="font-semibold text-navy underline underline-offset-2">
+                « Données personnelles » des mentions légales
+              </Link>
+            </>
+          )}
+          .
           </span>
         </label>
         {err("consent") && <p className="jg-small font-semibold text-[#b42318]">{err("consent")}</p>}

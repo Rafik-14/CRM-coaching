@@ -18,10 +18,6 @@ const PAGES = [
   "/contact",
   "/reserver",
   "/faq",
-  "/cgv",
-  "/mentions-legales",
-  "/confidentialite",
-  "/cookies",
 ];
 
 test.describe("site public", () => {
@@ -69,10 +65,10 @@ test.describe("site public", () => {
     expect((await request.get("/robots.txt")).status()).toBe(200);
   });
 
-  test("aucun paiement proposé dans les conditions générales", async ({ browser }) => {
-    const { page, context } = await visitor(browser);
-    await page.goto("/cgv");
-    await expect(page.getByText("Aucun paiement n’est demandé sur le site.")).toBeVisible();
-    await context.close();
+  // Jérémy is still validating the legal points (« Modifications 2.1 »): CGV and mentions légales are not published.
+  test("CGV et mentions légales pas encore publiées", async ({ request }) => {
+    for (const path of ["/cgv", "/mentions-legales", "/confidentialite", "/cookies"]) {
+      expect((await request.get(path, { maxRedirects: 0 })).status(), path).toBe(404);
+    }
   });
 });

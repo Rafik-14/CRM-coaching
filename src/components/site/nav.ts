@@ -8,21 +8,26 @@ export const SITE_NAV = [
   { href: "/transformations", label: "Transformations" },
   { href: "/evenements", label: "Événements" },
   { href: "/a-propos", label: "À propos" },
-  { href: "/le-chant-du-merle", label: "Le Chant du Merle" },
+  { href: "/le-chant-du-merle", label: "Le Chant du Merle | Mon premier roman" },
   { href: "/contact", label: "Contact" },
 ] as const;
 
 /** Desktop: these pages sit in the « Plus » menu (ten pages don't fit on one line); phones list them all. */
 export const DESKTOP_MORE: readonly string[] = ["/evenements", "/a-propos", "/le-chant-du-merle"];
 
-/** Small links at the bottom of every page. */
-export const LEGAL_NAV = [
-  { href: "/faq", label: "FAQ" },
+/**
+ * CGV and Mentions légales stay unpublished (pages answer 404, no links) until Jérémy has validated the legal points
+ * of his business status (« Modifications 2.1 »). Set to true to publish them again.
+ */
+export const LEGAL_PAGES_PUBLISHED = false;
+
+const LEGAL_PAGES = [
   { href: "/cgv", label: "CGV" },
   { href: "/mentions-legales", label: "Mentions légales" },
-  { href: "/confidentialite", label: "Politique de confidentialité" },
-  { href: "/cookies", label: "Gestion des cookies" },
 ] as const;
+
+/** Small links at the bottom of every page. */
+export const LEGAL_NAV = [{ href: "/faq", label: "FAQ" }, ...(LEGAL_PAGES_PUBLISHED ? LEGAL_PAGES : [])];
 
 export const BOOKING_LABEL = "Réserver un échange stratégique";
 

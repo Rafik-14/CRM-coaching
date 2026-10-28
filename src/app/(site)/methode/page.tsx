@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import { FinalCta, SectionHeading, Statement, Steps, WideFigure } from "@/components/site/blocks";
+import { FinalCta, FlowLine, SectionHeading, Statement, Steps, WideFigure } from "@/components/site/blocks";
 import { Container, Eyebrow, GoldLine, Section } from "@/components/site/ui";
 import methode from "@/assets/site/methode.webp";
 import schemaModele from "@/assets/site/schema-modele-jg.webp";
@@ -92,9 +92,11 @@ export default function MethodePage() {
       {/* Le modèle JG® */}
       <Section>
         <Container>
-          <SectionHeading
-            eyebrow="Le modèle JG®"
-            title="Comprendre où vous en êtes → Découvrir ce qui vous distingue → Savoir l’exprimer"
+          <SectionHeading title="Le modèle JG®" />
+          <FlowLine
+            strong
+            items={["Comprendre où vous en êtes", "Découvrir ce qui vous distingue", "Savoir l’exprimer"]}
+            className="mt-6"
           />
           <Steps steps={MODEL} className="mt-12" />
           <WideFigure label="Le modèle JG® en trois étapes" className="mt-14 md:mt-20">

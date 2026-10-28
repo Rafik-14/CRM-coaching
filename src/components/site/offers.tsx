@@ -42,6 +42,10 @@ const EXTRAS: Record<string, { label: string; items: string[]; cta: string; href
   },
 };
 
+/** Buttons in each formula's colour, like its name and side line (Jérémy, V4). */
+const OFFER_FILLED = "border-[var(--offer)] bg-[var(--offer)] text-white hover:border-navy hover:bg-navy";
+const OFFER_OUTLINE = "border-[var(--offer)] text-[var(--offer)] hover:bg-[var(--offer)] hover:text-white";
+
 /** The offers from the CRM (prices included), one airy row each. */
 export async function OfferList() {
   await connection();
@@ -58,7 +62,7 @@ export async function OfferList() {
             key={offer.id}
             id={slug}
             style={{ "--offer": offerColor(slug) } as React.CSSProperties}
-            className="scroll-mt-28 rounded-[12px] border border-t-4 border-[var(--jg-light-gray)] border-t-[var(--offer)] bg-white p-7 md:p-12"
+            className="scroll-mt-28 rounded-[12px] border border-l-4 border-[var(--jg-light-gray)] border-l-[var(--offer)] bg-white p-7 md:p-12"
           >
             <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
               <div>
@@ -66,7 +70,7 @@ export async function OfferList() {
                   {String(i + 1).padStart(2, "0")}
                 </p>
                 <span aria-hidden className="mt-3 block h-0.5 w-8 bg-[var(--offer)]" />
-                <h2 className="jg-h3 mt-5 tracking-[0.03em] uppercase">{offer.name}</h2>
+                <h2 className="jg-h3 mt-5 tracking-[0.03em] text-[var(--offer)] uppercase">{offer.name}</h2>
                 {offer.tagline && (
                   <p className="mt-3 font-heading text-[1.1875rem] leading-snug font-semibold text-[var(--offer)]">{offer.tagline}</p>
                 )}
@@ -83,7 +87,7 @@ export async function OfferList() {
                 <ButtonLink
                   href={extra?.href ?? bookingHref(`offre-${slug}`)}
                   variant={extra?.secondary ? "secondary" : "primary"}
-                  className="mt-8"
+                  className={cn("mt-8", extra?.secondary ? OFFER_OUTLINE : OFFER_FILLED)}
                 >
                   {extra?.cta ?? "Réserver un échange stratégique"}
                 </ButtonLink>
@@ -92,31 +96,6 @@ export async function OfferList() {
           </li>
         );
       })}
-      <li
-        id="bilan-de-competences"
-        style={{ "--offer": offerColor("bilan-de-competences") } as React.CSSProperties}
-        className="scroll-mt-28 rounded-[12px] border border-t-4 border-[var(--jg-light-gray)] border-t-[var(--offer)] bg-white p-7 md:p-12"
-      >
-        <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
-          <div>
-            <p className="font-heading text-[13px] font-semibold tracking-[0.16em] text-[var(--offer)] uppercase">Une autre façon d’avancer</p>
-            <span aria-hidden className="mt-3 block h-0.5 w-8 bg-[var(--offer)]" />
-            <h2 className="jg-h3 mt-5 tracking-[0.03em] uppercase">Bilan de compétences</h2>
-            <p className="mt-3 font-heading text-[1.1875rem] leading-snug font-semibold text-[var(--offer)]">
-              Besoin de faire le point sur votre avenir professionnel ?
-            </p>
-          </div>
-          <div>
-            <p>
-              Le bilan de compétences vous permet d’analyser votre parcours, d’identifier vos compétences et vos motivations,
-              et de construire un projet professionnel cohérent avec vos aspirations.
-            </p>
-            <ButtonLink href="/bilan-de-competences" variant="secondary" className="mt-8">
-              Découvrir le bilan de compétences
-            </ButtonLink>
-          </div>
-        </div>
-      </li>
     </ol>
   );
 }
