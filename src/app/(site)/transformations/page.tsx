@@ -4,6 +4,8 @@ import { FinalCta, SectionHeading, Statement } from "@/components/site/blocks";
 import { CaseBlock, CaseHeader, CaseQuote, ChangeList, KeyPiece } from "@/components/site/case-study";
 import { Container, GoldLine, Section } from "@/components/site/ui";
 import yannick from "@/assets/site/yannick.webp";
+import alexandre from "@/assets/site/alexandre.webp";
+import alexandrePortrait from "@/assets/site/alexandre-portrait.webp";
 import logoTransformations from "@/assets/site/logo-transformations.webp";
 
 export const metadata: Metadata = {
@@ -102,8 +104,10 @@ export default function TransformationsPage() {
 
       {/* Alexandre */}
       <Section id="alexandre" className="scroll-mt-20">
-        <Container>
-          <CaseHeader name="Alexandre" domain="Data, BI & transformation des organisations" />
+        {/* Desktop: Alexandre's portrait in a column next to his story, as for Yannick. */}
+        <Container className="grid gap-12 lg:grid-cols-[1fr_320px] lg:gap-16">
+          <div>
+          <CaseHeader name="Alexandre" domain="Data, BI & transformation des organisations" photo={alexandre} />
           <div className="mt-12 grid gap-10">
             <CaseBlock label="Avant">
               <CaseQuote>
@@ -168,6 +172,14 @@ export default function TransformationsPage() {
               />
             </CaseBlock>
           </div>
+          </div>
+          <Image
+            src={alexandrePortrait}
+            alt="Alexandre"
+            placeholder="blur"
+            sizes="320px"
+            className="hidden aspect-[2/3] w-full rounded-[12px] object-cover lg:sticky lg:top-28 lg:block"
+          />
         </Container>
       </Section>
 

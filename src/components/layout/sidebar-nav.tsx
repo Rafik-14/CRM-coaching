@@ -5,14 +5,30 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { navItems } from "./nav-items";
 
+/**
+ * Labels of the desktop sidebar: hidden while it is a thin icon strip, shown once it opens
+ * (mouse over it, or keyboard focus inside it). The parent <aside> carries the `group/sb` class.
+ */
+export const SIDEBAR_LABEL =
+  "whitespace-nowrap opacity-0 transition-opacity duration-150 group-hover/sb:opacity-100 group-focus-within/sb:opacity-100";
+
 /** Reads the URL to highlight the active link. Render inside <Suspense> (Cache Components). */
-export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
+export function SidebarNav({ onNavigate, collapsible }: { onNavigate?: () => void; collapsible?: boolean }) {
   const pathname = usePathname();
-  return <NavLinks pathname={pathname} onNavigate={onNavigate} />;
+  return <NavLinks pathname={pathname} onNavigate={onNavigate} collapsible={collapsible} />;
 }
 
 /** Plain links without active state: used as the static-shell fallback. */
-export function NavLinks({ pathname, onNavigate }: { pathname?: string; onNavigate?: () => void }) {
+export function NavLinks({
+  pathname,
+  onNavigate,
+  collapsible,
+}: {
+  pathname?: string;
+  onNavigate?: () => void;
+  /** Desktop icon strip: labels only show once the sidebar opens. */
+  collapsible?: boolean;
+}) {
   return (
     <nav className="grid gap-1 px-3">
       {navItems.map(({ href, label, icon: Icon }) => {
@@ -21,6 +37,7 @@ export function NavLinks({ pathname, onNavigate }: { pathname?: string; onNaviga
           <Link
             key={href}
             href={href}
+            title={collapsible ? label : undefined}
             onClick={onNavigate}
             aria-current={active ? "page" : undefined}
             className={cn(
@@ -30,8 +47,8 @@ export function NavLinks({ pathname, onNavigate }: { pathname?: string; onNaviga
                 "bg-sidebar-accent text-sidebar-accent-foreground before:absolute before:top-2 before:bottom-2 before:left-0 before:w-0.5 before:rounded-full before:bg-sidebar-primary",
             )}
           >
-            <Icon className={cn("size-4", active && "text-sidebar-primary")} />
-            {label}
+            <Icon className={cn("size-4 shrink-0", active && "text-sidebar-primary")} />
+            <span className={collapsible ? SIDEBAR_LABEL : undefined}>{label}</span>
           </Link>
         );
       })}

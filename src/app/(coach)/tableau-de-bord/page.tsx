@@ -6,11 +6,22 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { StageBadge } from "@/components/stage-badge";
 import { StatCard } from "@/components/stat-card";
 import { TaskCheckbox } from "@/components/task-checkbox";
-import { DonutChart, SessionsBarChart } from "@/components/charts";
+import { DonutChart } from "@/components/charts";
+import { ActivityChart } from "@/components/dashboard/activity-chart";
+import { SessionsChart } from "@/components/dashboard/sessions-chart";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/empty-state";
 import { getDashboard } from "@/server/queries/dashboard";
-import { formatDate, formatDayTime, formatMoney, formatMoneyTotals, fullName, initials, isOverdue } from "@/lib/format";
+import {
+  APP_TIME_ZONE,
+  formatDate,
+  formatDayTime,
+  formatMoney,
+  formatMoneyTotals,
+  fullName,
+  initials,
+  isOverdue,
+} from "@/lib/format";
 
 export const metadata: Metadata = { title: "Tableau de bord" };
 
@@ -24,25 +35,36 @@ export default function DashboardPage() {
 
 function Panel({
   title,
+  description,
   action,
   children,
   className,
 }: {
   title: string;
+  /** One line under the title: what the chart or list shows. */
+  description?: string;
   action?: React.ReactNode;
   children: React.ReactNode;
   className?: string;
 }) {
   return (
-    <section className={`rounded-2xl border border-border bg-card p-5 ${className ?? ""}`}>
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <h2 className="font-semibold">{title}</h2>
+    <section className={`min-w-0 rounded-2xl border border-border bg-card p-5 ${className ?? ""}`}>
+      <div className="mb-4 flex items-start justify-between gap-3">
+        <div>
+          <h2 className="font-semibold">{title}</h2>
+          {description && <p className="mt-1 max-w-prose text-xs text-muted-foreground">{description}</p>}
+        </div>
         {action}
       </div>
       {children}
     </section>
   );
 }
+
+const monthShort = new Intl.DateTimeFormat("fr-FR", { month: "short", timeZone: APP_TIME_ZONE });
+const monthLong = new Intl.DateTimeFormat("fr-FR", { month: "long", year: "numeric", timeZone: APP_TIME_ZONE });
+const dayMonth = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "short", timeZone: APP_TIME_ZONE });
+const dayMonthLong = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "long", timeZone: APP_TIME_ZONE });
 
 const SeeAll = ({ href }: { href: string }) => (
   <Link href={href} className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
@@ -89,14 +111,22 @@ async function Dashboard() {
       </section>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="Clients actifs" value={d.stats.activeClients} icon={Users} />
+        <StatCard
+          label="Clients actifs"
+          value={d.stats.activeClients}
+          icon={Users}
+          hint="en accompagnement aujourd’hui"
+          spark={{ values: d.months.slice(-6).map((m) => m.clients), label: "nouveaux clients · 6 mois" }}
+        />
         <StatCard
           label="Nouveaux contacts"
           value={d.stats.newLeads.value}
           icon={UserPlus}
           accent="info"
           trend={d.stats.newLeads.trend}
-          hint="30 derniers jours"
+          hint={`sur 30 j · contre ${d.stats.newLeads.previous} les 30 j d’avant`}
+          detail="Personnes ajoutées au CRM (site, recommandation, événement…)."
+          spark={{ values: d.months.slice(-6).map((m) => m.contacts), label: "par mois · 6 mois" }}
         />
         <StatCard
           label="Séances effectuées"
@@ -104,7 +134,9 @@ async function Dashboard() {
           icon={CalendarCheck}
           accent="success"
           trend={d.stats.sessionsDone.trend}
-          hint="30 derniers jours"
+          hint={`sur 30 j · contre ${d.stats.sessionsDone.previous} les 30 j d’avant`}
+          detail="Séances marquées « effectuées », absences exclues."
+          spark={{ values: d.weeks.filter((w) => !w.current).map((w) => w.done), label: "par semaine · 7 sem." }}
         />
         <StatCard
           label="Chiffre d'affaires"
@@ -113,14 +145,44 @@ async function Dashboard() {
           accent="warning"
           trend={d.stats.revenue.trend}
           hint="accompagnements payés · 30 j"
+          detail="Euros et francs suisses comptés séparément, sans conversion."
         />
       </div>
 
+      <Panel
+        title="Activité des 12 derniers mois"
+        description="Chaque mois : combien de personnes vous ont contacté, combien ont fait l’échange stratégique, et combien sont devenues clientes. Survolez le graphique pour le détail d’un mois."
+      >
+        <ActivityChart
+          months={d.months.map((m) => ({
+            key: m.key,
+            label: monthShort.format(m.start),
+            longLabel: monthLong.format(m.start),
+            contacts: m.contacts,
+            calls: m.calls,
+            clients: m.clients,
+          }))}
+        />
+      </Panel>
+
       <div className="grid gap-6 lg:grid-cols-3">
-        <Panel title="Séances par semaine" className="lg:col-span-2">
-          <SessionsBarChart weeks={d.weeks} />
+        <Panel
+          title="Séances par semaine"
+          description="Séances effectuées et prévues sur les 8 dernières semaines. Le trait pointillé indique votre moyenne."
+          className="lg:col-span-2"
+        >
+          <SessionsChart
+            weeks={d.weeks.map((w) => ({
+              key: w.start.toISOString(),
+              label: w.current ? "Cette sem." : dayMonth.format(w.start),
+              longLabel: `Semaine du ${dayMonthLong.format(w.start)}`,
+              done: w.done,
+              planned: w.planned,
+              current: w.current,
+            }))}
+          />
         </Panel>
-        <Panel title="Sources des contacts">
+        <Panel title="Sources des contacts" description="D’où viennent vos contacts : nombre et part de chaque source.">
           <DonutChart slices={d.sourceSlices.map((s) => ({ label: s.source, value: s.n }))} centerLabel="contacts" />
         </Panel>
       </div>

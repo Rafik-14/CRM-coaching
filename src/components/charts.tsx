@@ -1,69 +1,8 @@
-import { cn } from "@/lib/utils";
-import { APP_TIME_ZONE } from "@/lib/format";
 import { AnimateOnView, CountUp } from "@/components/animate";
-
-const weekFmt = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "short", timeZone: APP_TIME_ZONE });
-
-/** Sessions per week: done (navy) stacked with planned (gold). */
-export function SessionsBarChart({
-  weeks,
-}: {
-  weeks: { start: Date; done: number; planned: number; current: boolean }[];
-}) {
-  const max = Math.max(1, ...weeks.map((w) => w.done + w.planned));
-  return (
-    <AnimateOnView className="grid gap-3">
-      <div className="flex h-52 items-end gap-2 sm:gap-3" role="img" aria-label="Séances par semaine sur 8 semaines">
-        {weeks.map((w, i) => {
-          const total = w.done + w.planned;
-          return (
-            <div key={w.start.toISOString()} className="group flex h-full flex-1 flex-col items-center justify-end gap-1.5">
-              <span className="text-xs font-medium text-muted-foreground tabular-nums opacity-0 transition-opacity group-hover:opacity-100">
-                {total}
-              </span>
-              <div
-                className="animate-grow-y flex w-full max-w-10 flex-col justify-end overflow-hidden rounded-t-lg"
-                style={{ height: `${(total / max) * 100}%`, minHeight: total ? 6 : 2, animationDelay: `${i * 60}ms` }}
-                title={`${w.done} effectuée(s), ${w.planned} prévue(s)`}
-              >
-                {w.planned > 0 && <div className="w-full bg-gold/70" style={{ flexGrow: w.planned }} />}
-                {w.done > 0 && (
-                  <div
-                    className={cn("w-full", w.current ? "bg-primary" : "bg-primary/80")}
-                    style={{ flexGrow: w.done }}
-                  />
-                )}
-                {total === 0 && <div className="h-0.5 w-full bg-border" />}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-      <div className="flex gap-2 sm:gap-3">
-        {weeks.map((w) => (
-          <span
-            key={w.start.toISOString()}
-            className={cn("flex-1 text-center text-[10px] text-muted-foreground", w.current && "font-semibold text-primary")}
-          >
-            {w.current ? "Cette sem." : weekFmt.format(w.start)}
-          </span>
-        ))}
-      </div>
-      <figcaption className="flex gap-4 text-xs text-muted-foreground">
-        <span className="flex items-center gap-1.5">
-          <span className="size-2 rounded-full bg-primary" /> Effectuées
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="size-2 rounded-full bg-gold/70" /> Prévues
-        </span>
-      </figcaption>
-    </AnimateOnView>
-  );
-}
 
 const SLICE_COLORS = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)"];
 
-/** Donut chart (CSS conic-gradient) with legend. */
+/** Donut chart (CSS conic-gradient) with a legend giving each slice's count and share. */
 export function DonutChart({ slices, centerLabel }: { slices: { label: string; value: number }[]; centerLabel: string }) {
   const sum = slices.reduce((n, s) => n + s.value, 0);
   const total = sum || 1;
@@ -84,10 +23,11 @@ export function DonutChart({ slices, centerLabel }: { slices: { label: string; v
       </div>
       <ul className="grid gap-2">
         {slices.map((s, i) => (
-          <li key={s.label} className="flex items-center gap-2 text-sm">
+          <li key={s.label} className="flex items-center gap-2 text-sm" title={`${s.label} : ${s.value} (${Math.round((s.value / total) * 100)} %)`}>
             <span className="size-2.5 rounded-full" style={{ background: SLICE_COLORS[i % SLICE_COLORS.length] }} />
             <span className="flex-1 truncate text-muted-foreground">{s.label}</span>
-            <CountUp value={`${Math.round((s.value / total) * 100)} %`} className="font-medium tabular-nums" />
+            <span className="text-xs text-muted-foreground tabular-nums">{s.value}</span>
+            <CountUp value={`${Math.round((s.value / total) * 100)} %`} className="w-11 text-right font-medium tabular-nums" />
           </li>
         ))}
       </ul>
