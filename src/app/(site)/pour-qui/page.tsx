@@ -203,39 +203,31 @@ export default function PourQuiPage() {
         <Section key={a.id} id={a.id} tone={i % 2 === 0 ? "white" : "ivory"} className="scroll-mt-20">
           <Container>
             <AudienceHeading index={i + 2} label={a.label} logo={a.logo} title={a.title} />
-            <div className="mt-8 grid gap-10 lg:grid-cols-2 lg:gap-20">
-              <div>
-                <div className="jg-prose max-w-[620px]">
-                  {a.paragraphs.map((p) => (
-                    <p key={p}>{p}</p>
-                  ))}
+            {a.photo ? (
+              // With a photo: all the text in the left column, the photo on its own column at the right.
+              <div className="mt-8 grid gap-10 lg:grid-cols-[1fr_400px] lg:items-start lg:gap-16">
+                <div>
+                  <AudienceText a={a} />
+                  <AudienceList a={a} className="mt-8" />
+                  <AudienceCta a={a} />
                 </div>
-                <Goal className="mt-8">{a.goal}</Goal>
-                <BookingButton source={`pour-qui-${a.id}`} profil={a.profil} label={a.cta} className="mt-8" />
+                <Image
+                  src={a.photo.src}
+                  alt={a.photo.alt}
+                  placeholder="blur"
+                  sizes="(min-width: 1024px) 400px, 100vw"
+                  className="h-auto w-full max-w-[440px] rounded-[12px] lg:sticky lg:top-28 lg:max-w-none"
+                />
               </div>
-              <div>
-                <div className="rounded-[12px] border border-[var(--jg-light-gray)] bg-white p-7 md:p-9">
-                  <p className="font-semibold text-navy">{a.listLabel}</p>
-                  <ul className="mt-4 grid gap-3">
-                    {a.items.map((item) => (
-                      <li key={item} className="flex gap-3">
-                        <span aria-hidden className="mt-[0.8em] h-0.5 w-4 shrink-0 bg-gold" />
-                        <span>{item}</span>
-                      </li>
-                    ))}
-                  </ul>
+            ) : (
+              <div className="mt-8 grid gap-10 lg:grid-cols-2 lg:gap-20">
+                <div>
+                  <AudienceText a={a} />
+                  <AudienceCta a={a} />
                 </div>
-                {a.photo && (
-                  <Image
-                    src={a.photo.src}
-                    alt={a.photo.alt}
-                    placeholder="blur"
-                    sizes="(min-width: 1024px) 440px, 100vw"
-                    className="mt-8 h-auto w-full max-w-[440px] rounded-[12px]"
-                  />
-                )}
+                <AudienceList a={a} />
               </div>
-            </div>
+            )}
           </Container>
         </Section>
       ))}
@@ -247,6 +239,41 @@ export default function PourQuiPage() {
           point de départ le plus pertinent.
         </p>
       </FinalCta>
+    </>
+  );
+}
+
+function AudienceText({ a }: { a: Audience }) {
+  return (
+    <div className="jg-prose max-w-[620px]">
+      {a.paragraphs.map((p) => (
+        <p key={p}>{p}</p>
+      ))}
+    </div>
+  );
+}
+
+function AudienceList({ a, className }: { a: Audience; className?: string }) {
+  return (
+    <div className={cn("rounded-[12px] border border-[var(--jg-light-gray)] bg-white p-7 md:p-9", className)}>
+      <p className="font-semibold text-navy">{a.listLabel}</p>
+      <ul className="mt-4 grid gap-3">
+        {a.items.map((item) => (
+          <li key={item} className="flex gap-3">
+            <span aria-hidden className="mt-[0.8em] h-0.5 w-4 shrink-0 bg-gold" />
+            <span>{item}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function AudienceCta({ a }: { a: Audience }) {
+  return (
+    <>
+      <Goal className="mt-8">{a.goal}</Goal>
+      <BookingButton source={`pour-qui-${a.id}`} profil={a.profil} label={a.cta} className="mt-8" />
     </>
   );
 }

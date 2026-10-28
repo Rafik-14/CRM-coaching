@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { SEGMENT_VALUES } from "@/lib/jg";
 import { SESSION_TYPES } from "@/lib/validations/coaching";
 
 const optionalText = (max: number) =>
@@ -159,20 +158,4 @@ export const businessSchema = z.object({
   name: z.string().trim().min(1, "Le nom est obligatoire").max(120),
   /** Default currency for new contacts (each contact can be switched to EUR or CHF). */
   currency: z.enum(["EUR", "CHF"]).default("EUR"),
-});
-
-// ---------------------------------------------------------------- website form (webhook)
-
-export const siteFormSchema = z.object({
-  firstName: z.string().trim().min(1).max(80),
-  lastName: z.string().trim().max(80).optional().default(""),
-  email: z.email().trim().toLowerCase().max(200),
-  phone: z.string().trim().max(40).optional(),
-  message: z.string().trim().max(4000).optional(),
-  /** Optional JG® audience sent by the site's button (e.g. « Construire un partenariat » → cabinet_rh). */
-  segment: z.enum(SEGMENT_VALUES).optional().catch(undefined),
-  /** Optional label of the button / page the visitor came from. */
-  cta: z.string().trim().max(80).optional().catch(undefined),
-  /** Honeypot: real visitors leave it empty (checked by the route, which then fakes success). */
-  website: z.string().max(500).optional(),
 });
