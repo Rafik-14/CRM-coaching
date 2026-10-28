@@ -107,7 +107,16 @@ async function Analytics() {
           </p>
         </AnimateOnView>
         <AnimateOnView className="rounded-xl border border-border bg-card p-5">
-          <h2 className="mb-4 font-semibold">Par type de client</h2>
+          <h2 className="font-semibold">Par type de client</h2>
+          <p className="mb-3 text-sm text-muted-foreground">Contacts de chaque type, et la part devenue cliente</p>
+          <p className="mb-3 flex gap-4 text-xs text-muted-foreground">
+            <span className="flex items-center gap-1.5">
+              <span className="size-2.5 rounded-[2px] bg-[var(--chart-4)]" /> Contacts
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="size-2.5 rounded-[2px] bg-[var(--chart-1)]" /> Devenus clients
+            </span>
+          </p>
           <ul className="grid gap-3">
             {a.segments.map((s, i) => (
               <li key={s.label} className="grid gap-1">
@@ -117,13 +126,17 @@ async function Analytics() {
                     {s.clients} client{s.clients > 1 ? "s" : ""} / {s.contacts}
                   </span>
                 </div>
-                <div className="h-2 overflow-hidden rounded-full bg-muted">
+                <div
+                  className="animate-grow-x relative h-4 overflow-hidden rounded-r-[4px] bg-[var(--chart-4)]"
+                  style={{
+                    width: `${(s.contacts / Math.max(1, a.segments[0]?.contacts ?? 1)) * 100}%`,
+                    animationDelay: `${i * 70}ms`,
+                  }}
+                  title={`${s.label} : ${s.contacts} contacts, dont ${s.clients} devenus clients`}
+                >
                   <div
-                    className="animate-grow-x h-full rounded-full bg-primary"
-                    style={{
-                      width: `${(s.contacts / Math.max(1, a.segments[0]?.contacts ?? 1)) * 100}%`,
-                      animationDelay: `${i * 70}ms`,
-                    }}
+                    className="absolute inset-y-0 left-0 bg-[var(--chart-1)]"
+                    style={{ width: `${(s.clients / Math.max(1, s.contacts)) * 100}%` }}
                   />
                 </div>
               </li>
@@ -157,28 +170,36 @@ async function Analytics() {
       <div className="grid gap-6 lg:grid-cols-2">
         <AnimateOnView className="rounded-xl border border-border bg-card p-5">
           <h2 className="font-semibold">Entonnoir de conversion</h2>
-          <p className="mb-5 text-sm text-muted-foreground">Contacts ayant atteint chaque étape</p>
-          <ol className="grid gap-3">
+          <p className="mb-5 text-sm text-muted-foreground">
+            Combien de contacts ont atteint chaque étape. Entre deux barres : la part qui passe à l&apos;étape suivante.
+          </p>
+          <ol className="grid gap-1">
             {a.funnel.map((f, i) => {
               const prev = a.funnel[i - 1]?.reached;
-              const drop = prev ? 1 - f.reached / prev : null;
+              const kept = prev ? f.reached / prev : null;
               return (
-                <li key={f.name} className="grid gap-1.5">
-                  <div className="flex items-center justify-between gap-3 text-sm">
-                    <span className="flex items-center gap-2">
-                      <span className={cn("size-2 rounded-full", stageDot[f.color] ?? stageDot.slate)} />
+                <li key={f.name} className="grid gap-1">
+                  {kept != null && (
+                    <p className="pl-1 text-xs text-muted-foreground">
+                      ↓ <span className="font-semibold text-foreground tabular-nums">{pct(kept)}</span> passent à
+                      l&apos;étape suivante
+                    </p>
+                  )}
+                  <div className="grid grid-cols-[minmax(0,13rem)_1fr_2.5rem] items-center gap-3 text-sm">
+                    <span className="flex items-center gap-2 truncate">
+                      <span className={cn("size-2 shrink-0 rounded-full", stageDot[f.color] ?? stageDot.slate)} />
                       {f.name}
                     </span>
-                    <span className="flex items-center gap-3 tabular-nums">
-                      {drop != null && drop > 0 && <span className="text-xs text-destructive">−{pct(drop)}</span>}
-                      <CountUp value={String(f.reached)} className="font-semibold" />
-                    </span>
-                  </div>
-                  <div className="h-3 overflow-hidden rounded-full bg-muted">
                     <div
-                      className="animate-grow-x h-full rounded-full bg-primary"
-                      style={{ width: `${(f.reached / maxReached) * 100}%`, animationDelay: `${i * 70}ms` }}
+                      className="animate-grow-x h-7 rounded-r-[4px] bg-[var(--chart-1)]"
+                      style={{
+                        width: `${Math.max(1.5, (f.reached / maxReached) * 100)}%`,
+                        opacity: 0.35 + (0.65 * (i + 1)) / a.funnel.length,
+                        animationDelay: `${i * 70}ms`,
+                      }}
+                      title={`${f.name} : ${f.reached} contacts`}
                     />
+                    <CountUp value={String(f.reached)} className="text-right font-semibold tabular-nums" />
                   </div>
                 </li>
               );
@@ -188,28 +209,40 @@ async function Analytics() {
 
         <AnimateOnView className="rounded-xl border border-border bg-card p-5">
           <h2 className="font-semibold">Temps moyen par étape</h2>
-          <p className="mb-5 text-sm text-muted-foreground">Jours passés par les contacts actuellement dans l&apos;étape</p>
+          <p className="mb-3 text-sm text-muted-foreground">
+            Nombre moyen de jours passés par les contacts qui sont aujourd&apos;hui dans chaque étape. Plus c&apos;est
+            long, plus une relance compte.
+          </p>
+          <p className="mb-4 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+            <span className="flex items-center gap-1.5">
+              <span className="size-2.5 rounded-[2px] bg-[var(--chart-3)]" /> Moins de 14 jours
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="size-2.5 rounded-[2px] bg-destructive" /> 14 jours ou plus : à relancer
+            </span>
+          </p>
           <ul className="grid gap-3">
             {a.funnel.map((f, i) => (
-              <li key={f.name} className="grid grid-cols-[8rem_1fr_3rem] items-center gap-3 text-sm">
+              <li key={f.name} className="grid grid-cols-[minmax(0,13rem)_1fr_3.5rem] items-center gap-3 text-sm">
                 <span className="truncate text-muted-foreground">{f.name}</span>
-                <div className="h-2.5 overflow-hidden rounded-full bg-muted">
+                <div className="h-5">
                   <div
-                    className={cn("animate-grow-x h-full rounded-full", f.avgDays >= 14 ? "bg-destructive/70" : "bg-info/70")}
-                    style={{ width: `${(f.avgDays / maxDays) * 100}%`, animationDelay: `${i * 70}ms` }}
+                    className={cn("animate-grow-x h-full rounded-r-[4px]", f.avgDays >= 14 ? "bg-destructive" : "bg-[var(--chart-3)]")}
+                    style={{ width: `${Math.max(1.5, (f.avgDays / maxDays) * 100)}%`, animationDelay: `${i * 70}ms` }}
+                    title={f.current ? `${f.name} : ${f.avgDays} jours en moyenne` : `${f.name} : personne dans cette étape`}
                   />
                 </div>
                 <CountUp value={f.current ? `${f.avgDays} j` : "—"} className="text-right font-medium tabular-nums" />
               </li>
             ))}
           </ul>
-          <p className="mt-5 text-xs text-muted-foreground">En rouge : plus de 14 jours, pensez à relancer.</p>
         </AnimateOnView>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <AnimateOnView className="rounded-xl border border-border bg-card p-5">
-          <h2 className="mb-5 font-semibold">Séances</h2>
+          <h2 className="font-semibold">Séances</h2>
+          <p className="mb-5 text-sm text-muted-foreground">Toutes vos séances, réparties par statut.</p>
           {a.sessions.length ? (
             <DonutChart slices={a.sessions} centerLabel="séances" />
           ) : (
@@ -217,7 +250,10 @@ async function Analytics() {
           )}
         </AnimateOnView>
         <AnimateOnView className="rounded-xl border border-border bg-card p-5">
-          <h2 className="mb-5 font-semibold">Revenus par accompagnement</h2>
+          <h2 className="font-semibold">Revenus par accompagnement</h2>
+          <p className="mb-5 text-sm text-muted-foreground">
+            Montant encaissé par formule et nombre de ventes. La barre compare les formules entre elles.
+          </p>
           {a.revenueByPackage.length ? (
             <ul className="grid gap-4">
               {a.revenueByPackage.map((r, i) => {
@@ -228,14 +264,16 @@ async function Analytics() {
                     <div className="flex items-baseline justify-between gap-3 text-sm">
                       <span>
                         {r.label}
-                        <span className="ml-1.5 text-xs text-muted-foreground">× {r.count}</span>
+                        <span className="ml-1.5 text-xs text-muted-foreground">
+                          {r.count} vente{r.count > 1 ? "s" : ""}
+                        </span>
                       </span>
                       <CountUp value={formatMoneyTotals(r.value, a.mainCurrency)} className="font-semibold tabular-nums" />
                     </div>
-                    <div className="h-2.5 overflow-hidden rounded-full bg-muted">
+                    <div className="h-5">
                       <div
-                        className="animate-grow-x h-full rounded-full bg-gold"
-                        style={{ width: `${(main / max) * 100}%`, animationDelay: `${i * 90}ms` }}
+                        className="animate-grow-x h-full rounded-r-[4px] bg-[var(--chart-2)]"
+                        style={{ width: `${Math.max(1.5, (main / max) * 100)}%`, animationDelay: `${i * 90}ms` }}
                       />
                     </div>
                   </li>

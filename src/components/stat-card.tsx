@@ -9,6 +9,8 @@ export function StatCard({
   trend,
   hint,
   accent = "primary",
+  spark,
+  detail,
 }: {
   label: string;
   value: React.ReactNode;
@@ -17,6 +19,10 @@ export function StatCard({
   trend?: number | null;
   hint?: string;
   accent?: "primary" | "info" | "success" | "warning";
+  /** Small trend curve under the figure (oldest value first), with what it covers (« 6 derniers mois »). */
+  spark?: { values: number[]; label: string };
+  /** One line explaining what is counted. */
+  detail?: string;
 }) {
   const accentCls = {
     primary: "bg-primary/15 text-primary",
@@ -47,6 +53,41 @@ export function StatCard({
           {hint}
         </p>
       )}
+      {detail && <p className="mt-1 text-xs text-muted-foreground">{detail}</p>}
+      {spark && spark.values.length > 1 && <Sparkline values={spark.values} label={spark.label} className={sparkCls[accent]} />}
+    </div>
+  );
+}
+
+const sparkCls = {
+  primary: "text-[var(--chart-1)]",
+  info: "text-[var(--chart-3)]",
+  success: "text-success",
+  warning: "text-[var(--chart-2)]",
+} as const;
+
+/** Tiny line chart: the shape of the trend, the last point marked. Values are read from the card itself. */
+function Sparkline({ values, label, className }: { values: number[]; label: string; className?: string }) {
+  const w = 120;
+  const h = 28;
+  const max = Math.max(1, ...values);
+  const pts = values.map((v, i) => [(i / (values.length - 1)) * (w - 4) + 2, h - 3 - (v / max) * (h - 6)] as const);
+  const [lx, ly] = pts[pts.length - 1];
+  return (
+    <div className={cn("mt-3 flex items-end justify-between gap-3", className)}>
+      <svg viewBox={`0 0 ${w} ${h}`} className="h-7 w-full max-w-36" aria-hidden>
+        <polyline
+          points={pts.map((p) => p.join(",")).join(" ")}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2}
+          strokeLinejoin="round"
+          strokeLinecap="round"
+          vectorEffect="non-scaling-stroke"
+        />
+        <circle cx={lx} cy={ly} r={3} fill="currentColor" />
+      </svg>
+      <span className="shrink-0 text-[10px] text-muted-foreground">{label}</span>
     </div>
   );
 }
