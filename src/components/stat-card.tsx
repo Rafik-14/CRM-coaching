@@ -53,7 +53,7 @@ export function StatCard({
           {hint}
         </p>
       )}
-      {detail && <p className="mt-1 text-xs text-muted-foreground/80">{detail}</p>}
+      {detail && <p className="mt-1 text-xs text-muted-foreground">{detail}</p>}
       {spark && spark.values.length > 1 && <Sparkline values={spark.values} label={spark.label} className={sparkCls[accent]} />}
     </div>
   );
