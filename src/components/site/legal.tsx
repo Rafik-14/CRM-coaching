@@ -2,7 +2,7 @@ import { TriangleAlert } from "lucide-react";
 import { Container, Eyebrow, GoldLine, Section } from "./ui";
 
 /**
- * Legal pages (CGV, mentions légales, confidentialité, cookies). The texts are drafts:
+ * Legal pages (CGV, mentions légales, which also hold the privacy and cookie information). The texts are drafts:
  * every page shows a banner, and each missing piece is marked with <ToComplete>, until the client
  * (or their adviser) supplies the final wording.
  */
@@ -39,9 +39,9 @@ export function ToComplete({ children = "à compléter" }: { children?: React.Re
   );
 }
 
-export function LegalSection({ title, children }: { title: string; children: React.ReactNode }) {
+export function LegalSection({ title, id, children }: { title: string; id?: string; children: React.ReactNode }) {
   return (
-    <section>
+    <section id={id} className={id ? "scroll-mt-28" : undefined}>
       <h2 className="jg-h4">{title}</h2>
       <div className="mt-3 [&_li]:ml-5 [&_li]:list-disc [&_p+p]:mt-3 [&_ul]:mt-3 [&_ul]:grid [&_ul]:gap-1">{children}</div>
     </section>

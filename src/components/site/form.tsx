@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LEGAL_PAGES_PUBLISHED } from "./nav";
 import { SEGMENTS, SUB_SEGMENTS } from "@/lib/jg";
 import { cn } from "@/lib/utils";
 
@@ -105,10 +106,14 @@ export function ConsentCheckbox({ errors }: { errors?: Record<string, string[] |
           className="mt-1 size-5 shrink-0 accent-[var(--jg-navy)]"
         />
         <span className="jg-small">
-          J’accepte que mes informations soient utilisées pour me recontacter, conformément à la{" "}
-          <Link href="/confidentialite" className="font-semibold text-navy underline underline-offset-2">
-            politique de confidentialité
-          </Link>
+          J’accepte que mes informations soient utilisées pour me recontacter{LEGAL_PAGES_PUBLISHED && (
+            <>
+              , conformément à la rubrique{" "}
+              <Link href="/mentions-legales#donnees-personnelles" className="font-semibold text-navy underline underline-offset-2">
+                « Données personnelles » des mentions légales
+              </Link>
+            </>
+          )}
           .
         </span>
       </label>

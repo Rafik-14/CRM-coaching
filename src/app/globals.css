@@ -281,7 +281,12 @@
   .jg-prose > * + * {
     margin-top: 1em;
   }
-  /* « Surbrillance » (Jérémy's example): a soft light halo behind a key sentence on navy. Stays inside the gutters. */
+  /* Thin line in the site's gold between two sections, so each part of a page stands apart (Jérémy, V4). */
+  .jg-site main > section + section {
+    border-top: 1px solid rgb(212 168 102 / 0.45);
+  }
+  /* « Surbrillance » (Jérémy's example): a soft halo behind a key sentence, gold on light sections, light on navy.
+     Stays inside the gutters. */
   .jg-glow {
     position: relative;
     isolation: isolate;
@@ -294,6 +299,9 @@
     inset: -3rem -1rem;
     z-index: -1;
     pointer-events: none;
+    background: radial-gradient(closest-side, rgb(212 168 102 / 0.3), rgb(212 168 102 / 0.1) 60%, transparent);
+  }
+  .jg-on-navy .jg-glow::before {
     background: radial-gradient(closest-side, rgb(96 128 170 / 0.5), rgb(96 128 170 / 0.18) 60%, transparent);
   }
   /* Visible focus: navy ring on light backgrounds, white on navy. */

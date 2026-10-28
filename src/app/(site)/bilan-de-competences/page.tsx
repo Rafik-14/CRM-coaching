@@ -1,17 +1,17 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import { FinalCta, SectionHeading } from "@/components/site/blocks";
-import { Container, Eyebrow, Section } from "@/components/site/ui";
+import { FinalCta, SectionHeading, Statement } from "@/components/site/blocks";
+import { Container, Eyebrow, GoldLine, Section } from "@/components/site/ui";
 import bilan from "@/assets/site/bilan-competences.webp";
 
 export const metadata: Metadata = {
   title: "Bilan de compétences",
   description:
-    "Faire le point, envisager une reconversion, retrouver du sens : le bilan de compétences pour définir une direction professionnelle cohérente avec votre situation et vos objectifs.",
+    "Faire le point, envisager une reconversion, retrouver du sens : le bilan de compétences pour définir une direction professionnelle cohérente avec votre situation et vos objectifs.",
   alternates: { canonical: "/bilan-de-competences" },
 };
 
-/** Texts: « Site web JG_brutV2 », onglet BILAN DE COMPÉTENCES (Jérémy, Oct. 2026). */
+/** Texts: « Site web JG_brutV2 », onglet BILAN DE COMPÉTENCES (Jérémy, Oct. 2026), both versions of the tab. */
 const EXPLORE = [
   ["Votre parcours professionnel", "analyser vos expériences, vos réussites et les enseignements que vous en avez tirés."],
   ["Vos compétences et vos aptitudes", "identifier vos savoir-faire, vos connaissances, vos qualités et vos compétences transférables."],
@@ -26,30 +26,28 @@ export default function BilanPage() {
       <Section className="pt-10 md:pt-16 lg:pt-20">
         <Container className="grid gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16">
           <div>
-            <SectionHeading as="h1" eyebrow="Une autre façon d’avancer" title="Bilan de compétences">
-              <p className="font-heading text-[1.125rem] leading-snug font-medium text-[var(--jg-offer-bilan)] md:text-[1.25rem]">
-                Et si vous preniez le temps de réfléchir à la suite de votre parcours professionnel ?
-              </p>
+            <SectionHeading as="h1" eyebrow="Bilan de compétences" title="Et si vous n’étiez plus à la bonne place ?">
+              <p>Vous vous levez pour aller travailler, mais au fond de vous, quelque chose a changé ?</p>
               <p>
-                Vous ressentez le besoin de faire le point, d’envisager une reconversion, de retrouver du sens dans votre
-                travail ou de construire un nouveau projet professionnel ?
-              </p>
-              <p>
-                Le bilan de compétences vous permet de prendre du recul sur votre parcours, de mieux identifier vos
-                ressources et vos aspirations, et de définir une direction professionnelle cohérente avec votre situation et
-                vos objectifs.
+                Vous avez envie d’évoluer, de changer de voie, de retrouver du sens ou simplement de comprendre ce que vous
+                pourriez faire d’autre ?
               </p>
               <p>
                 <strong>
-                  L’objectif n’est pas de repartir de zéro, mais de comprendre ce que vous avez construit, ce que vous
-                  souhaitez faire évoluer et les possibilités qui s’offrent à vous.
+                  Vous n’avez pas forcément besoin de tout recommencer.
+                  <br />
+                  Vous avez peut-être besoin de faire le point.
                 </strong>
+              </p>
+              <p>
+                Le bilan de compétences vous aide à prendre du recul, à révéler vos compétences, à comprendre vos
+                motivations et à explorer de nouvelles possibilités professionnelles.
               </p>
             </SectionHeading>
           </div>
           <Image
             src={bilan}
-            alt="Le déroulement du bilan de compétences : 1, entretien préalable ; 2, constitution du dossier ; 3, phase préliminaire (analyse de votre parcours, de vos besoins et de vos objectifs) ; 4, phase d’investigation (exploration de vos compétences, de vos motivations et des possibilités professionnelles) ; 5, phase de conclusion (synthèse et projet professionnel réaliste avec un plan d’action). Financement possible selon votre situation."
+            alt="Le déroulement du bilan de compétences : 1, entretien préalable ; 2, constitution du dossier ; 3, phase préliminaire (analyse de votre parcours, de vos besoins et de vos objectifs) ; 4, phase d’investigation (exploration de vos compétences, de vos motivations et des possibilités professionnelles) ; 5, phase de conclusion (synthèse et projet professionnel réaliste avec un plan d’action). Financement possible selon votre situation."
             placeholder="blur"
             priority
             sizes="(min-width: 1024px) 460px, 100vw"
@@ -60,9 +58,32 @@ export default function BilanPage() {
 
       <Section tone="ivory">
         <Container>
+          <SectionHeading title="Et si vous preniez le temps de réfléchir à la suite de votre parcours professionnel ?">
+            <p>
+              Vous ressentez le besoin de faire le point, d’envisager une reconversion, de retrouver du sens dans votre
+              travail ou de construire un nouveau projet professionnel ?
+            </p>
+            <p>
+              Le bilan de compétences vous permet de prendre du recul sur votre parcours, de mieux identifier vos
+              ressources et vos aspirations, et de définir une direction professionnelle cohérente avec votre situation et
+              vos objectifs.
+            </p>
+            <p>
+              <strong>
+                L’objectif n’est pas de repartir de zéro, mais de comprendre ce que vous avez construit, ce que vous
+                souhaitez faire évoluer et les possibilités qui s’offrent à vous.
+              </strong>
+            </p>
+          </SectionHeading>
+        </Container>
+      </Section>
+
+      <Section>
+        <Container>
           <Eyebrow>Ce que le bilan de compétences vous permet d’explorer</Eyebrow>
           <span aria-hidden className="mt-4 block h-0.5 w-12 bg-[var(--jg-offer-bilan)]" />
-          <ol className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <p className="mt-6 font-semibold text-navy">Ensemble, faisons émerger un projet qui vous ressemble et explorons :</p>
+          <ol className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {EXPLORE.map(([title, text], i) => (
               <li key={title} className="rounded-[12px] border border-[var(--jg-light-gray)] bg-white p-6 md:p-7">
                 <p className="font-heading text-[15px] font-semibold text-[var(--jg-offer-bilan)] tabular-nums">{String(i + 1).padStart(2, "0")}</p>
@@ -71,6 +92,13 @@ export default function BilanPage() {
               </li>
             ))}
           </ol>
+        </Container>
+      </Section>
+
+      <Section tone="navy" size="compact">
+        <Container>
+          <GoldLine />
+          <Statement className="mt-6 max-w-[820px]">Vous n’avez pas à avoir toutes les réponses pour commencer.</Statement>
         </Container>
       </Section>
 
@@ -98,12 +126,13 @@ export default function BilanPage() {
       </Section>
 
       <FinalCta
-        title="Vous souhaitez savoir si un bilan de compétences correspond à votre besoin ?"
+        title="Votre prochaine étape professionnelle commence peut-être par une conversation."
         source="bilan-de-competences"
-        label="Réserver un échange découverte"
+        label="Réserver mon échange découverte"
         note="Un premier échange pour faire le point sur votre situation et obtenir les informations nécessaires avant de vous engager."
       >
-        Commençons par en parler.
+        <p>Vous souhaitez savoir si un bilan de compétences correspond à votre besoin ?</p>
+        <p className="mt-1">Commençons par en parler.</p>
       </FinalCta>
     </>
   );

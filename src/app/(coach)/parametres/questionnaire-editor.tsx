@@ -132,7 +132,7 @@ export function QuestionnaireEditor({ questionnaire }: { questionnaire: Question
           Enregistrer
         </Button>
         <p className="text-xs text-muted-foreground">
-          Une case « J’accepte la politique de confidentialité » est toujours ajoutée à la fin. Les réponses déjà reçues gardent leurs questions.
+          Une case d’accord (données personnelles) est toujours ajoutée à la fin. Les réponses déjà reçues gardent leurs questions.
         </p>
       </div>
     </form>
