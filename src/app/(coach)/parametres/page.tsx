@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
-import { Globe, ShieldCheck, UserRound } from "lucide-react";
+import { ShieldCheck, UserRound } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageHeader } from "@/components/page-header";
@@ -69,18 +69,6 @@ async function Settings({ searchParams }: { searchParams: PageProps<"/parametres
     getCalendarFeed(),
   ]);
   const [emailTemplates, questionnaire] = await Promise.all([listTemplates(), getQuestionnaire()]);
-  const origins = (process.env.SITE_FORM_ORIGINS ?? "").split(",").map((o) => o.trim()).filter(Boolean);
-  const endpoint = `${process.env.BETTER_AUTH_URL ?? "https://crm.example.com"}/api/formulaire-site`;
-  const snippet = `<form action="${endpoint}" method="post">
-  <input name="firstName" placeholder="Prénom" required>
-  <input name="lastName" placeholder="Nom">
-  <input name="email" type="email" placeholder="E-mail" required>
-  <input name="phone" placeholder="Téléphone">
-  <textarea name="message" placeholder="Votre message"></textarea>
-  <!-- anti-spam : doit rester vide et caché -->
-  <input name="website" style="display:none" tabindex="-1" autocomplete="off">
-  <button type="submit">Envoyer</button>
-</form>`;
 
   return (
     <Tabs defaultValue={initialTab}>
@@ -115,31 +103,6 @@ async function Settings({ searchParams }: { searchParams: PageProps<"/parametres
         <Panel title="Mon activité" description="Nom affiché et devise par défaut">
           <BusinessForm name={business.name} currency={business.currency} />
         </Panel>
-        <section className="rounded-2xl border border-border bg-card p-5 lg:col-span-2">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <h2 className="flex items-center gap-2 font-semibold">
-                <Globe className="size-4" /> Formulaire du site
-              </h2>
-              <p className="mt-0.5 text-sm text-muted-foreground">
-                Chaque message envoyé depuis votre site crée un contact « Nouveau » et une tâche « Rappeler ».
-              </p>
-            </div>
-            <span
-              className={
-                origins.length
-                  ? "rounded-md bg-success/15 px-2.5 py-1 text-xs font-medium text-success"
-                  : "rounded-md bg-warning/15 px-2.5 py-1 text-xs font-medium text-warning"
-              }
-            >
-              {origins.length ? `Actif pour ${origins.join(", ")}` : "À configurer (SITE_FORM_ORIGINS)"}
-            </span>
-          </div>
-          <p className="mt-4 mb-2 text-sm">Code à coller sur le site :</p>
-          <pre className="overflow-x-auto rounded-xl bg-muted p-4 text-xs leading-relaxed">
-            <code>{snippet}</code>
-          </pre>
-        </section>
       </TabsContent>
 
       <TabsContent value="pipeline" className="mt-6">
