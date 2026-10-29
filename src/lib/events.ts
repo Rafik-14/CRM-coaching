@@ -4,7 +4,7 @@ import { zonedTimeToUtc } from "@/lib/booking";
 import { APP_TIME_ZONE } from "@/lib/format";
 
 /**
- * Conferences & workshops (docs/EVENTS-PLAN.md): labels, form rules and small pure helpers shared by the CRM,
+ * Conferences & workshops (docs/technical/plans/EVENTS-PLAN.md): labels, form rules and small pure helpers shared by the CRM,
  * the public pages and the tests. No payment: `priceText` is information only.
  */
 

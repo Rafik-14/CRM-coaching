@@ -36,7 +36,7 @@
 |---|---|---|
 | 1 | « Organiser » — contacts, pipeline, sessions & notes, packages, goals, tasks, documents, calendar, analytics, settings, website form endpoint | Done |
 | **1 bis** | **« Personnaliser » — JG® brand, offers, method, client types (this document)** | **To do — next** |
-| 2 | « Automatiser » — e-mails, reminders, calendar feed, online booking, templates, intake form, invoices & payments (`docs/PHASE-2-PLAN.md`) | To do |
+| 2 | « Automatiser » — e-mails, reminders, calendar feed, online booking, templates, intake form, invoices & payments (`docs/technical/plans/PHASE-2-PLAN.md`) | To do |
 | 3 | « Accompagner » — client space, exercises, check-ins, wheel of life, end-of-coaching review, AI assistant (option) | To do |
 | — | Production on the SwissWAI server (VM), domain at OVH | Separate track |
 
@@ -361,7 +361,7 @@ Templates (editable in settings), auto-selected from the session type or the cli
 
 - Rewrite `src/server/db/seed.ts`: JG® offers, stages, templates, ~30 **fake** contacts spread across the 5 segments (students, job seekers, an HR firm with referred candidates, a school, entrepreneurs), sessions, 2 fake case studies. Real client data never goes to the demo.
 - Redeploy the Vercel demo (migrations run in the build); check login and every page.
-- Update `README.md`, `docs/STACK.md`; refresh the supervisor PDF if needed.
+- Update `README.md`, `docs/technical/STACK.md`; refresh the supervisor PDF if needed.
 
 ### Summary
 

@@ -7,7 +7,7 @@ import { seatsTakenByEvent } from "@/server/events";
 import { findToken } from "@/server/access-tokens";
 import { freeSeats } from "@/lib/events";
 
-/** Conferences & workshops: lists for the CRM and the public pages (docs/EVENTS-PLAN.md). */
+/** Conferences & workshops: lists for the CRM and the public pages (docs/technical/plans/EVENTS-PLAN.md). */
 
 async function withCounts<T extends { id: string }>(rows: T[]) {
   const counts = await seatsTakenByEvent(db, rows.map((r) => r.id));

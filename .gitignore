@@ -51,7 +51,7 @@ next-env.d.ts
 .env*
 
 # rendered videos (large)
-docs/*.mp4
+docs/**/*.mp4
 
 # end-to-end tests (Playwright)
 /e2e/.auth

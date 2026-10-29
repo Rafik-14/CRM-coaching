@@ -337,7 +337,7 @@ async function Analytics() {
   );
 }
 
-/** Conferences & workshops of the last 12 months: attendance and contacts they brought (docs/EVENTS-PLAN.md §3). */
+/** Conferences & workshops of the last 12 months: attendance and contacts they brought (docs/technical/plans/EVENTS-PLAN.md §3). */
 async function EventStatsSection() {
   const st = await getEventStats();
   if (!st.rows.length && !st.contacts) return null;

@@ -7,10 +7,10 @@ import { navItems } from "./nav-items";
 
 /**
  * Labels of the desktop sidebar: hidden while it is a thin icon strip, shown once it opens
- * (mouse over it, or keyboard focus inside it). The parent <aside> carries the `group/sb` class.
+ * (mouse over it, or keyboard focus inside it — not a mouse click, so it closes after navigating). The parent <aside> carries the `group/sb` class.
  */
 export const SIDEBAR_LABEL =
-  "whitespace-nowrap opacity-0 transition-opacity duration-150 group-hover/sb:opacity-100 group-focus-within/sb:opacity-100";
+  "whitespace-nowrap opacity-0 transition-opacity duration-150 group-hover/sb:opacity-100 group-has-[:focus-visible]/sb:opacity-100";
 
 /** Reads the URL to highlight the active link. Render inside <Suspense> (Cache Components). */
 export function SidebarNav({ onNavigate, collapsible }: { onNavigate?: () => void; collapsible?: boolean }) {

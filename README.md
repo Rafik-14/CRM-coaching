@@ -1,8 +1,8 @@
 # CRM Coaching
 
 Custom CRM for a life coach (SwissWAI client): contacts, pipeline, clients, sessions & notes, goals, tasks —
-plus the coach's public website (Méthode JG®) with online booking, in the same app. Website plan: [`docs/WEBSITE-PLAN.md`](docs/WEBSITE-PLAN.md).
-Full plan and architecture: [`docs/STACK.md`](docs/STACK.md).
+plus the coach's public website (Méthode JG®) with online booking, in the same app. Website plan: [`docs/technical/plans/WEBSITE-PLAN.md`](docs/technical/plans/WEBSITE-PLAN.md).
+Full plan and architecture: [`docs/technical/STACK.md`](docs/technical/STACK.md). All documents: [`docs/`](docs/README.md).
 
 **Stack:** Next.js 16 (App Router, Cache Components) · TypeScript · Tailwind v4 + shadcn/ui · PostgreSQL + Drizzle ORM · Better Auth
 
@@ -99,17 +99,6 @@ migrations + seed on PostgreSQL 16, and a production build. Nothing is deployed 
 - SEO: metadata per page, `/sitemap.xml`, `/robots.txt`; the whole site is `noindex` on Vercel (demo) or with `SITE_NOINDEX=true`.
   Set `NEXT_PUBLIC_SITE_URL` to the public address in production.
 
-## Website contact form → CRM (external site)
-
-`POST /api/formulaire-site` creates a lead (stage "Nouveau", source "Site web") and a "Rappeler…" task;
-an existing e-mail only gets a new task. Accepts JSON or a plain HTML form.
-
-- `SITE_FORM_ORIGINS`: comma-separated origins of the coach's website (browser posts)
-- `SITE_FORM_SECRET`: optional, for server-to-server forwarding (header `x-form-key`)
-- `SITE_FORM_THANKS_URL`: optional redirect after a plain HTML form submit
-- Anti-spam: hidden `website` field (honeypot) + 5 requests/minute per IP.
-- The ready-to-paste HTML snippet is shown in **Paramètres → Général**.
-
 ## Documents
 
 Private files are stored on disk in `FILES_DIR` (default `./.data/files`), never in `/public`.
@@ -120,7 +109,7 @@ On the server, put `FILES_DIR` on a persistent volume and include it in backups.
 ## Brand (JG®)
 
 The UI follows Jérémy Galéa's visual brief (« Brief maître — design system JG® »). Plan and rules:
-`docs/JG-TAILORING-PLAN.md`.
+`docs/technical/plans/JG-TAILORING-PLAN.md`.
 
 - Colours: `--jg-*` variables in `src/app/globals.css` (navy `#172536`, gold `#D4A866`, teal, ivory,
   anthracite, light grey). Other states are tints mixed from these; gold and teal are never body text.
@@ -141,4 +130,4 @@ The UI follows Jérémy Galéa's visual brief (« Brief maître — design syste
 ## Production
 
 PostgreSQL in Docker on SwissWAI's server: set `DATABASE_URL` to the real database, `DATABASE_POOL_MAX=10`,
-a strong `BETTER_AUTH_SECRET`, and `BETTER_AUTH_URL` to the public URL. See `docs/STACK.md` §10.
+a strong `BETTER_AUTH_SECRET`, and `BETTER_AUTH_URL` to the public URL. See `docs/technical/STACK.md` §10.

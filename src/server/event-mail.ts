@@ -15,7 +15,7 @@ import { EVENT_KIND_LABEL, type EventKind } from "@/lib/events";
 import { fillTemplateText, type TemplateKey } from "@/lib/email-templates";
 import type { EmailContent } from "@/server/email/layout";
 
-/** E-mails of conferences & workshops (docs/EVENTS-PLAN.md §1, §5). Never throws (sendEmail logs failures). */
+/** E-mails of conferences & workshops (docs/technical/plans/EVENTS-PLAN.md §1, §5). Never throws (sendEmail logs failures). */
 
 const dateFmt = new Intl.DateTimeFormat("fr-FR", { timeZone: APP_TIME_ZONE, weekday: "long", day: "numeric", month: "long", year: "numeric" });
 const timeFmt = new Intl.DateTimeFormat("fr-FR", { timeZone: APP_TIME_ZONE, hour: "2-digit", minute: "2-digit" });

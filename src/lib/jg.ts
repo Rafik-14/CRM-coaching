@@ -51,7 +51,5 @@ export const COUNTRIES = [
 ] as const;
 export const countryLabel = (v: string | null | undefined) => COUNTRIES.find((c) => c.value === v)?.label ?? null;
 
-/** Méthode JG® steps: Clarifier, Révéler, Incarner (home page and method page). */
-export const METHOD_STEPS = ["Clarifier", "Révéler", "Incarner"] as const;
 /** Parcours Signature JG® axes. */
 export const SIGNATURE_AXES = ["Identité", "Valeur", "Positionnement", "Posture", "Impact"] as const;

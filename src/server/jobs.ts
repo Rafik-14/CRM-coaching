@@ -60,7 +60,7 @@ const sendScheduledEmails: Job = {
   },
 };
 
-/** Conferences & workshops: reminder the day before, thank-you the day after (docs/EVENTS-PLAN.md §5). */
+/** Conferences & workshops: reminder the day before, thank-you the day after (docs/technical/plans/EVENTS-PLAN.md §5). */
 function eventMails(kind: "reminder" | "thanks"): Job {
   return {
     name: kind === "reminder" ? "eventReminders" : "eventThanks",

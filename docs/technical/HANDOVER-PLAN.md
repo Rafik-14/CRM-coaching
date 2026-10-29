@@ -38,7 +38,7 @@ The host's details (hosting company, address) for the Mentions légales come fro
 | # | Item |
 |---|---|
 | R1 | README rewritten for a newcomer: what it is, architecture, local setup, tests, deployment (→ DEPLOY.md), environment variables, operations |
-| R2 | `docs/STACK.md` and `PHASE-2-PLAN.md` updated (billing removed, events added) ; short `docs/ARCHITECTURE.md` (modules, data model, scheduled jobs, private links, security choices) |
+| R2 | `docs/technical/STACK.md` and `PHASE-2-PLAN.md` updated (billing removed, events added) ; short `docs/ARCHITECTURE.md` (modules, data model, scheduled jobs, private links, security choices) |
 | R3 | Client-facing files (presentations, videos, PDFs for Jérémy) moved out of the code repository or into a clearly separated folder |
 | R4 | Secret scan of the whole Git history (gitleaks) — no password, key or real client data in the repo |
 | R5 | Vercel-only pieces documented as « demo only » (or removed if the demo is shut down) |
