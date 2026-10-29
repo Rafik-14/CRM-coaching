@@ -1,0 +1,25 @@
+# Weekly update pull requests for the npm packages and the GitHub Actions used by CI.
+# Each PR runs the full CI (audit, types, tests, build, end-to-end) before anyone merges it.
+# Dependabot runs on Linux, so its lockfile changes are already in the format CI needs.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      timezone: Europe/Zurich
+    open-pull-requests-limit: 5
+    groups:
+      # Minor and patch updates together, one PR a week; major versions come one by one (they may need code changes).
+      minor-and-patch:
+        update-types: [minor, patch]
+    commit-message:
+      prefix: "Dépendances"
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: "CI"

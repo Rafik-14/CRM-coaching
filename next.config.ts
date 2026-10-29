@@ -1,6 +1,28 @@
 import type { NextConfig } from "next";
 
+/**
+ * Content-Security-Policy: everything (scripts, styles, images, fonts, requests) must come from the site itself; no
+ * plugins, no framing, forms only post to the site. Inline scripts/styles stay allowed: Next.js needs them unless every
+ * page gets a per-request nonce, which would turn off static rendering. Production only (dev tooling needs eval).
+ */
+const contentSecurityPolicy = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline'",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob:",
+  "font-src 'self' data:",
+  "connect-src 'self'",
+  "media-src 'self' blob:",
+  "worker-src 'self' blob:",
+  "frame-src 'none'",
+  "frame-ancestors 'none'",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+].join("; ");
+
 const securityHeaders = [
+  ...(process.env.NODE_ENV === "production" ? [{ key: "Content-Security-Policy", value: contentSecurityPolicy }] : []),
   { key: "X-Frame-Options", value: "DENY" },
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
