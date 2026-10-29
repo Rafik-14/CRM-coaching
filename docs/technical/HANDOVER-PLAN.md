@@ -15,7 +15,7 @@
 | C2 | Legal information: name / business name, address, contact e-mail and phone; CGV points « à compléter » (cancellation, applicable law) | Mentions légales, Confidentialité, CGV |
 | C3 | Real availability for the « échange stratégique » | CRM › Paramètres › Réservation (he can do it himself) |
 | C4 | Missing photos (Particuliers, Entrepreneurs), exact book video and Amazon links, OK for people shown in photos | Site |
-| C5 | Professional e-mail address (CRM login + notifications) | Seed / Paramètres |
+| C5 | Professional e-mail address (CRM login + notifications). Not created yet: Jérémy's business status is being set up. Recommended: a mailbox at a mail provider on his OVH domain (e.g. Infomaniak), not self-hosted on SwissWAI's server; until then his personal address is used | Production env (SMTP, `MAIL_FROM`) + Mon compte |
 | C6 | Decisions: desktop menu (« Plus ▾ » or two-line header); events visible at launch or hidden until the first one | Site |
 
 The host's details (hosting company, address) for the Mentions légales come from SwissWAI.
@@ -32,6 +32,20 @@ The host's details (hosting company, address) for the Mentions légales come fro
 | D6 | Backups | Script for a daily `pg_dump` + uploaded files archive, with retention, and the restore procedure |
 | D7 | `docs/DEPLOY.md` | Step by step for the supervisor: prerequisites, first install, DNS (incl. SPF / DKIM / DMARC for e-mail), HTTPS, first login, updates (`git pull` + rebuild), rollback, logs, backups / restore |
 | D8 | Local check of the kit | `docker compose` profile with **Mailpit** (fake mail server) so the whole thing, e-mails included, can be tried on any machine before touching the server |
+
+### Security items to build into the kit (from the security review, Oct. 2026)
+
+| # | Item | Why |
+|---|---|---|
+| S1 | **Backups encrypted** (D6): daily `pg_dump` + uploaded files, encrypted before they leave the server, kept off the server, restore tested | Coaching notes are confidential; a stolen backup must be unreadable |
+| S2 | **Real visitor IP behind the proxy**: the rate limits (`src/server/rate-limit.ts`) must read the header the reverse proxy sets (e.g. `X-Real-IP` overwritten by nginx), not a header the visitor can fake | Otherwise login and form limits can be dodged |
+| S3 | **Error alerting**: app and container logs kept, and an alert (e-mail) when `/api/health` fails or errors spike | The error pages exist; nobody is told yet when they show |
+| S4 | **Secret scan** of the whole Git history (gitleaks) before the handover (= R4) | No password or key may ship with the repository |
+| S5 | **Database and files on an encrypted disk** if SwissWAI's server offers it; database only reachable inside the Docker network | Defence in depth for client data |
+| S6 | **Vercel-only pieces removed**: the demo will be shut down (decided Oct. 2026), so SwissWAI's server is the only target (= R5) | One environment to secure |
+
+Already done outside the kit: login attempts limited (5 per account, 10 per connection every 15 min),
+Content-Security-Policy, error pages (site, CRM, global), weekly Dependabot update PRs.
 
 ## 3. Repository clean-up for the handover
 
