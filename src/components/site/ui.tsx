@@ -55,11 +55,6 @@ export function GoldLine({ className }: { className?: string }) {
   return <span aria-hidden className={cn("block h-0.5 w-12 bg-gold", className)} />;
 }
 
-/** Reading width (680–720 px). */
-export function Prose({ className, ...props }: React.ComponentProps<"div">) {
-  return <div className={cn("jg-prose max-w-[720px]", className)} {...props} />;
-}
-
 type CtaProps = SiteButtonProps & { className?: string; children?: React.ReactNode };
 
 export function ButtonLink({ href, variant, block, className, children, ...props }: CtaProps & React.ComponentProps<typeof Link>) {

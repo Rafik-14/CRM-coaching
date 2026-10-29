@@ -15,7 +15,7 @@ import photoAtelier from "@/assets/site/evenements-atelier.webp";
 import affiche from "@/assets/site/affiche-et-si-nos-mots.webp";
 
 /** Poster of the 26 November 2026 workshop (Le Juvénat), shown with the upcoming events until that day. */
-const POSTER = { image: affiche, until: "2026-11-27" };
+const POSTER = { image: affiche, kind: "workshop", until: "2026-11-27" } as const;
 
 export const metadata: Metadata = {
   title: "Conférences et ateliers",
@@ -84,7 +84,7 @@ async function EventLists({ searchParams }: { searchParams: PageProps<"/evenemen
   const { upcoming, past } = await listPublicEvents();
 
   const upcomingShown = upcoming.filter((e) => !type || e.kind === type);
-  const showPoster = new Date() < new Date(POSTER.until);
+  const showPoster = (!type || type === POSTER.kind) && new Date() < new Date(POSTER.until);
   const pastFiltered = past.filter((e) => (!type || e.kind === type) && (!audience || e.audience === audience));
   const showFilters = past.length >= FILTERS_FROM || (upcoming.length > 0 && past.length > 0 && new Set([...upcoming, ...past].map((e) => e.kind)).size > 1);
   const href = (patch: Record<string, string | null>) => {

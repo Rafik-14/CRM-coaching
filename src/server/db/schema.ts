@@ -488,7 +488,7 @@ export const accessTokens = pgTable(
 );
 
 // ---------------------------------------------------------------------------
-// Conferences & workshops (docs/EVENTS-PLAN.md). No payment: the price is only a text shown on the site.
+// Conferences & workshops (docs/technical/plans/EVENTS-PLAN.md). No payment: the price is only a text shown on the site.
 // ---------------------------------------------------------------------------
 
 export const events = pgTable(

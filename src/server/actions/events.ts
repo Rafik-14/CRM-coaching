@@ -29,7 +29,7 @@ import {
 import { formValues, type SiteFormState } from "@/lib/validations/site";
 import type { ActionState } from "./coaching";
 
-/** Conferences & workshops (docs/EVENTS-PLAN.md). CRM actions first, then the public ones. */
+/** Conferences & workshops (docs/technical/plans/EVENTS-PLAN.md). CRM actions first, then the public ones. */
 
 const uuid = z.uuid();
 const fieldErrors = (error: z.ZodError) => ({ fieldErrors: z.flattenError(error).fieldErrors as Record<string, string[]> });

@@ -27,7 +27,7 @@ export default function CoachLayout({ children }: LayoutProps<"/">) {
         {/* Desktop sidebar: a 64 px icon strip that opens over the page (no layout shift) when the mouse comes over
             it or the keyboard focus enters it, so the pages get the full width for their data. */}
         <div className="hidden w-16 shrink-0 md:block">
-          <aside className="group/sb fixed inset-y-0 left-0 z-40 flex w-16 flex-col overflow-hidden bg-sidebar py-5 transition-[width,box-shadow] duration-200 ease-out hover:w-64 hover:shadow-[8px_0_24px_rgba(23,37,54,0.25)] focus-within:w-64 focus-within:shadow-[8px_0_24px_rgba(23,37,54,0.25)] motion-reduce:transition-none">
+          <aside className="group/sb fixed inset-y-0 left-0 z-40 flex w-16 flex-col overflow-hidden bg-sidebar py-5 transition-[width,box-shadow] duration-200 ease-out hover:w-64 hover:shadow-[8px_0_24px_rgba(23,37,54,0.25)] has-[:focus-visible]:w-64 has-[:focus-visible]:shadow-[8px_0_24px_rgba(23,37,54,0.25)] motion-reduce:transition-none">
             <div className="px-[13px] pb-6">
               <Brand labelClassName={SIDEBAR_LABEL} />
             </div>

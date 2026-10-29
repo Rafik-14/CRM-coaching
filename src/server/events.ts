@@ -4,7 +4,7 @@ import type { AnyDb } from "@/server/db/types";
 import { canRegister, freeSeats } from "@/lib/events";
 
 /**
- * Seats for conferences & workshops (docs/EVENTS-PLAN.md §4–5).
+ * Seats for conferences & workshops (docs/technical/plans/EVENTS-PLAN.md §4–5).
  * Every change to the seats of one event locks that event's row first (SELECT … FOR UPDATE), so two people
  * can never take the last seat at the same time, and the waiting list moves up in order.
  * No "server-only" import: the tests run it against PGlite; only server code imports it.
