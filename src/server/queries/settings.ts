@@ -1,7 +1,7 @@
 import "server-only";
 import { asc, desc, eq } from "drizzle-orm";
 import { db } from "@/server/db";
-import { noteTemplates, packages, pipelineStages, settings, tasks } from "@/server/db/schema";
+import { noteTemplates, packages, pipelineStages, settings, tasks, user as userTable } from "@/server/db/schema";
 import { requireCoach } from "@/server/dal";
 import { getBookingSettings, getUpcomingExceptions, todayKey } from "@/server/booking";
 
@@ -15,7 +15,7 @@ export async function listTasks() {
 
 export async function getSettingsOverview() {
   const user = await requireCoach();
-  const [stages, pkgs, templates, business, booking, exceptions] = await Promise.all([
+  const [stages, pkgs, templates, business, booking, exceptions, account] = await Promise.all([
     db.query.pipelineStages.findMany({ orderBy: asc(pipelineStages.position) }),
     db.query.packages.findMany({
       orderBy: [desc(packages.active), asc(packages.position), asc(packages.sessionsCount)],
@@ -24,10 +24,13 @@ export async function getSettingsOverview() {
     db.query.settings.findFirst({ where: eq(settings.key, "business") }),
     getBookingSettings(),
     getUpcomingExceptions(),
+    // Read from the database, not the 5-minute session cookie cache, so the switch shows its real state.
+    db.query.user.findFirst({ where: eq(userTable.id, user.id), columns: { twoFactorEnabled: true } }),
   ]);
   const biz = (business?.value ?? {}) as { name?: string; currency?: string };
   return {
     user,
+    twoFactorEnabled: account?.twoFactorEnabled ?? false,
     business: { name: biz.name ?? "—", currency: biz.currency ?? "EUR" },
     stages,
     packages: pkgs,

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
-import { ShieldCheck, UserRound } from "lucide-react";
+import { UserRound } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageHeader } from "@/components/page-header";
@@ -9,6 +9,7 @@ import { getSettingsOverview } from "@/server/queries/settings";
 import { initials } from "@/lib/format";
 import { getEmailOverview } from "@/server/queries/email";
 import { getCalendarFeed } from "@/server/queries/calendar-feed";
+import { TwoFactorSettings } from "./two-factor-settings";
 import { CalendarFeedPanel } from "./calendar-feed-panel";
 import { AvailabilityExceptions } from "./availability-exceptions";
 import { EmailTemplates } from "./email-templates";
@@ -63,7 +64,7 @@ const TABS = ["general", "pipeline", "forfaits", "notes", "reservation", "emails
 async function Settings({ searchParams }: { searchParams: PageProps<"/parametres">["searchParams"] }) {
   const onglet = (await searchParams).onglet;
   const initialTab = TABS.find((t) => t === onglet) ?? "general";
-  const [{ user, business, stages, packages, templates, booking, exceptions, today }, email, feed] = await Promise.all([
+  const [{ user, twoFactorEnabled, business, stages, packages, templates, booking, exceptions, today }, email, feed] = await Promise.all([
     getSettingsOverview(),
     getEmailOverview(),
     getCalendarFeed(),
@@ -95,10 +96,12 @@ async function Settings({ searchParams }: { searchParams: PageProps<"/parametres
             </div>
           </div>
           <Row label={<span className="inline-flex items-center gap-2"><UserRound className="size-4" />Rôle</span>} value="Coach" />
-          <Row
-            label={<span className="inline-flex items-center gap-2"><ShieldCheck className="size-4" />Sécurité</span>}
-            value={<span className="text-xs text-muted-foreground">Double authentification : bientôt</span>}
-          />
+        </Panel>
+        <Panel
+          title="Double authentification"
+          description="À la connexion, en plus du mot de passe : un code à 6 chiffres affiché par une application de votre téléphone."
+        >
+          <TwoFactorSettings enabled={twoFactorEnabled} />
         </Panel>
         <Panel title="Mon activité" description="Nom affiché et devise par défaut">
           <BusinessForm name={business.name} currency={business.currency} />

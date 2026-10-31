@@ -18,6 +18,25 @@ export function rateLimited(key: string, max = 5, windowMs = 60_000) {
   return recent.length > max;
 }
 
+/**
+ * Failure counters (login, second step): only failed attempts count, so a user who signs in often is never blocked.
+ * `tooManyFailures` checks without recording; `recordFailure` adds one; `clearFailures` resets after a success.
+ */
+export function tooManyFailures(key: string, max: number, windowMs: number) {
+  const now = Date.now();
+  return (buckets.get(key) ?? []).filter((t) => now - t < windowMs).length >= max;
+}
+
+export function recordFailure(key: string) {
+  const list = buckets.get(key) ?? [];
+  list.push(Date.now());
+  buckets.set(key, list);
+}
+
+export function clearFailures(key: string) {
+  buckets.delete(key);
+}
+
 /** Visitor IP from the proxy headers (Vercel / nginx), for rate limiting only. */
 export async function clientIp() {
   const h = await headers();

@@ -2,6 +2,7 @@ import "server-only";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
+import { twoFactor } from "better-auth/plugins";
 import { db } from "./db";
 import * as schema from "./db/schema";
 
@@ -13,6 +14,7 @@ export const auth = betterAuth({
       session: schema.session,
       account: schema.account,
       verification: schema.verification,
+      twoFactor: schema.twoFactor,
     },
   }),
   emailAndPassword: {
@@ -34,8 +36,16 @@ export const auth = betterAuth({
     cookieCache: { enabled: true, maxAge: 5 * 60 },
   },
   rateLimit: { enabled: true, window: 60, max: 30 },
-  // Must stay last: lets server actions set auth cookies.
-  plugins: [nextCookies()],
+  plugins: [
+    // Two-step login (optional, switched on in Mon compte): code from an authenticator app, or a backup code.
+    // « Trust this device » lasts 30 days; 10 wrong codes in a row lock the account's second step for 15 minutes.
+    twoFactor({
+      issuer: "Jérémy Galéa CRM",
+      backupCodeOptions: { amount: 10, length: 10 },
+    }),
+    // Must stay last: lets server actions set auth cookies.
+    nextCookies(),
+  ],
 });
 
 export type Session = typeof auth.$Infer.Session;
