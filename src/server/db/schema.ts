@@ -34,6 +34,8 @@ export const user = pgTable("user", {
   emailVerified: boolean("email_verified").notNull().default(false),
   image: text("image"),
   role: userRole("role").notNull().default("client"),
+  /** Two-step login switched on (Better Auth two-factor plugin). */
+  twoFactorEnabled: boolean("two_factor_enabled").notNull().default(false),
   ...timestamps,
 });
 
@@ -84,6 +86,26 @@ export const verification = pgTable(
     ...timestamps,
   },
   (t) => [index("verification_identifier_idx").on(t.identifier)],
+);
+
+/**
+ * Two-step login (Better Auth two-factor plugin): the authenticator-app secret and the backup codes, both encrypted
+ * by Better Auth with BETTER_AUTH_SECRET. `verified` stays false until the first code is confirmed.
+ */
+export const twoFactor = pgTable(
+  "two_factor",
+  {
+    id: text("id").primaryKey(),
+    secret: text("secret").notNull(),
+    backupCodes: text("backup_codes").notNull(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    verified: boolean("verified").notNull().default(true),
+    failedVerificationCount: integer("failed_verification_count").notNull().default(0),
+    lockedUntil: timestamp("locked_until", { withTimezone: true }),
+  },
+  (t) => [index("two_factor_user_idx").on(t.userId), index("two_factor_secret_idx").on(t.secret)],
 );
 
 // ---------------------------------------------------------------------------
