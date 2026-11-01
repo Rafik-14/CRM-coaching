@@ -35,54 +35,44 @@ function AmazonLink({ onNavy = false, children }: { onNavy?: boolean; children: 
  * Readers' photos of the book around the world (Jérémy, Oct. 2026), in travel order: a collection of postcards,
  * the book being the thread of the journey. Places are as seen in the photos, to be confirmed by Jérémy.
  */
-const TRAVELS: { src: StaticImageData; place: string; alt: string; focus: string; tilt: string }[] = [
-  { src: merleGeneve, place: "Genève, Suisse", alt: "Le livre à l’aéroport de Genève, avant l’embarquement", focus: "object-[50%_60%]", tilt: "md:-rotate-2" },
-  { src: merleCannes, place: "Cannes, France", alt: "Le livre à Cannes, devant le Palais des festivals", focus: "object-[50%_50%]", tilt: "md:rotate-[1.5deg]" },
-  { src: merlePlage, place: "Capri, Italie", alt: "Le livre au bord de la mer, au pied des falaises", focus: "object-[50%_78%]", tilt: "md:-rotate-1" },
-  { src: merleCappadoce, place: "Cappadoce, Turquie", alt: "Le livre sur une terrasse en Cappadoce", focus: "object-[50%_78%]", tilt: "md:rotate-2" },
-  { src: merleDesert, place: "Désert du Sahara", alt: "Le livre dans les dunes du désert", focus: "object-[50%_62%]", tilt: "md:-rotate-[1.5deg]" },
-  { src: merleTerrasse, place: "Au bord de la mer", alt: "Le livre sur une table, face à la mer", focus: "object-[50%_58%]", tilt: "md:rotate-1" },
+const TRAVELS: { src: StaticImageData; place: string; alt: string; focus: string }[] = [
+  { src: merleGeneve, place: "Genève, Suisse", alt: "Le livre à l’aéroport de Genève, avant l’embarquement", focus: "object-[50%_60%]" },
+  { src: merleCannes, place: "Cannes, France", alt: "Le livre à Cannes, devant le Palais des festivals", focus: "object-[50%_50%]" },
+  { src: merlePlage, place: "Capri, Italie", alt: "Le livre au bord de la mer, au pied des falaises", focus: "object-[50%_78%]" },
+  { src: merleCappadoce, place: "Cappadoce, Turquie", alt: "Le livre sur une terrasse en Cappadoce", focus: "object-[50%_78%]" },
+  { src: merleDesert, place: "Désert du Sahara", alt: "Le livre dans les dunes du désert", focus: "object-[50%_62%]" },
+  { src: merleTerrasse, place: "Au bord de la mer", alt: "Le livre sur une table, face à la mer", focus: "object-[50%_58%]" },
 ];
 
-/** Travel notebook: six postcards with a numbered stamp, linked on larger screens by a dotted gold route. */
+/**
+ * Travel notebook: six postcards with a numbered stamp. On a computer they lie in a pile that fans out into a row
+ * when the mouse (or the keyboard focus) reaches it; on touch screens they are a row to swipe (.jg-pile, globals.css).
+ */
 function BookPostcards() {
   return (
-    <div className="relative mt-12 md:mt-16">
-      <svg
-        aria-hidden
-        viewBox="0 0 100 100"
-        preserveAspectRatio="none"
-        className="pointer-events-none absolute inset-0 hidden size-full md:block"
-      >
-        <path
-          d="M 8 22 C 30 2, 55 42, 92 22 S 70 70, 50 76 S 12 70, 8 82"
-          fill="none"
-          stroke="var(--jg-gold)"
-          strokeWidth="2"
-          strokeDasharray="2 7"
-          strokeLinecap="round"
-          vectorEffect="non-scaling-stroke"
-        />
-      </svg>
-      <ol className="relative grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-3 md:gap-x-10 md:gap-y-14">
+    <div className="mt-12 md:mt-16">
+      <p className="jg-pile-hint jg-small text-center">Passez la souris sur les cartes postales pour suivre le voyage.</p>
+      <p className="jg-swipe-hint jg-small">Faites glisser pour suivre le voyage.</p>
+      {/* tabIndex: keyboard users open the pile like a mouse hover. */}
+      <ol className="jg-pile" tabIndex={0} aria-label="Le livre en voyage : six cartes postales">
         {TRAVELS.map((t, i) => (
-          <li key={t.place} className={cn("relative", t.tilt)}>
-            <figure className="rounded-[4px] border border-[var(--jg-light-gray)] bg-white p-2 pb-3 shadow-[0_6px_18px_rgba(23,37,54,0.1)] md:p-3 md:pb-4">
+          <li key={t.place} style={{ "--i": i, "--k": i - (TRAVELS.length - 1) / 2 } as React.CSSProperties}>
+            <figure className="rounded-[4px] border border-[var(--jg-light-gray)] bg-white p-2 pb-3 shadow-[0_6px_18px_rgba(23,37,54,0.12)] md:p-3 md:pb-4">
               <Image
                 src={t.src}
                 alt={t.alt}
                 placeholder="blur"
-                sizes="(min-width: 1240px) 360px, (min-width: 768px) 30vw, 46vw"
+                sizes="(min-width: 1024px) 200px, (min-width: 640px) 42vw, 68vw"
                 className={cn("aspect-[4/5] w-full rounded-[2px] object-cover", t.focus)}
               />
-              <figcaption className="mt-3 font-heading text-[12px] font-semibold tracking-[0.14em] text-navy uppercase md:text-[13px]">
+              <figcaption className="mt-3 font-heading text-[12px] font-semibold tracking-[0.12em] text-navy uppercase md:text-[13px]">
                 {t.place}
               </figcaption>
             </figure>
             {/* Postmark: the step of the journey. */}
             <span
               aria-hidden
-              className="absolute -top-3 -right-2 flex size-11 rotate-12 items-center justify-center rounded-full border-2 border-dashed border-gold bg-white font-heading text-[13px] font-bold text-[var(--jg-gold-ink)] tabular-nums md:size-14 md:text-[15px]"
+              className="absolute -top-3 -right-2 flex size-11 rotate-12 items-center justify-center rounded-full border-2 border-dashed border-gold bg-white font-heading text-[13px] font-bold text-[var(--jg-gold-ink)] tabular-nums"
             >
               {String(i + 1).padStart(2, "0")}
             </span>
