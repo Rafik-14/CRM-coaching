@@ -16,6 +16,9 @@ import schemaMethode from "@/assets/site/schema-methode-jg.webp";
 import etapeClarifier from "@/assets/site/etape-clarifier.webp";
 import etapeReveler from "@/assets/site/etape-reveler.webp";
 import etapeIncarner from "@/assets/site/etape-incarner.webp";
+import iconeClarifier from "@/assets/site/etape-clarifier-icone.webp";
+import iconeReveler from "@/assets/site/etape-reveler-icone.webp";
+import iconeIncarner from "@/assets/site/etape-incarner-icone.webp";
 import { SCHEMA_ALT } from "@/components/site/content";
 import { SITE_URL } from "@/lib/site";
 import { cn } from "@/lib/utils";
@@ -31,6 +34,7 @@ const STEPS = [
   {
     title: "Clarifier",
     image: etapeClarifier,
+    icon: iconeClarifier,
     tone: "bg-navy text-white",
     number: "text-gold",
     ring: "border-navy",
@@ -40,6 +44,7 @@ const STEPS = [
   {
     title: "Révéler",
     image: etapeReveler,
+    icon: iconeReveler,
     tone: "bg-gold text-navy",
     number: "text-navy",
     ring: "border-gold",
@@ -49,6 +54,7 @@ const STEPS = [
   {
     title: "Incarner",
     image: etapeIncarner,
+    icon: iconeIncarner,
     tone: "bg-[var(--jg-teal)] text-white",
     number: "text-white",
     ring: "border-[var(--jg-teal)]",
@@ -321,12 +327,7 @@ export default function HomePage() {
                   aria-hidden
                   className={cn("relative z-10 size-16 overflow-hidden rounded-full border-[3px] bg-white md:hidden", step.ring)}
                 >
-                  <Image
-                    src={step.image}
-                    alt=""
-                    sizes="96px"
-                    className="absolute top-[-6px] left-1/2 size-24 max-w-none -translate-x-1/2"
-                  />
+                  <Image src={step.icon} alt="" sizes="64px" className="size-full object-cover" />
                 </span>
                 {/* One brand colour per step (navy, gold, teal); on larger screens the picture sits on its own white tile. */}
                 <div className={cn("h-full rounded-[12px] p-4 md:p-6", step.tone)}>

@@ -6,9 +6,9 @@ import { SCHEMA_ALT } from "@/components/site/content";
 import { BookingButton, Container, Eyebrow, GoldLine, Section } from "@/components/site/ui";
 import { cn } from "@/lib/utils";
 import schemaMethode from "@/assets/site/schema-methode-jg.webp";
-import etapeClarifier from "@/assets/site/etape-clarifier.webp";
-import etapeReveler from "@/assets/site/etape-reveler.webp";
-import etapeIncarner from "@/assets/site/etape-incarner.webp";
+import iconeClarifier from "@/assets/site/etape-clarifier-icone.webp";
+import iconeReveler from "@/assets/site/etape-reveler-icone.webp";
+import iconeIncarner from "@/assets/site/etape-incarner-icone.webp";
 
 export const metadata: Metadata = {
   title: "La Méthode JG®",
@@ -21,21 +21,21 @@ export const metadata: Metadata = {
 const MODEL = [
   {
     title: "Clarifier",
-    image: etapeClarifier,
+    image: iconeClarifier,
     ring: "border-navy",
     caption: "Comprendre où vous en êtes.",
     text: "Explorer votre parcours, vos motivations, vos expériences et vos priorités pour identifier vos ressources et donner une direction à votre évolution.",
   },
   {
     title: "Révéler",
-    image: etapeReveler,
+    image: iconeReveler,
     ring: "border-gold",
     caption: "Découvrir ce qui vous distingue.",
     text: "Faire émerger vos forces distinctives, votre singularité et les éléments qui constituent votre véritable valeur ajoutée.",
   },
   {
     title: "Incarner",
-    image: etapeIncarner,
+    image: iconeIncarner,
     ring: "border-[var(--jg-teal)]",
     caption: "Savoir l’exprimer et la faire reconnaître.",
     text: "Traduire cette compréhension en posture, en discours et en actions concrètes pour exprimer votre valeur avec justesse, assurance et impact.",
@@ -133,8 +133,8 @@ export default function MethodePage() {
           <ol className="mt-12 grid gap-6 md:mt-16 lg:grid-cols-3">
             {MODEL.map((step, i) => (
               <li key={step.title} className="flex gap-5 rounded-[12px] bg-white p-6 md:p-7">
-                <span aria-hidden className={cn("relative size-20 shrink-0 overflow-hidden rounded-full border-[3px] bg-white", step.ring)}>
-                  <Image src={step.image} alt="" sizes="120px" className="absolute top-[-8px] left-1/2 size-[120px] max-w-none -translate-x-1/2" />
+                <span aria-hidden className={cn("size-20 shrink-0 overflow-hidden rounded-full border-[3px] bg-white", step.ring)}>
+                  <Image src={step.image} alt="" sizes="80px" className="size-full object-cover" />
                 </span>
                 <div>
                   <h3 className="font-heading text-[15px] font-semibold tracking-[0.12em] text-navy uppercase">
