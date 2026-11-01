@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { SiteFooter } from "@/components/site/site-footer";
 import { SiteHeader } from "@/components/site/site-header";
 import { SiteTheme } from "@/components/site/site-theme";
@@ -15,7 +16,10 @@ export default function SiteLayout({ children }: LayoutProps<"/">) {
       </main>
       <SiteFooter />
       <ContactFab />
-      <ScrollReveal />
+      {/* Suspense: ScrollReveal reads the current page address, only known at request time. */}
+      <Suspense fallback={null}>
+        <ScrollReveal />
+      </Suspense>
     </div>
   );
 }
