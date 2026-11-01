@@ -23,7 +23,7 @@ test.describe("téléphone", () => {
 
   test("accueil : photo d’ouverture, accompagnements dépliables, bouton flottant", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText(/Faites la différence quand ça compte/);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(/Ne soyez pas seulement compétent. Soyez évident./);
     // Floating action button: one round button that opens « Réserver un échange » and « WhatsApp ».
     const fab = page.getByRole("button", { name: /Contacter Jérémy Galéa/ });
     const actions = page.locator("#contact-fab-actions");

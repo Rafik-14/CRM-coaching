@@ -64,9 +64,9 @@ export const DEFAULT_OFFERS = [
   {
     position: 1,
     name: "Architecture Identitaire JG®",
-    tagline: "Comprendre ce qui fait réellement votre valeur.",
+    tagline: "Vous avez de la valeur. Découvrez ce qui vous rend unique.",
     description:
-      "Prenez du recul sur votre parcours, identifiez ce qui vous distingue et clarifiez ce qui donne du sens à votre évolution professionnelle.",
+      "Prenez du recul sur votre parcours, identifiez vos forces distinctives et mettez des mots sur ce qui fait réellement votre singularité. Repartez avec une vision plus claire de votre identité professionnelle, de vos atouts et de votre prochaine direction.",
     sessionsCount: 1,
     price: "160.00",
     priceChf: "180.00",
@@ -77,9 +77,9 @@ export const DEFAULT_OFFERS = [
   {
     position: 2,
     name: "Accompagnement Décisif JG®",
-    tagline: "Réussir un moment qui compte.",
+    tagline: "Vous avez quelque chose à prouver. Faites en sorte que ça se voie.",
     description:
-      "Préparez un enjeu professionnel précis, structurez votre message et apprenez à exprimer votre valeur avec clarté et justesse lorsque la décision se prend.",
+      "Entretien, prise de poste, négociation, présentation ou prise de parole : préparez les moments où votre capacité à convaincre peut tout changer. Structurez votre discours, affirmez votre positionnement et apprenez à faire comprendre ce qui vous distingue.",
     sessionsCount: 3,
     price: "450.00",
     priceChf: "480.00",
@@ -90,13 +90,13 @@ export const DEFAULT_OFFERS = [
   {
     position: 3,
     name: "Parcours Signature JG®",
-    tagline: "Transformer durablement votre manière d'incarner votre valeur.",
+    tagline: "Ne vous contentez plus de montrer ce que vous savez faire. Incarnez ce qui vous rend unique.",
     description:
-      "Un accompagnement approfondi pour mieux comprendre ce qui vous distingue, affirmer votre identité professionnelle et la traduire concrètement dans votre discours, votre posture et vos choix.",
+      "Un parcours approfondi pour clarifier votre identité professionnelle, construire un positionnement distinctif et apprendre à exprimer votre valeur avec justesse et assurance. De la prise de conscience à l'affirmation de soi, faites de votre singularité une véritable force dans votre trajectoire professionnelle.",
     sessionsCount: 6,
     price: "840.00",
     priceChf: "930.00",
-    includes: ["6 séances individuelles", "Workbook Signature JG®", "Exercices interséances"],
+    includes: ["Workbook Signature JG®", "Exercices interséances", "Accompagnement individualisé"],
     goalPresets: [...SIGNATURE_AXES],
     template: TEMPLATE_SIGNATURE,
   },

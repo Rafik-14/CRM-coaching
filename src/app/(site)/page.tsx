@@ -12,17 +12,18 @@ import { ArrowLink, BookingButton, Container, DotList, Eyebrow, GoldLine, Sectio
 import hero from "@/assets/site/hero.webp";
 import methode from "@/assets/site/methode.webp";
 import apropos from "@/assets/site/apropos.webp";
-import schemaValeur from "@/assets/site/schema-valeur.webp";
+import schemaMethode from "@/assets/site/schema-methode-jg.webp";
 import etapeClarifier from "@/assets/site/etape-clarifier.webp";
 import etapeReveler from "@/assets/site/etape-reveler.webp";
 import etapeIncarner from "@/assets/site/etape-incarner.webp";
+import { SCHEMA_ALT } from "@/components/site/content";
 import { SITE_URL } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: { absolute: "Jérémy Galéa · Méthode JG® — Révéler votre potentiel" },
   description:
-    "Faites la différence quand ça compte. Coach & formateur, Jérémy Galéa vous aide à faire reconnaître votre valeur au moment où une décision se prend. France • Suisse.",
+    "Ne soyez pas seulement compétent. Soyez évident. Accompagnements individuels, formations et conférences pour vous démarquer, affirmer votre positionnement et convaincre avec impact. France • Suisse.",
   alternates: { canonical: "/" },
 };
 
@@ -62,7 +63,7 @@ const CASE_PHOTOS: Record<(typeof CASES)[number]["slug"], StaticImageData> = { y
 /** Each formula's link takes its colour (text and underline), like its name and side line. */
 const OFFER_LINK = "text-[var(--offer)] [&_span]:decoration-[var(--offer)]";
 
-const HERO_DOMAINS = ["Identité professionnelle", "Positionnement", "Évolution de carrière", "Leadership", "Entretiens & recrutement", "Prise de parole"] as const;
+const HERO_DOMAINS = ["Identité professionnelle", "Positionnement", "Évolution de carrière", "Leadership", "Recrutement", "Prise de parole"] as const;
 
 /** The four formulas of the home page; each keeps its colour (OFFER_COLORS) on Accompagnements too. */
 const OFFERS = [
@@ -165,9 +166,9 @@ export default function HomePage() {
           <div className="relative z-10 col-start-1 row-start-1 self-end pb-8 md:pb-0 lg:self-end">
             <Eyebrow className="max-md:text-gold">Jérémy Galéa · Méthode JG®</Eyebrow>
             <GoldLine className="mt-4 max-md:hidden" />
-            <h1 className="jg-h1 mt-3 max-md:text-white md:mt-6">Faites la différence quand ça compte.</h1>
-            <p className="mt-4 font-heading text-[1.125rem] leading-snug font-medium text-navy max-md:text-white/90 md:mt-6 md:text-[1.375rem]">
-              Identifiez ce qui vous distingue. Exprimez votre valeur. Incarnez-la avec impact.
+            <h1 className="jg-h1 mt-3 max-md:text-white md:mt-6">Ne soyez pas seulement compétent. Soyez évident.</h1>
+            <p className="mt-4 font-heading text-[1.125rem] leading-snug font-semibold text-navy max-md:text-white/90 md:mt-6 md:text-[1.375rem]">
+              Marre de vous sentir invisible dans les moments décisifs ? Rendez votre valeur impossible à ignorer.
             </p>
             <div className="mt-6 md:hidden">
               <BookingButton source="accueil-hero" variant="accent" block />
@@ -176,16 +177,17 @@ export default function HomePage() {
           </div>
           <div className="col-start-1 row-start-2 mt-8 md:mt-6 lg:self-start">
             <p className="jg-glow max-w-[600px] max-md:hidden">
-              <strong>
-                Que ce soit pour évoluer, vous repositionner, convaincre ou prendre la parole, je vous aide à faire
-                reconnaître votre valeur au moment où une décision se prend.
-              </strong>
+              Accompagnements individuels, formations et conférences pour vous démarquer, affirmer votre positionnement et
+              convaincre avec impact.
             </p>
             <Statement className="jg-glow md:hidden">
-              Que ce soit pour évoluer, vous repositionner, convaincre ou prendre la parole, je vous aide à faire reconnaître
-              votre valeur au moment où une décision se prend.
+              Accompagnements individuels, formations et conférences pour vous démarquer, affirmer votre positionnement et
+              convaincre avec impact.
             </Statement>
-            <DotList items={HERO_DOMAINS} className="jg-small mt-8 font-medium text-navy" />
+            <p className="mt-6 font-heading text-[1.0625rem] font-semibold tracking-[0.04em] text-[var(--jg-gold-ink)]">
+              Révéler votre potentiel.
+            </p>
+            <DotList items={HERO_DOMAINS} className="jg-small mt-6 font-semibold text-navy" />
             <div className="mt-10 hidden flex-col gap-3 sm:flex-row sm:items-center sm:gap-5 md:flex">
               <BookingButton source="accueil-hero" />
               <p className="jg-small">20 minutes · Sans engagement</p>
@@ -197,17 +199,17 @@ export default function HomePage() {
       {/* 2 — Prise de conscience */}
       <Section tone="ivory">
         <Container className="grid gap-10 lg:grid-cols-2 lg:gap-20">
-          <SectionHeading num={1} title="Et si votre parcours racontait une histoire que vous n’avez jamais vue ?" />
+          <SectionHeading num={1} title="Votre parcours a plus de valeur que vous ne le pensez." />
           <div className="jg-prose max-w-[640px] lg:pt-14">
             <p>
               Vos expériences, vos choix et même vos détours ont façonné des compétences, des réflexes et une manière d’agir
               qui vous sont propres.
             </p>
-            <p>Un fil conducteur relie parfois ce que vous avez construit sans que vous l’ayez encore identifié.</p>
+            <p>Un fil conducteur relie souvent ce que vous avez construit, sans que vous en ayez pleinement conscience.</p>
             <p className="jg-glow">
               <strong>
-                Mon rôle est de faire émerger ce fil conducteur pour révéler les forces, les ressources et les expériences qui
-                donnent du sens à votre parcours.
+                Mon rôle : faire émerger ce fil conducteur pour révéler vos forces, comprendre ce qui vous distingue et donner
+                du sens à la suite de votre parcours.
               </strong>
             </p>
           </div>
@@ -293,8 +295,8 @@ export default function HomePage() {
           </div>
           <WideFigure label="Schéma : de la valeur réelle à la valeur perçue" className="mt-16 md:mt-24">
             <Image
-              src={schemaValeur}
-              alt="Votre valeur réelle (expérience, compétences, qualités, potentiel : elle existe déjà) devient, grâce à mon intervention (clarifier, révéler, incarner : je vous aide à la traduire et à la communiquer efficacement), une valeur perçue, claire, lisible et reconnue, qui crée plus d’opportunités et des décisions en votre faveur."
+              src={schemaMethode}
+              alt={SCHEMA_ALT}
               placeholder="blur"
               sizes="(min-width: 1240px) 1240px, (min-width: 768px) 100vw, 760px"
               className="rounded-[12px]"

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image, { type StaticImageData } from "next/image";
 import { ExternalLink, Play } from "lucide-react";
 import { BOOK } from "@/components/site/content";
+import { PostcardPile } from "@/components/site/postcard-pile";
 import { SectionHeading } from "@/components/site/blocks";
 import { siteButton } from "@/components/site/button";
 import { Container, Eyebrow, GoldLine, Section } from "@/components/site/ui";
@@ -45,16 +46,14 @@ const TRAVELS: { src: StaticImageData; place: string; alt: string; focus: string
 ];
 
 /**
- * Travel notebook: six postcards with a numbered stamp. On a computer they lie in a pile that fans out into a row
- * when the mouse (or the keyboard focus) reaches it; on touch screens they are a row to swipe (.jg-pile, globals.css).
+ * Travel notebook: six postcards with a numbered stamp. On tablets and computers they fan out into a row when they
+ * come on screen and gather into a pile when they leave (PostcardPile); on phones they are a row to swipe.
  */
 function BookPostcards() {
   return (
     <div className="mt-12 md:mt-16">
-      <p className="jg-pile-hint jg-small text-center">Passez la souris sur les cartes postales pour suivre le voyage.</p>
       <p className="jg-swipe-hint jg-small">Faites glisser pour suivre le voyage.</p>
-      {/* tabIndex: keyboard users open the pile like a mouse hover. */}
-      <ol className="jg-pile" tabIndex={0} aria-label="Le livre en voyage : six cartes postales">
+      <PostcardPile label="Le livre en voyage : six cartes postales">
         {TRAVELS.map((t, i) => (
           <li key={t.place} style={{ "--i": i, "--k": i - (TRAVELS.length - 1) / 2 } as React.CSSProperties}>
             <figure className="rounded-[4px] border border-[var(--jg-light-gray)] bg-white p-2 pb-3 shadow-[0_6px_18px_rgba(23,37,54,0.12)] md:p-3 md:pb-4">
@@ -78,7 +77,7 @@ function BookPostcards() {
             </span>
           </li>
         ))}
-      </ol>
+      </PostcardPile>
     </div>
   );
 }
@@ -171,6 +170,9 @@ export default function ChantDuMerlePage() {
             </p>
             <p>Parfois, un livre ne se contente pas de nous emmener ailleurs. Il nous invite aussi à nous découvrir autrement.</p>
           </SectionHeading>
+          <p className="jg-glow mx-auto mt-12 max-w-[760px] text-center font-heading text-[1.375rem] leading-snug font-semibold text-navy md:mt-16 md:text-[1.625rem]">
+            « Certaines histoires nous emmènent bien plus loin qu’on ne l’imagine. »
+          </p>
           <BookPostcards />
           <div className="mt-12 md:mt-16">
             <AmazonLink>Découvrir Le Chant du Merle sur Amazon</AmazonLink>

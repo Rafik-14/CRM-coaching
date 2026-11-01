@@ -44,3 +44,7 @@ export const OFFER_COLORS: Record<string, string> = {
   "bilan-de-competences": "var(--jg-offer-bilan)",
 };
 export const offerColor = (slug: string) => OFFER_COLORS[slug] ?? "var(--jg-navy)";
+
+/** Text of the « Méthode JG® » diagram (home page and Méthode page, MODIFICATIONS 2.2). */
+export const SCHEMA_ALT =
+  "Méthode JG®. Vous avez déjà de la valeur. Mon rôle est de la rendre évidente. Votre valeur réelle : expérience, compétences, forces, potentiel. Méthode JG® : clarifier (comprendre), révéler (donner du sens), incarner (rendre visible). Votre valeur perçue : claire, crédible, évidente. Votre valeur existe. La décision se joue dans la façon dont elle est perçue.";
