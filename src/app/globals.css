@@ -364,8 +364,8 @@
   }
 }
 
-/* Le Chant du Merle: the six postcards (BookPostcards).
-   Touch screens and small screens: a row to swipe. Computer with a mouse: a pile that fans out on hover / focus. */
+/* Le Chant du Merle: the six postcards (BookPostcards, PostcardPile).
+   Phones: a row to swipe. Tablets and computers: a pile that fans out into a row while it is on screen ([data-open]). */
 @layer components {
   .jg-pile {
     display: flex;
@@ -383,16 +383,10 @@
     width: min(68%, 260px);
     scroll-snap-align: center;
   }
-  .jg-pile-hint {
-    display: none;
-  }
   .jg-swipe-hint {
     margin-bottom: 4px;
   }
-  @media (min-width: 64rem) and (hover: hover) {
-    .jg-pile-hint {
-      display: block;
-    }
+  @media (min-width: 48rem) {
     .jg-swipe-hint {
       display: none;
     }
@@ -402,7 +396,6 @@
       overflow: visible;
       padding: 28px 0 12px;
       margin: 0;
-      outline-offset: 8px;
     }
     .jg-pile > li {
       grid-area: 1 / 1;
@@ -410,24 +403,26 @@
       z-index: calc(10 - var(--i));
       /* In the pile: slightly shifted and turned, like postcards dropped on a table. */
       transform: translate(calc(var(--k) * 7px), calc(var(--k) * var(--k) * 2px)) rotate(calc(var(--k) * 3.4deg));
-      transition: transform 0.75s cubic-bezier(0.22, 1, 0.36, 1);
-      transition-delay: calc((5 - var(--i)) * 45ms);
+      transition: transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+      transition-delay: calc((5 - var(--i)) * 50ms);
     }
-    /* Fanned out: one row along the table, a light tilt kept. */
-    .jg-pile:is(:hover, :focus-visible, :focus-within) > li {
+    /* On screen: one row along the table, a light tilt kept. */
+    .jg-pile[data-open] > li {
       transform: translateX(calc(var(--k) * (100% + 20px))) rotate(calc(var(--k) * 0.8deg));
-      transition-delay: calc(var(--i) * 55ms);
+      transition-delay: calc(var(--i) * 70ms);
     }
     /* Only the top card's postmark shows on the pile; the others appear as the cards fan out. */
     .jg-pile > li:not(:first-child) > span {
       opacity: 0;
       transition: opacity 0.3s;
     }
-    .jg-pile:is(:hover, :focus-visible, :focus-within) > li > span {
+    .jg-pile[data-open] > li > span {
       opacity: 1;
-      transition-delay: 0.35s;
+      transition-delay: 0.5s;
     }
-    .jg-pile:is(:hover, :focus-visible, :focus-within) > li:hover {
+  }
+  @media (min-width: 48rem) and (hover: hover) {
+    .jg-pile[data-open] > li:hover {
       z-index: 20;
       transform: translateX(calc(var(--k) * (100% + 20px))) translateY(-10px) scale(1.06);
       transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);

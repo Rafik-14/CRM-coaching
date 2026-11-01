@@ -311,7 +311,7 @@ function PackageDialog({ pkg, templates }: { pkg?: Pkg; templates: TemplateOptio
             </FormField>
           </div>
           <FormField label="Accroche" htmlFor="pkg-tagline" error={err("tagline")}>
-            <Input id="pkg-tagline" name="tagline" defaultValue={pkg?.tagline ?? ""} placeholder="ex. Réussir un moment qui compte." />
+            <Input id="pkg-tagline" name="tagline" defaultValue={pkg?.tagline ?? ""} placeholder="ex. Vous avez quelque chose à prouver. Faites en sorte que ça se voie." />
           </FormField>
           <div className="grid grid-cols-3 gap-4">
             <FormField label="Séances *" htmlFor="pkg-sessions" error={err("sessionsCount")}>

@@ -1,5 +1,5 @@
 import { connection } from "next/server";
-import { Check, ChevronDown } from "lucide-react";
+import { ArrowRight, Check, ChevronDown } from "lucide-react";
 import { formatMoney } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { getPublicOffers, type PublicOffer } from "@/server/queries/site";
@@ -20,24 +20,48 @@ export function priceLine(offer: Pick<PublicOffer, "priceEur" | "priceChf" | "se
   return `${prices} · ${offer.sessionsCount} séance${offer.sessionsCount > 1 ? "s" : ""} de ${SESSION_LENGTH}`;
 }
 
-/** Site wording that is not stored in the CRM (who the offer is for, button), keyed by offer anchor. */
-const EXTRAS: Record<string, { label: string; items: string[]; cta: string; href: string; secondary?: boolean }> = {
+/** « Inclus » list: the offer's « includes » from the CRM. */
+const INCLUDES = Symbol("includes");
+
+/**
+ * Site wording that is not stored in the CRM (who the offer is for, button), keyed by offer anchor
+ * (« MODIFICATIONS 2.2 », onglet Accompagnements, Nov. 2026).
+ */
+const EXTRAS: Record<
+  string,
+  { lists: { label: string; items: readonly string[] | typeof INCLUDES }[]; sessions?: string; cta: string; href: string; secondary?: boolean }
+> = {
   "architecture-identitaire": {
-    label: "Pour :",
-    items: ["Clarification", "Repositionnement", "Orientation", "Reconversion", "Évolution"],
-    cta: "Réserver une Architecture Identitaire",
+    lists: [{ label: "Pour :", items: ["Clarification", "Repositionnement", "Orientation", "Reconversion", "Évolution professionnelle"] }],
+    cta: "Clarifier ma valeur",
     href: bookingHref("offre-architecture-identitaire", "particulier"),
   },
   "accompagnement-decisif": {
-    label: "Pour :",
-    items: ["Entretien", "Stage", "Alternance", "Oral", "Pitch", "Négociation", "Prise de poste"],
-    cta: "Parler de votre enjeu",
+    lists: [
+      {
+        label: "Pour :",
+        items: ["Entretiens & recrutement", "Mobilité professionnelle", "Négociation", "Prise de parole", "Leadership"],
+      },
+    ],
+    cta: "Préparer mon moment décisif",
     href: bookingHref("offre-accompagnement-decisif", "particulier"),
   },
   "parcours-signature": {
-    label: "Inclus :",
-    items: [],
-    cta: "Découvrir le Parcours Signature JG®",
+    lists: [
+      { label: "Inclus :", items: INCLUDES },
+      {
+        label: "Pour :",
+        items: [
+          "Transformation professionnelle",
+          "Repositionnement stratégique",
+          "Leadership",
+          "Évolution de carrière",
+          "Affirmation de son identité",
+        ],
+      },
+    ],
+    sessions: "séances individuelles",
+    cta: "Construire mon parcours Signature",
     href: "/accompagnements/parcours-signature",
     secondary: true,
   },
@@ -59,8 +83,9 @@ export async function OfferList() {
       {offers.map((offer, i) => {
         const slug = offerSlug(offer.name);
         const extra = EXTRAS[slug];
-        const items = extra?.items.length ? extra.items : offer.includes;
-        const label = extra?.label ?? (offer.includes.length ? "Inclus :" : null);
+        const lists = (extra?.lists ?? [{ label: "Inclus :", items: INCLUDES }])
+          .map((list) => ({ label: list.label, items: list.items === INCLUDES ? offer.includes : list.items }))
+          .filter((list) => list.items.length > 0);
         const featured = FEATURED?.slug === slug;
         return (
           <li
@@ -100,13 +125,13 @@ export async function OfferList() {
             </p>
             <p className={cn("mt-2 text-[15px]", featured ? "text-white/85" : "text-muted-foreground")}>
               {offer.priceChf != null && <>{formatMoney(offer.priceChf, "CHF")} · </>}
-              {offer.sessionsCount} séance{offer.sessionsCount > 1 ? "s" : ""} de {SESSION_LENGTH}
+              {offer.sessionsCount} {extra?.sessions ?? (offer.sessionsCount > 1 ? "séances" : "séance")} de {SESSION_LENGTH}
             </p>
-            {label && items.length > 0 && (
-              <div className="mt-6">
-                <p className={cn("font-semibold", featured ? "text-white" : "text-navy")}>{label}</p>
+            {lists.map((list) => (
+              <div key={list.label} className="mt-6">
+                <p className={cn("font-semibold", featured ? "text-white" : "text-navy")}>{list.label}</p>
                 <ul className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1.5 text-[15px]">
-                  {items.map((item) => (
+                  {list.items.map((item) => (
                     <li key={item} className="flex items-start gap-2">
                       <Check aria-hidden className={cn("mt-1 size-4 shrink-0", featured ? "text-gold" : "text-[var(--offer)]")} />
                       {item}
@@ -114,7 +139,7 @@ export async function OfferList() {
                   ))}
                 </ul>
               </div>
-            )}
+            ))}
             {offer.description && (
               <details className="group mt-6">
                 <summary
@@ -137,6 +162,7 @@ export async function OfferList() {
                 className={cn(!featured && (extra?.secondary ? OFFER_OUTLINE : OFFER_FILLED))}
               >
                 {extra?.cta ?? "Réserver un échange stratégique"}
+                <ArrowRight aria-hidden />
               </ButtonLink>
             </div>
           </li>

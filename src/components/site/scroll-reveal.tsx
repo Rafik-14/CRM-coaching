@@ -3,8 +3,13 @@
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 
-/** What appears on scroll: each block inside a page section (heading, text, image, card…). */
-const TARGETS = "#contenu section > div > *";
+/**
+ * What appears on scroll: each block inside a page section (heading, text, image, card…), or, inside a list marked
+ * data-reveal-children, each item one after the other. Blocks holding a form stay still, so a field or button never
+ * moves under the pointer.
+ */
+const TARGETS =
+  "#contenu section > div > :not([data-reveal-children], :has(form)), #contenu [data-reveal-children] > *";
 
 /**
  * Text and blocks fade in and rise slightly when they scroll into view, once, on every page of the site.
@@ -37,7 +42,7 @@ export function ScrollReveal() {
           { opacity: 0, translate: "0 24px" },
           { opacity: 1, translate: "0 0" },
         ],
-        { duration: 800, delay: Math.min(index, 3) * 90, easing: "cubic-bezier(0.22, 1, 0.36, 1)", fill: "backwards" },
+        { duration: 800, delay: Math.min(index, 5) * 110, easing: "cubic-bezier(0.22, 1, 0.36, 1)", fill: "backwards" },
       );
       animation.pause(); // held on its first frame (hidden) until the block comes into view
       waiting.set(el, animation);

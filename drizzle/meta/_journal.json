@@ -120,6 +120,13 @@
       "when": 1793280025130,
       "tag": "0016_two_factor",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1793559070301,
+      "tag": "0017_offers_v4_texts",
+      "breakpoints": true
     }
   ]
 }
