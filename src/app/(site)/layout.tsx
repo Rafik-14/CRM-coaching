@@ -2,6 +2,7 @@ import { SiteFooter } from "@/components/site/site-footer";
 import { SiteHeader } from "@/components/site/site-header";
 import { SiteTheme } from "@/components/site/site-theme";
 import { ContactFab } from "@/components/site/contact-fab";
+import { ScrollReveal } from "@/components/site/scroll-reveal";
 
 /** Public website: own header and footer, always in the light JG® palette. */
 export default function SiteLayout({ children }: LayoutProps<"/">) {
@@ -14,6 +15,7 @@ export default function SiteLayout({ children }: LayoutProps<"/">) {
       </main>
       <SiteFooter />
       <ContactFab />
+      <ScrollReveal />
     </div>
   );
 }

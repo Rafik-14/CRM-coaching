@@ -1,10 +1,11 @@
 import { connection } from "next/server";
+import { Check, ChevronDown } from "lucide-react";
 import { formatMoney } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { getPublicOffers, type PublicOffer } from "@/server/queries/site";
 import { offerColor, offerSlug } from "./content";
 import { bookingHref } from "./nav";
-import { ButtonLink, DotList } from "./ui";
+import { ButtonLink } from "./ui";
 
 /** Length of every session, shown after the number of sessions (« 1 séance de 75 min »). */
 const SESSION_LENGTH = "75 min";
@@ -42,56 +43,101 @@ const EXTRAS: Record<string, { label: string; items: string[]; cta: string; href
   },
 };
 
-/** Buttons in each formula's colour, like its name and side line (Jérémy, V4). */
+/** Buttons in each formula's colour, like its name and top line (Jérémy, V4). */
 const OFFER_FILLED = "border-[var(--offer)] bg-[var(--offer)] text-white hover:border-navy hover:bg-navy";
 const OFFER_OUTLINE = "border-[var(--offer)] text-[var(--offer)] hover:bg-[var(--offer)] hover:text-white";
 
-/** The offers from the CRM (prices included), one airy row each. */
+/** The offer set apart in solid navy, with its badge. To be confirmed by Jérémy (or set to null for none). */
+const FEATURED: { slug: string; badge: string } | null = { slug: "accompagnement-decisif", badge: "Le plus choisi" };
+
+/** The offers from the CRM (prices included), as comparison cards side by side on large screens. */
 export async function OfferList() {
   await connection();
   const offers = await getPublicOffers();
   return (
-    <ol className="grid gap-6">
+    <ol className="grid gap-10 pt-3 lg:grid-cols-3 lg:items-stretch lg:gap-6">
       {offers.map((offer, i) => {
         const slug = offerSlug(offer.name);
         const extra = EXTRAS[slug];
         const items = extra?.items.length ? extra.items : offer.includes;
-        const label = extra?.label ?? (offer.includes.length ? "Inclus :" : null);
+        const label = extra?.label ?? (offer.includes.length ? "Inclus :" : null);
+        const featured = FEATURED?.slug === slug;
         return (
           <li
             key={offer.id}
             id={slug}
             style={{ "--offer": offerColor(slug) } as React.CSSProperties}
-            className="scroll-mt-28 rounded-[12px] border border-l-4 border-[var(--jg-light-gray)] border-l-[var(--offer)] bg-white p-7 md:p-12"
+            className={cn(
+              "relative flex scroll-mt-28 flex-col rounded-b-[12px] border border-t-4 p-7 transition-[translate,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-[0_14px_32px_rgba(23,37,54,0.12)] motion-reduce:hover:translate-y-0 md:p-8",
+              featured
+                ? "jg-on-navy border-navy border-t-gold bg-navy text-white"
+                : "border-[var(--jg-light-gray)] border-t-[var(--offer)] bg-white",
+            )}
           >
-            <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
-              <div>
-                <p className="font-heading text-[15px] font-semibold text-[var(--offer)] tabular-nums">
-                  {String(i + 1).padStart(2, "0")}
-                </p>
-                <span aria-hidden className="mt-3 block h-0.5 w-8 bg-[var(--offer)]" />
-                <h2 className="jg-h3 mt-5 tracking-[0.03em] text-[var(--offer)] uppercase">{offer.name}</h2>
-                {offer.tagline && (
-                  <p className="mt-3 font-heading text-[1.1875rem] leading-snug font-semibold text-[var(--offer)]">{offer.tagline}</p>
-                )}
-                <p className="mt-6 font-heading text-[1.25rem] font-semibold text-navy">{priceLine(offer)}</p>
+            {featured && (
+              <p className="absolute -top-4 left-7 rounded-[4px] bg-gold px-3 py-1 font-heading text-[12px] font-semibold tracking-[0.06em] text-navy md:left-8">
+                {FEATURED.badge}
+              </p>
+            )}
+            <p className={cn("font-heading text-[15px] font-semibold tabular-nums", featured ? "text-gold" : "text-[var(--offer)]")}>
+              {String(i + 1).padStart(2, "0")}
+            </p>
+            <h2
+              className={cn(
+                "mt-3 font-heading text-[1.0625rem] leading-snug font-semibold tracking-[0.04em] uppercase",
+                featured ? "text-white" : "text-[var(--offer)]",
+              )}
+            >
+              {offer.name}
+            </h2>
+            {offer.tagline && (
+              <p className={cn("mt-2 font-heading leading-snug font-medium lg:min-h-[3em]", featured ? "text-gold" : "text-navy")}>
+                {offer.tagline}
+              </p>
+            )}
+            <p className={cn("mt-6 font-heading text-[2.25rem] leading-none font-semibold tabular-nums", featured ? "text-gold" : "text-navy")}>
+              {formatMoney(offer.priceEur, "EUR")}
+            </p>
+            <p className={cn("mt-2 text-[15px]", featured ? "text-white/85" : "text-muted-foreground")}>
+              {offer.priceChf != null && <>{formatMoney(offer.priceChf, "CHF")} · </>}
+              {offer.sessionsCount} séance{offer.sessionsCount > 1 ? "s" : ""} de {SESSION_LENGTH}
+            </p>
+            {label && items.length > 0 && (
+              <div className="mt-6">
+                <p className={cn("font-semibold", featured ? "text-white" : "text-navy")}>{label}</p>
+                <ul className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1.5 text-[15px]">
+                  {items.map((item) => (
+                    <li key={item} className="flex items-start gap-2">
+                      <Check aria-hidden className={cn("mt-1 size-4 shrink-0", featured ? "text-gold" : "text-[var(--offer)]")} />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
               </div>
-              <div>
-                {offer.description && <p>{offer.description}</p>}
-                {label && items.length > 0 && (
-                  <div className="mt-6">
-                    <p className="font-semibold text-navy">{label}</p>
-                    <DotList items={items} className="mt-1" />
-                  </div>
-                )}
-                <ButtonLink
-                  href={extra?.href ?? bookingHref(`offre-${slug}`)}
-                  variant={extra?.secondary ? "secondary" : "primary"}
-                  className={cn("mt-8", extra?.secondary ? OFFER_OUTLINE : OFFER_FILLED)}
+            )}
+            {offer.description && (
+              <details className="group mt-6">
+                <summary
+                  className={cn(
+                    "flex cursor-pointer list-none items-center gap-1.5 text-[15px] font-semibold underline-offset-4 hover:underline [&::-webkit-details-marker]:hidden",
+                    featured ? "text-white" : "text-navy",
+                  )}
                 >
-                  {extra?.cta ?? "Réserver un échange stratégique"}
-                </ButtonLink>
-              </div>
+                  <ChevronDown aria-hidden className="size-4 transition-transform group-open:rotate-180" />
+                  Voir le détail
+                </summary>
+                <p className={cn("mt-3 text-[15px]", featured && "text-white/90")}>{offer.description}</p>
+              </details>
+            )}
+            <div className="mt-auto pt-7">
+              <ButtonLink
+                href={extra?.href ?? bookingHref(`offre-${slug}`)}
+                variant={featured ? "accent" : extra?.secondary ? "secondary" : "primary"}
+                block
+                className={cn(!featured && (extra?.secondary ? OFFER_OUTLINE : OFFER_FILLED))}
+              >
+                {extra?.cta ?? "Réserver un échange stratégique"}
+              </ButtonLink>
             </div>
           </li>
         );
@@ -102,9 +148,9 @@ export async function OfferList() {
 
 export function OfferListSkeleton() {
   return (
-    <div className="grid gap-6" aria-busy>
+    <div className="grid gap-6 pt-3 lg:grid-cols-3" aria-busy>
       {[0, 1, 2].map((i) => (
-        <div key={i} className="h-72 animate-pulse rounded-[12px] border border-[var(--jg-light-gray)] bg-white" />
+        <div key={i} className="h-[560px] animate-pulse rounded-[12px] border border-[var(--jg-light-gray)] bg-white" />
       ))}
     </div>
   );
