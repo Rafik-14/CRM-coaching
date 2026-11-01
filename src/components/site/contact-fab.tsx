@@ -12,7 +12,7 @@ const ACTION_LABEL =
 const ACTION_ICON = "flex size-12 items-center justify-center rounded-full shadow-[0_6px_18px_rgba(23,37,54,0.25)] [&_svg]:size-5";
 
 /**
- * Floating action button, bottom right of every page: one round gold button that opens the two quick ways to reach
+ * Floating action button, bottom right of every page: one round green button that opens the two quick ways to reach
  * Jérémy, « Réserver un échange » and « WhatsApp ». Closes on Escape, on a click outside, or once an action is chosen.
  */
 export function ContactFab() {
@@ -74,7 +74,7 @@ export function ContactFab() {
         aria-controls="contact-fab-actions"
         aria-label={open ? "Fermer" : "Contacter Jérémy Galéa : réserver un échange ou écrire sur WhatsApp"}
         onClick={() => setOpen((v) => !v)}
-        className="flex size-14 items-center justify-center rounded-full bg-gold text-navy shadow-[0_8px_24px_rgba(23,37,54,0.3)] transition-transform duration-200 hover:-translate-y-px motion-reduce:hover:translate-y-0 [&_svg]:size-6"
+        className="flex size-14 items-center justify-center rounded-full bg-[#25D366] text-[#0b3d22] shadow-[0_8px_24px_rgba(23,37,54,0.3)] hover:bg-[#1fb857] transition-transform duration-200 hover:-translate-y-px motion-reduce:hover:translate-y-0 [&_svg]:size-6"
       >
         {open ? <X aria-hidden strokeWidth={2} /> : <MessageCircle aria-hidden strokeWidth={2} />}
       </button>
