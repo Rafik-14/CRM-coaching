@@ -4,5 +4,5 @@ export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? process.env.BETTER_
   "",
 );
 
-/** Search engines stay out of the Vercel demo (and of any copy with SITE_NOINDEX=true). */
-export const SITE_INDEXABLE = !process.env.VERCEL && process.env.SITE_NOINDEX !== "true";
+/** Search engines stay out of Vercel preview deployments (and of any copy with SITE_NOINDEX=true). */
+export const SITE_INDEXABLE = process.env.VERCEL_ENV !== "preview" && process.env.SITE_NOINDEX !== "true";
