@@ -38,8 +38,8 @@ export const BOOK = {
  * Used as a CSS variable: style={{ "--offer": offerColor(slug) }} then text-[var(--offer)], border-[var(--offer)]…
  */
 export const OFFER_COLORS: Record<string, string> = {
+  "focus-decisif": "var(--jg-offer-decisif)",
   "architecture-identitaire": "var(--jg-offer-architecture)",
-  "accompagnement-decisif": "var(--jg-offer-decisif)",
   "parcours-signature": "var(--jg-offer-signature)",
   "bilan-de-competences": "var(--jg-offer-bilan)",
 };

@@ -131,7 +131,7 @@ type Ref = Awaited<ReturnType<typeof seedReferenceData>>;
 
 async function seedDemoData({ stages, templates, offers }: Ref) {
   const stage = (name: string) => stages.find((st) => st.name === name)!;
-  const [architecture, decisif, signature] = offers;
+  const [decisif, architecture, signature] = offers;
   const fieldsOf = (offerOrType: string) =>
     (templates.find((t) => t.sessionType === offerOrType) ??
       templates.find((t) => t.id === offers.find((o) => o.id === offerOrType)?.noteTemplateId) ??

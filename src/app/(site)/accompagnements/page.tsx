@@ -10,7 +10,7 @@ import fin from "@/assets/site/accompagnements-fin.webp";
 export const metadata: Metadata = {
   title: "Accompagnements",
   description:
-    "Votre prochaine étape commence ici. Architecture Identitaire JG®, Accompagnement Décisif JG®, Parcours Signature JG® : trois façons de révéler votre singularité et de faire reconnaître ce que vous apportez.",
+    "Votre prochaine étape commence ici. Focus Décisif JG®, Architecture Identitaire JG®, Parcours Signature JG® : trois façons de révéler votre singularité et de faire reconnaître ce que vous apportez.",
   alternates: { canonical: "/accompagnements" },
 };
 

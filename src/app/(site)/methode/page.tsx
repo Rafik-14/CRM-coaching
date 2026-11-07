@@ -6,6 +6,7 @@ import { SCHEMA_ALT } from "@/components/site/content";
 import { BookingButton, Container, Eyebrow, GoldLine, Section } from "@/components/site/ui";
 import { cn } from "@/lib/utils";
 import schemaMethode from "@/assets/site/schema-methode-jg.webp";
+import photoJeremy from "@/assets/site/methode-jeremy.webp";
 import iconeClarifier from "@/assets/site/etape-clarifier-icone.webp";
 import iconeReveler from "@/assets/site/etape-reveler-icone.webp";
 import iconeIncarner from "@/assets/site/etape-incarner-icone.webp";
@@ -60,12 +61,23 @@ const VERBS = [
 export default function MethodePage() {
   return (
     <>
-      {/* Introduction: ivory, large navy title, the strong sentence in gold. No photograph. */}
+      {/* Introduction: ivory, large navy title, the strong sentence in gold, Jérémy's photo first (« MODIFICATIONS 3.0 »). */}
       <Section tone="ivory" className="pt-10 md:pt-16 lg:pt-20">
         <Container>
-          <Eyebrow>La Méthode JG®</Eyebrow>
-          <GoldLine className="mt-4" />
-          <h1 className="jg-h1 mt-6 max-w-[980px]">Vous avez déjà de la valeur. Apprenez à la rendre évidente.</h1>
+          <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,380px)] lg:items-center lg:gap-16">
+            <Image
+              src={photoJeremy}
+              alt="Jérémy Galéa devant un tableau : Identité, Valeur distinctive, Impact, Décision"
+              priority
+              sizes="(min-width: 1024px) 380px, 100vw"
+              className="mx-auto w-full max-w-[420px] rounded-[12px] object-cover lg:order-last"
+            />
+            <div>
+              <Eyebrow>La Méthode JG®</Eyebrow>
+              <GoldLine className="mt-4" />
+              <h1 className="jg-h1 mt-6 max-w-[980px]">Vous avez déjà de la valeur. Apprenez à la rendre évidente.</h1>
+            </div>
+          </div>
           <div className="mt-10 grid gap-8 lg:grid-cols-2 lg:gap-20">
             <div className="jg-prose max-w-[620px]">
               <p>Vous n’avez pas besoin de devenir quelqu’un d’autre pour être reconnu à votre juste valeur.</p>

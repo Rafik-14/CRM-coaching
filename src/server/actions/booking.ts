@@ -43,7 +43,7 @@ export async function bookEchange(_prev: SiteFormState, formData: FormData): Pro
     return { error: "Ce créneau vient d’être pris ou n’est plus disponible. Merci d’en choisir un autre.", values };
   }
 
-  const extra = [v.stake && `Enjeu : ${v.stake}.`, v.message && `Sa situation : ${v.message}`]
+  const extra = [v.stake && `Enjeu : ${v.stake}.`, v.stakeDetail && `Précision : ${v.stakeDetail}`, v.message && `Sa situation : ${v.message}`]
     .filter(Boolean)
     .join("\n");
 
@@ -120,6 +120,7 @@ export async function bookEchange(_prev: SiteFormState, formData: FormData): Pro
         phone: v.phone,
         segment: v.segment,
         stake: v.stake,
+        stakeDetail: v.stakeDetail,
         message: v.message,
         startsAt,
         durationMin: config.slotMinutes,

@@ -304,7 +304,7 @@ function PackageDialog({ pkg, templates }: { pkg?: Pkg; templates: TemplateOptio
         <form action={formAction} className="grid gap-4">
           <div className="grid grid-cols-[1fr_5rem] gap-4">
             <FormField label="Nom *" htmlFor="pkg-name" error={err("name")}>
-              <Input id="pkg-name" name="name" defaultValue={pkg?.name} placeholder="ex. Accompagnement Décisif JG®" />
+              <Input id="pkg-name" name="name" defaultValue={pkg?.name} placeholder="ex. Focus Décisif JG®" />
             </FormField>
             <FormField label="Ordre" htmlFor="pkg-position" error={err("position")}>
               <Input id="pkg-position" name="position" type="number" min={0} max={99} defaultValue={pkg?.position ?? ""} />

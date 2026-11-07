@@ -18,7 +18,7 @@ export const DEFAULT_STAGES = [
 export const TEMPLATE_DEFAULT = "Séance Méthode JG®";
 export const TEMPLATE_ECHANGE = "Échange stratégique";
 export const TEMPLATE_ARCHITECTURE = "Architecture Identitaire JG®";
-export const TEMPLATE_DECISIF = "Accompagnement Décisif JG®";
+export const TEMPLATE_DECISIF = "Focus Décisif JG®";
 export const TEMPLATE_SIGNATURE = "Parcours Signature JG®";
 
 export const DEFAULT_TEMPLATES: { name: string; fields: string[]; isDefault?: boolean; sessionType?: string }[] = [
@@ -63,40 +63,46 @@ export const DEFAULT_TEMPLATES: { name: string; fields: string[]; isDefault?: bo
 export const DEFAULT_OFFERS = [
   {
     position: 1,
-    name: "Architecture Identitaire JG®",
-    tagline: "Vous avez de la valeur. Découvrez ce qui vous rend unique.",
+    name: "Focus Décisif JG®",
+    tagline: "Prenez votre place. Maîtrisez votre message. Faites la différence.",
     description:
-      "Prenez du recul sur votre parcours, identifiez vos forces distinctives et mettez des mots sur ce qui fait réellement votre singularité. Repartez avec une vision plus claire de votre identité professionnelle, de vos atouts et de votre prochaine direction.",
+      "Une échéance approche ? Un entretien important, une négociation ou une prise de parole se prépare. Concentrez-vous sur l'essentiel : identifiez vos arguments différenciants, structurez votre message et ajustez votre posture. Repartez avec des repères concrets pour aborder votre objectif avec davantage de clarté, d'assurance et d'impact.",
     sessionsCount: 1,
     price: "160.00",
     priceChf: "180.00",
     includes: [] as string[],
     goalPresets: [] as string[],
-    template: TEMPLATE_ARCHITECTURE,
+    template: TEMPLATE_DECISIF,
   },
   {
     position: 2,
-    name: "Accompagnement Décisif JG®",
-    tagline: "Vous avez quelque chose à prouver. Faites en sorte que ça se voie.",
+    name: "Architecture Identitaire JG®",
+    tagline: "Comprendre ce qui fait réellement votre valeur.",
     description:
-      "Entretien, prise de poste, négociation, présentation ou prise de parole : préparez les moments où votre capacité à convaincre peut tout changer. Structurez votre discours, affirmez votre positionnement et apprenez à faire comprendre ce qui vous distingue.",
+      "Votre parcours vous a construit. Encore faut-il savoir ce qu'il révèle de vous. À travers un travail structuré, explorez vos expériences, identifiez vos forces distinctives et faites émerger ce qui vous caractérise réellement. Construisez une identité professionnelle cohérente, clarifiez votre positionnement et apprenez à exprimer ce qui fait votre singularité.",
     sessionsCount: 3,
     price: "450.00",
     priceChf: "480.00",
     includes: [] as string[],
     goalPresets: [] as string[],
-    template: TEMPLATE_DECISIF,
+    template: TEMPLATE_ARCHITECTURE,
   },
   {
     position: 3,
     name: "Parcours Signature JG®",
-    tagline: "Ne vous contentez plus de montrer ce que vous savez faire. Incarnez ce qui vous rend unique.",
+    tagline: "Révélez votre potentiel. Incarnez votre identité.",
     description:
-      "Un parcours approfondi pour clarifier votre identité professionnelle, construire un positionnement distinctif et apprendre à exprimer votre valeur avec justesse et assurance. De la prise de conscience à l'affirmation de soi, faites de votre singularité une véritable force dans votre trajectoire professionnelle.",
+      "Vous souhaitez franchir un véritable cap professionnel ? Engagez un travail approfondi pour comprendre vos mécanismes, révéler vos ressources et construire une identité pleinement assumée. De la clarification de votre potentiel à son incarnation concrète, avancez étape par étape pour aligner qui vous êtes, ce que vous apportez et la manière dont vous le faites percevoir.",
     sessionsCount: 6,
     price: "840.00",
     priceChf: "930.00",
-    includes: ["Workbook Signature JG®", "Exercices interséances", "Accompagnement individualisé"],
+    includes: [
+      "Accompagnement individuel approfondi",
+      "Workbook Signature JG®",
+      "Exercices et travaux interséances",
+      "Construction et affirmation du positionnement",
+      "Mise en pratique et consolidation des acquis",
+    ],
     goalPresets: [...SIGNATURE_AXES],
     template: TEMPLATE_SIGNATURE,
   },

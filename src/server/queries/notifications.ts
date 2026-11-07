@@ -27,7 +27,7 @@ export async function getNotifications() {
       orderBy: asc(coachingSessions.startsAt),
       with: { contact: true },
     }),
-    // Interview, pitch… in the next 7 days (Accompagnement Décisif JG®).
+    // Interview, pitch… in the next 7 days (Focus Décisif JG®).
     db.query.contacts.findMany({
       where: and(gte(contacts.keyMomentAt, startOfDay), lt(contacts.keyMomentAt, new Date(startOfDay.getTime() + 8 * 86_400_000))),
       orderBy: asc(contacts.keyMomentAt),
