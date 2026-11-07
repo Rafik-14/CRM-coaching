@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import { Coins } from "lucide-react";
 import { FinalCta, SectionHeading, Statement } from "@/components/site/blocks";
 import { Container, Eyebrow, GoldLine, Section } from "@/components/site/ui";
 import bilan from "@/assets/site/bilan-competences.webp";
+import ayrone from "@/assets/site/ayrone-logo.webp";
 
 export const metadata: Metadata = {
   title: "Bilan de compétences",
@@ -44,6 +46,7 @@ export default function BilanPage() {
                 motivations et à explorer de nouvelles possibilités professionnelles.
               </p>
             </SectionHeading>
+            <AyronePartnership />
           </div>
           <Image
             src={bilan}
@@ -135,5 +138,48 @@ export default function BilanPage() {
         <p className="mt-1">Commençons par en parler.</p>
       </FinalCta>
     </>
+  );
+}
+
+/** Partnership with Ayrone (Qualiopi-certified training body) and funding, under the introduction (Jérémy, Nov. 2026). */
+function AyronePartnership() {
+  return (
+    <div className="mt-10 grid gap-4">
+      <div className="flex flex-col gap-6 rounded-[12px] bg-ivory p-6 shadow-[0_6px_18px_rgba(23,37,54,0.06)] sm:flex-row sm:items-center md:p-7">
+        <p className="min-w-0 border-l-4 border-gold pl-4 font-heading text-[1.25rem] leading-snug font-semibold text-navy sm:flex-1 lg:text-[1.125rem] xl:text-[1.25rem]">
+          Profitez de notre approche innovante du bilan de compétences{" "}
+          <span className="text-[var(--jg-gold-ink)]">avec Ayrone.</span>
+        </p>
+        <div className="flex shrink-0 items-center gap-3 sm:border-l sm:border-[var(--jg-light-gray)] sm:pl-5">
+          <div className="flex flex-col items-center">
+            <Image src="/brand/jg-monogram.svg" alt="" width={44} height={47} unoptimized className="h-11 w-auto" />
+            <span className="mt-1 font-heading text-[10px] font-semibold tracking-[0.18em] text-navy">JÉRÉMY GALÉA</span>
+            <span className="font-heading text-[7px] tracking-[0.14em] text-navy">RÉVÉLER VOTRE POTENTIEL</span>
+          </div>
+          <span aria-hidden className="font-heading text-[1.5rem] text-[var(--jg-gold-ink)]">
+            ×
+          </span>
+          <Image src={ayrone} alt="Ayrone" sizes="120px" className="h-auto w-[110px] mix-blend-multiply" />
+        </div>
+      </div>
+      <div className="flex flex-col gap-6 rounded-[12px] bg-ivory p-6 shadow-[0_6px_18px_rgba(23,37,54,0.06)] sm:flex-row sm:items-center md:p-7">
+        <div className="flex min-w-0 items-center gap-4 sm:flex-1">
+          <p className="shrink-0 leading-tight">
+            <span className="block font-heading text-[1.375rem] font-bold text-navy">Qualiopi</span>
+            <span className="block text-[12px] text-navy">processus certifié</span>
+          </p>
+          <p className="min-w-0 flex-1 text-[15px] leading-snug text-navy">
+            Ayrone – Organisme de formation certifié <strong>Qualiopi</strong>
+          </p>
+        </div>
+        <div className="flex min-w-0 items-center gap-4 sm:flex-1 sm:border-l sm:border-[var(--jg-light-gray)] sm:pl-5">
+          <Coins aria-hidden className="size-9 shrink-0 text-[var(--jg-gold-ink)]" />
+          <p className="text-[14px] leading-snug">
+            <strong className="block font-heading text-[1rem] text-navy">Financement possible</strong>
+            via CPF, France Travail, employeur, OPCO… (selon votre situation et votre éligibilité).
+          </p>
+        </div>
+      </div>
+    </div>
   );
 }
