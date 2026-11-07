@@ -19,7 +19,7 @@ export function SiteNavLinks() {
 
 const linkClass = (active: boolean) =>
   cn(
-    "relative inline-flex min-h-11 items-center font-heading text-[13.5px] font-medium whitespace-nowrap text-navy transition-colors duration-200 hover:text-gold 2xl:text-[14px]",
+    "relative inline-flex min-h-11 items-center font-heading text-[13.5px] font-medium whitespace-nowrap text-white transition-colors duration-200 hover:text-gold 2xl:text-[14px]",
     "after:absolute after:inset-x-0 after:bottom-1.5 after:h-0.5 after:bg-gold after:transition-opacity after:duration-200",
     active ? "after:opacity-100" : "after:opacity-0",
   );
@@ -78,7 +78,7 @@ function MoreMenu({ items, pathname }: { items: { href: string; label: string }[
       {open && (
         <ul
           id={id}
-          className="absolute top-full right-0 z-50 mt-1 grid min-w-52 gap-0.5 rounded-[10px] border border-[var(--jg-light-gray)] bg-white p-2 shadow-[0_12px_32px_rgba(23,37,54,0.12)]"
+          className="absolute top-full right-0 z-50 mt-1 grid min-w-52 gap-0.5 rounded-[10px] border border-[var(--jg-light-gray)] bg-white p-2 shadow-[0_12px_32px_rgba(23,37,54,0.12)] [&_a:focus-visible]:outline-[var(--jg-navy)]!"
         >
           {items.map((item) => {
             const current = !!pathname && isActive(pathname, item.href);

@@ -5,13 +5,13 @@ import { MobileMenu } from "./mobile-menu";
 import { bookingHref } from "./nav";
 import { NavList, SiteNavLinks } from "./site-nav-links";
 
-/** Sticky, discreet header (brief §6): logo left, navigation, main CTA right. */
+/** Sticky navy header (brief §6, navy bar requested Nov. 2026): white logo left, white navigation, gold CTA right. */
 export function SiteHeader() {
   return (
-    <header className="sticky top-0 z-40 border-b border-[var(--jg-light-gray)] bg-white">
+    <header className="jg-on-navy sticky top-0 z-40 border-b border-white/10 bg-navy">
       <a
         href="#contenu"
-        className="sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-50 focus:rounded-[7px] focus:bg-navy focus:px-4 focus:py-3 focus:text-white"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-50 focus:rounded-[7px] focus:bg-white focus:px-4 focus:py-3 focus:text-navy"
       >
         Aller au contenu
       </a>
@@ -24,12 +24,12 @@ export function SiteHeader() {
           aria-label="Jérémy Galéa — accueil"
           className="-ml-1 flex shrink-0 items-center gap-2.5 xl:-ml-[min(56px,calc((100vw-1272px)/2))]"
         >
-          <Image src="/brand/jg-monogram.svg" alt="" width={48} height={51} unoptimized priority className="h-12 w-auto xl:h-[54px]" />
+          <Image src="/brand/jg-monogram-white.svg" alt="" width={48} height={51} unoptimized priority className="h-12 w-auto xl:h-[54px]" />
           <span className="grid leading-none">
-            <span className="font-heading text-[15px] font-semibold tracking-[0.16em] text-navy uppercase xl:text-[14px] xl:tracking-[0.15em]">
+            <span className="font-heading text-[15px] font-semibold tracking-[0.16em] text-white uppercase xl:text-[14px] xl:tracking-[0.15em]">
               Jérémy Galéa
             </span>
-            <span className="mt-1.5 font-heading text-[10.5px] font-medium tracking-[0.2em] text-[var(--jg-anthracite)]/80 uppercase xl:text-[10px]">
+            <span className="mt-1.5 font-heading text-[10.5px] font-medium tracking-[0.2em] text-white/75 uppercase xl:text-[10px]">
               Révéler votre potentiel
             </span>
           </span>
@@ -40,10 +40,10 @@ export function SiteHeader() {
           </Suspense>
         </nav>
         <div className="ml-auto flex items-center gap-2 xl:ml-0">
-          {/* Sized like the navigation: same 14 px type, slim navy button (hit area stays 44 px). */}
+          {/* Sized like the navigation: same 14 px type, slim gold button on the navy bar (hit area stays 44 px). */}
           <Link
             href={bookingHref("en-tete")}
-            className="relative hidden h-10 shrink-0 items-center rounded-[7px] bg-navy px-[18px] whitespace-nowrap font-heading text-[14px] font-medium text-white transition-colors duration-200 after:absolute after:inset-x-0 after:-inset-y-0.5 hover:bg-[var(--jg-navy-hover)] sm:inline-flex"
+            className="relative hidden h-10 shrink-0 items-center rounded-[7px] bg-gold px-[18px] whitespace-nowrap font-heading text-[14px] font-semibold text-navy transition-colors duration-200 after:absolute after:inset-x-0 after:-inset-y-0.5 hover:bg-white sm:inline-flex"
           >
             Réserver un échange
           </Link>

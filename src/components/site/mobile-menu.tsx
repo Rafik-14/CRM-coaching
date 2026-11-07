@@ -19,7 +19,7 @@ export function MobileMenu() {
     <SheetPrimitive.Root open={open} onOpenChange={setOpen}>
       <SheetPrimitive.Trigger
         aria-label="Ouvrir le menu"
-        className="inline-flex size-12 items-center justify-center rounded-[7px] text-navy transition-colors hover:bg-ivory xl:hidden"
+        className="inline-flex size-12 items-center justify-center rounded-[7px] text-white transition-colors hover:bg-white/10 xl:hidden"
       >
         <Menu className="size-6" strokeWidth={1.75} />
       </SheetPrimitive.Trigger>
