@@ -49,6 +49,11 @@ const nextConfig: NextConfig = {
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },
+  async redirects() {
+    // Link printed in the NFC business card's QR code and chip. Temporary (307) on purpose: browsers don't cache it,
+    // so the destination can change later without reprinting the cards.
+    return [{ source: "/carte", destination: "/", permanent: false }];
+  },
   turbopack: {
     rules: {
       "*.css": {
