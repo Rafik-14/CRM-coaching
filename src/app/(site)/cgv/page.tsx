@@ -16,7 +16,7 @@ export default function CgvPage() {
       <LegalSection title="1. Objet">
         <p>
           Les présentes conditions s’appliquent aux accompagnements proposés par Jérémy Galéa (Méthode JG®) :
-          Architecture Identitaire JG®, Accompagnement Décisif JG® et Parcours Signature JG®.{" "}
+          Focus Décisif JG®, Architecture Identitaire JG® et Parcours Signature JG®.{" "}
           <ToComplete>interventions en entreprise, écoles et cabinets RH le cas échéant</ToComplete>
         </p>
       </LegalSection>

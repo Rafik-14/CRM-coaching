@@ -90,7 +90,7 @@ export function BookingWidget({
             <input {...controlProps("phone", e)} defaultValue={val("phone")} type="tel" autoComplete="tel" className={inputClass} />
           </Field>
           <Field label="Vous êtes" name="segment" optional error={e?.segment}>
-            <SegmentSelect defaultValue={state.values?.segment ?? profil} errors={e} onChange={setSegment} />
+            <SegmentSelect defaultValue={state.values?.segment ?? profil} errors={e} onChange={setSegment} withOther />
           </Field>
           {segment === "particulier" ? (
             <Field label="Votre situation" name="subSegment" optional error={e?.subSegment}>
@@ -108,6 +108,9 @@ export function BookingWidget({
                 </option>
               ))}
             </select>
+          </Field>
+          <Field label="Vous souhaitez préciser votre situation ?" name="stakeDetail" optional error={e?.stakeDetail} className="sm:col-span-2">
+            <input {...controlProps("stakeDetail", e)} defaultValue={val("stakeDetail")} className={inputClass} />
           </Field>
         </div>
         <Field

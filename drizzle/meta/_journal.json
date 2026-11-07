@@ -127,6 +127,13 @@
       "when": 1793559070301,
       "tag": "0017_offers_v4_texts",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1794063097554,
+      "tag": "0018_offers_v5_focus_decisif",
+      "breakpoints": true
     }
   ]
 }

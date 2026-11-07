@@ -9,6 +9,8 @@ export const SEGMENTS = [
   { value: "entreprise", label: "Entreprise" },
   { value: "cabinet_rh", label: "Cabinet RH / chasseur de têtes" },
   { value: "ecole", label: "École / université" },
+  /** Booking form only (« MODIFICATIONS 3.0 »); the contact form keeps « Je préfère ne pas préciser » instead. */
+  { value: "autre", label: "Autre" },
 ] as const;
 export type Segment = (typeof SEGMENTS)[number]["value"];
 export const SEGMENT_VALUES = SEGMENTS.map((s) => s.value) as [Segment, ...Segment[]];
@@ -27,22 +29,14 @@ export const SUB_SEGMENT_VALUES = SUB_SEGMENTS.map((s) => s.value) as [SubSegmen
 export const segmentLabel = (v: string | null | undefined) => SEGMENTS.find((s) => s.value === v)?.label ?? null;
 export const subSegmentLabel = (v: string | null | undefined) => SUB_SEGMENTS.find((s) => s.value === v)?.label ?? null;
 
-/** « Enjeux » from the offers: a decisive moment (Accompagnement Décisif) or a direction (Architecture Identitaire). */
+/** « Votre enjeu » on the booking form (« MODIFICATIONS 3.0 »: 6 categories instead of 14). Also suggested in the CRM contact form. */
 export const STAKES = [
-  "Entretien",
-  "Stage",
-  "Alternance",
-  "Oral",
-  "Pitch",
-  "Négociation",
-  "Prise de poste",
-  "Clarification",
-  "Repositionnement",
-  "Orientation",
-  "Reconversion",
-  "Évolution",
-  "Leadership",
-  "Recrutement",
+  "Préparer une échéance professionnelle",
+  "Clarifier mon identité et mon positionnement",
+  "Faire évoluer mon parcours professionnel",
+  "Développer mon impact et mon leadership",
+  "Développer mon activité ou mon projet",
+  "Autre",
 ] as const;
 
 export const COUNTRIES = [

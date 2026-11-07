@@ -6,14 +6,15 @@ export const SITE_NAV = [
   { href: "/bilan-de-competences", label: "Bilan de compétences" },
   { href: "/pour-qui", label: "Pour qui ?" },
   { href: "/transformations", label: "Transformations" },
-  { href: "/evenements", label: "Événements" },
   { href: "/a-propos", label: "À propos" },
+  { href: "/evenements", label: "Événements" },
   { href: "/le-chant-du-merle", label: "Le Chant du Merle | Mon premier roman" },
   { href: "/contact", label: "Contact" },
 ] as const;
 
 /** Desktop: these pages sit in the « Plus » menu (ten pages don't fit on one line); phones list them all. */
-export const DESKTOP_MORE: readonly string[] = ["/evenements", "/a-propos", "/le-chant-du-merle"];
+/** « À propos » stays in the bar, between Transformations and Contact (« MODIFICATIONS 3.0 »). */
+export const DESKTOP_MORE: readonly string[] = ["/evenements", "/le-chant-du-merle"];
 
 /**
  * CGV and Mentions légales stay unpublished (pages answer 404, no links) until Jérémy has validated the legal points

@@ -111,6 +111,7 @@ export function coachNewBooking(b: {
   phone: string | null;
   segment: string | null;
   stake: string | null;
+  stakeDetail?: string | null;
   message: string | null;
   startsAt: Date;
   durationMin: number;
@@ -124,6 +125,7 @@ export function coachNewBooking(b: {
       heading: "Nouvel échange stratégique réservé en ligne",
       paragraphs: [
         `${b.name} vient de réserver depuis le site. La séance, la tâche de préparation et la fiche sont dans le CRM.`,
+        ...(b.stakeDetail ? [`Précision sur sa situation : ${b.stakeDetail}`] : []),
         ...(b.message ? [`Sa situation : ${b.message}`] : []),
       ],
       details: [

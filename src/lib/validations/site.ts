@@ -51,6 +51,13 @@ export const bookingFormSchema = z.object({
     .union([z.literal(""), z.enum(STAKES)])
     .optional()
     .transform((v) => v || null),
+  /** « Vous souhaitez préciser votre situation ? » — free text right under « Votre enjeu ». */
+  stakeDetail: z
+    .string()
+    .trim()
+    .max(500, "500 caractères maximum.")
+    .optional()
+    .transform((v) => v || null),
   message: z
     .string()
     .trim()

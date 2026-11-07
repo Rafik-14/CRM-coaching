@@ -71,66 +71,55 @@ const OFFER_LINK = "text-[var(--offer)] [&_span]:decoration-[var(--offer)]";
 
 const HERO_DOMAINS = ["Identité professionnelle", "Positionnement", "Évolution de carrière", "Leadership", "Recrutement", "Prise de parole"] as const;
 
-/** The four formulas of the home page; each keeps its colour (OFFER_COLORS) on Accompagnements too. */
+/** The three formulas of the home page (« MODIFICATIONS 3.0 »); each keeps its colour (OFFER_COLORS) on Accompagnements too. */
 const OFFERS = [
   {
-    slug: "architecture-identitaire",
-    eyebrow: null,
-    name: "Architecture Identitaire JG®",
-    tagline: "Comprendre ce qui fait votre valeur.",
+    slug: "focus-decisif",
+    name: "Focus Décisif JG®",
+    tagline: "Prenez votre place. Maîtrisez votre message. Faites la différence.",
     paragraphs: [
-      "Vous avez un parcours, des compétences et une expérience. Mais vous avez peut-être du mal à en dégager le fil conducteur, à identifier ce qui vous distingue ou à savoir quelle direction prendre.",
-      "L’Architecture Identitaire JG® vous aide à prendre du recul sur votre parcours, à révéler vos forces distinctives et à clarifier votre identité professionnelle pour construire une direction qui vous ressemble.",
+      "Un entretien important, une négociation, un oral ou une prise de parole : certains moments ne laissent que peu de place à l’improvisation.",
+      "Le Focus Décisif JG® vous aide à préparer une échéance professionnelle précise, à identifier vos arguments différenciants, structurer votre message et ajuster votre posture pour aborder ce moment avec clarté et impact.",
     ],
-    label: "Pour vous si vous souhaitez :",
-    items: ["Clarifier votre identité professionnelle", "Vous repositionner", "Vous orienter", "Envisager une reconversion", "Préparer une évolution"],
-    note: null,
+    label: "Pour préparer :",
+    items: ["Un entretien de recrutement", "Un stage ou une alternance", "Un oral", "Un pitch", "Une négociation", "Une prise de poste"],
+    note: "Format : 1 séance ciblée de 75 minutes.",
+    link: "Découvrir le Focus Décisif JG®",
+    href: "/accompagnements#focus-decisif",
+  },
+  {
+    slug: "architecture-identitaire",
+    name: "Architecture Identitaire JG®",
+    tagline: "Comprendre ce qui fait réellement votre valeur.",
+    paragraphs: [
+      "Vous avez un parcours, des compétences et des expériences. Mais savez-vous précisément ce qui vous distingue, ce qui vous anime et ce que vous souhaitez réellement apporter ?",
+      "L’Architecture Identitaire JG® vous permet de prendre du recul sur votre parcours, de faire émerger vos forces distinctives et de clarifier votre identité professionnelle. Un travail structuré pour relier vos expériences, vos ressources et vos aspirations afin de construire un positionnement qui vous ressemble.",
+    ],
+    label: "Pour vous si vous souhaitez :",
+    items: [
+      "Clarifier votre identité professionnelle",
+      "Vous repositionner",
+      "Identifier vos forces distinctives",
+      "Envisager une reconversion",
+      "Préparer une évolution professionnelle",
+    ],
+    note: "Format : 3 séances individuelles de 75 minutes.",
     link: "Découvrir l’Architecture Identitaire JG®",
     href: "/accompagnements#architecture-identitaire",
   },
   {
-    slug: "accompagnement-decisif",
-    eyebrow: null,
-    name: "Accompagnement Décisif JG®",
-    tagline: "Faire la différence au moment où tout se joue.",
-    paragraphs: [
-      "Un entretien, un oral, un pitch ou une négociation : certaines situations exigent de savoir exprimer clairement sa valeur, de rendre sa contribution compréhensible et de renforcer sa crédibilité.",
-      "L’Accompagnement Décisif JG® vous aide à préparer une échéance professionnelle précise pour mieux structurer votre message, affirmer votre positionnement et faire comprendre ce qui vous distingue.",
-    ],
-    label: "Pour préparer :",
-    items: ["Un entretien de recrutement", "Un stage ou une alternance", "Un oral", "Un pitch", "Une négociation", "Une prise de poste"],
-    note: "Format : 3 séances selon votre objectif.",
-    link: "Découvrir l’Accompagnement Décisif JG®",
-    href: "/accompagnements#accompagnement-decisif",
-  },
-  {
     slug: "parcours-signature",
-    eyebrow: null,
     name: "Parcours Signature JG®",
-    tagline: "Révéler votre valeur. L’incarner durablement.",
+    tagline: "Révélez votre potentiel. Incarnez votre identité.",
     paragraphs: [
-      "Vous souhaitez aller au-delà d’une difficulté ponctuelle pour construire un positionnement professionnel solide, cohérent avec qui vous êtes et avec ce que vous souhaitez apporter.",
-      "Le Parcours Signature JG® vous accompagne en profondeur pour relier votre parcours, vos forces et vos aspirations, clarifier ce qui vous distingue et transformer cette compréhension en une posture, un discours et une trajectoire professionnelle assumés.",
+      "Vous souhaitez aller plus loin qu’une clarification ou qu’un besoin ponctuel ? Vous ressentez le besoin de construire un positionnement professionnel solide, cohérent avec qui vous êtes et avec ce que vous souhaitez apporter.",
+      "Le Parcours Signature JG® vous accompagne dans une démarche approfondie pour explorer vos mécanismes, révéler vos ressources, dépasser vos freins et construire une identité pleinement assumée. De la compréhension de votre potentiel à son incarnation concrète, vous apprenez à aligner qui vous êtes, ce que vous apportez et la manière dont vous le faites percevoir.",
     ],
-    label: "Votre accompagnement comprend :",
-    items: ["6 séances individuelles", "Le Workbook Signature JG®", "Des exercices entre les séances"],
+    label: "Votre accompagnement comprend :",
+    items: ["6 séances individuelles", "Le Workbook Signature JG®", "Des exercices et travaux interséances"],
     note: null,
     link: "Découvrir le Parcours Signature JG®",
     href: "/accompagnements/parcours-signature",
-  },
-  {
-    slug: "bilan-de-competences",
-    eyebrow: "Une autre façon d’avancer",
-    name: "Bilan de compétences",
-    tagline: "Besoin de faire le point sur votre avenir professionnel ?",
-    paragraphs: [
-      "Le bilan de compétences vous permet d’analyser votre parcours, d’identifier vos compétences et vos motivations, et de construire un projet professionnel cohérent avec vos aspirations.",
-    ],
-    label: null,
-    items: [],
-    note: null,
-    link: "Découvrir le bilan de compétences",
-    href: "/bilan-de-competences",
   },
 ] as const;
 
@@ -360,7 +349,11 @@ export default function HomePage() {
       <Section>
         <Container>
           <SectionHeading num={6} eyebrow="Les accompagnements" title="Révéler votre valeur. Construire la suite.">
-            <p>Des accompagnements adaptés à votre situation, à vos objectifs et au moment professionnel que vous traversez.</p>
+            <p>
+              Des accompagnements adaptés à votre situation, à vos objectifs et au moment professionnel que vous traversez. Parce que
+              chaque enjeu mérite une réponse adaptée : une intervention ciblée, un travail de clarification ou une démarche plus
+              approfondie.
+            </p>
           </SectionHeading>
           {/* Phones: fold-out list, the first one open. Each formula keeps its colour (number, line, subtitle). */}
           <div className="mt-8 border-t border-[var(--jg-light-gray)] md:hidden">
@@ -373,7 +366,7 @@ export default function HomePage() {
               >
                 <summary className="flex cursor-pointer list-none items-start gap-3 py-4 [&::-webkit-details-marker]:hidden">
                   <span className="font-heading text-[15px] font-semibold text-[var(--offer)] tabular-nums">
-                    {offer.eyebrow ? "+" : String(i + 1).padStart(2, "0")}
+                    {String(i + 1).padStart(2, "0")}
                   </span>
                   <span className="flex-1">
                     <span className="block font-heading text-[15px] font-semibold tracking-[0.04em] text-[var(--offer)] uppercase">{offer.name}</span>
@@ -387,7 +380,7 @@ export default function HomePage() {
                       {p}
                     </p>
                   ))}
-                  {(offer.label || offer.note) && (
+                  {(
                     <div className="jg-small mt-3">
                       {offer.label && <p className="font-semibold text-navy">{offer.label}</p>}
                       {offer.items.length > 0 && <DotList items={offer.items} className="mt-1" />}
@@ -401,13 +394,13 @@ export default function HomePage() {
               </details>
             ))}
           </div>
-          {/* Tablet and desktop: four cards (2 × 2), a coloured top line, number and subtitle per formula. */}
-          <ul className="mt-12 hidden gap-6 md:grid md:grid-cols-2">
+          {/* Tablet and desktop: three cards side by side, a coloured top line, number and subtitle per formula. */}
+          <ul className="mt-12 hidden gap-6 md:grid md:grid-cols-2 lg:grid-cols-3">
             {OFFERS.map((offer, i) => (
               <li key={offer.name} style={{ "--offer": offerColor(offer.slug) } as React.CSSProperties}>
                 <Card className="flex h-full flex-col border-l-4 border-l-[var(--offer)]">
                   <p className="font-heading text-[15px] font-semibold text-[var(--offer)] tabular-nums">
-                    {offer.eyebrow ? <span className="text-[13px] tracking-[0.16em] uppercase">{offer.eyebrow}</span> : String(i + 1).padStart(2, "0")}
+                    {String(i + 1).padStart(2, "0")}
                   </p>
                   <span aria-hidden className="mt-3 block h-0.5 w-8 bg-[var(--offer)]" />
                   <h3 className="jg-h4 mt-5 tracking-[0.04em] text-[var(--offer)] uppercase">{offer.name}</h3>
@@ -417,7 +410,7 @@ export default function HomePage() {
                       {p}
                     </p>
                   ))}
-                  {(offer.label || offer.note) && (
+                  {(
                     <div className="jg-small mt-5">
                       {offer.label && <p className="font-semibold text-navy">{offer.label}</p>}
                       {offer.items.length > 0 && <DotList items={offer.items} className="mt-1" />}

@@ -42,7 +42,7 @@ const TRAVELS: { src: StaticImageData; place: string; alt: string; focus: string
   { src: merlePlage, place: "Capri, Italie", alt: "Le livre au bord de la mer, au pied des falaises", focus: "object-[50%_78%]" },
   { src: merleCappadoce, place: "Cappadoce, Turquie", alt: "Le livre sur une terrasse en Cappadoce", focus: "object-[50%_78%]" },
   { src: merleDesert, place: "Désert du Sahara", alt: "Le livre dans les dunes du désert", focus: "object-[50%_62%]" },
-  { src: merleTerrasse, place: "Au bord de la mer", alt: "Le livre sur une table, face à la mer", focus: "object-[50%_58%]" },
+  { src: merleTerrasse, place: "BALI", alt: "Le livre sur une table, face à la mer", focus: "object-[50%_58%]" },
 ];
 
 /**

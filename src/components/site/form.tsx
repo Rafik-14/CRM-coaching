@@ -56,10 +56,13 @@ export function SegmentSelect({
   defaultValue,
   errors,
   onChange,
+  withOther = false,
 }: {
   defaultValue?: string;
   errors?: Record<string, string[] | undefined>;
   onChange?: (value: string) => void;
+  /** Booking form (« MODIFICATIONS 3.0 »): « Autre » last instead of « Je préfère ne pas préciser ». */
+  withOther?: boolean;
 }) {
   return (
     <select
@@ -68,8 +71,8 @@ export function SegmentSelect({
       onChange={onChange ? (e) => onChange(e.target.value) : undefined}
       className={cn(inputClass, "appearance-auto")}
     >
-      <option value="">Je préfère ne pas préciser</option>
-      {SEGMENTS.map((s) => (
+      <option value="">{withOther ? "—" : "Je préfère ne pas préciser"}</option>
+      {SEGMENTS.filter((s) => withOther || s.value !== "autre").map((s) => (
         <option key={s.value} value={s.value}>
           {s.label}
         </option>

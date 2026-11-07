@@ -24,55 +24,60 @@ export function priceLine(offer: Pick<PublicOffer, "priceEur" | "priceChf" | "se
 const INCLUDES = Symbol("includes");
 
 /**
- * Site wording that is not stored in the CRM (who the offer is for, button), keyed by offer anchor
- * (« MODIFICATIONS 2.2 », onglet Accompagnements, Nov. 2026).
+ * Site wording that is not stored in the CRM (kind of offer, who it is for, button), keyed by offer anchor
+ * (« MODIFICATIONS 3.0 », onglet Accompagnements, Nov. 2026).
  */
 const EXTRAS: Record<
   string,
-  { lists: { label: string; items: readonly string[] | typeof INCLUDES }[]; sessions?: string; cta: string; href: string; secondary?: boolean }
+  { kind: string; lists: { label: string; items: readonly string[] | typeof INCLUDES }[]; sessions?: string; cta: string; href: string }
 > = {
-  "architecture-identitaire": {
-    lists: [{ label: "Pour :", items: ["Clarification", "Repositionnement", "Orientation", "Reconversion", "Évolution professionnelle"] }],
-    cta: "Clarifier ma valeur",
-    href: bookingHref("offre-architecture-identitaire", "particulier"),
-  },
-  "accompagnement-decisif": {
+  "focus-decisif": {
+    kind: "Intervention ciblée",
     lists: [
       {
-        label: "Pour :",
-        items: ["Entretiens & recrutement", "Mobilité professionnelle", "Négociation", "Prise de parole", "Leadership"],
-      },
-    ],
-    cta: "Préparer mon moment décisif",
-    href: bookingHref("offre-accompagnement-decisif", "particulier"),
-  },
-  "parcours-signature": {
-    lists: [
-      { label: "Inclus :", items: INCLUDES },
-      {
-        label: "Pour :",
+        label: "Pour :",
         items: [
-          "Transformation professionnelle",
-          "Repositionnement stratégique",
-          "Leadership",
-          "Évolution de carrière",
-          "Affirmation de son identité",
+          "Préparation d’entretien",
+          "Recrutement et sélection",
+          "Négociation",
+          "Présentation professionnelle",
+          "Prise de parole",
+          "Situation professionnelle ponctuelle",
         ],
       },
     ],
+    cta: "Préparer mon moment décisif",
+    href: bookingHref("offre-focus-decisif", "particulier"),
+  },
+  "architecture-identitaire": {
+    kind: "Construction identitaire",
+    lists: [
+      {
+        label: "Pour :",
+        items: [
+          "Clarification de l’identité professionnelle",
+          "Repositionnement",
+          "Évolution professionnelle",
+          "Reconversion",
+          "Identification des forces distinctives",
+          "Construction d’un positionnement professionnel",
+        ],
+      },
+    ],
+    cta: "Découvrir ce qui me distingue",
+    href: bookingHref("offre-architecture-identitaire", "particulier"),
+  },
+  "parcours-signature": {
+    kind: "Transformation approfondie",
+    lists: [{ label: "Inclus :", items: INCLUDES }],
     sessions: "séances individuelles",
-    cta: "Construire mon parcours Signature",
+    cta: "Construire mon parcours signature",
     href: "/accompagnements/parcours-signature",
-    secondary: true,
   },
 };
 
-/** Buttons in each formula's colour, like its name and top line (Jérémy, V4). */
-const OFFER_FILLED = "border-[var(--offer)] bg-[var(--offer)] text-white hover:border-navy hover:bg-navy";
-const OFFER_OUTLINE = "border-[var(--offer)] text-[var(--offer)] hover:bg-[var(--offer)] hover:text-white";
-
-/** The offer set apart in solid navy, with its badge. To be confirmed by Jérémy (or set to null for none). */
-const FEATURED: { slug: string; badge: string } | null = { slug: "accompagnement-decisif", badge: "Le plus choisi" };
+/** Each formula has its own colour: top band, light tint, number, name and a button filled in that colour (Jérémy, 3.0). */
+const OFFER_BUTTON = "border-[var(--offer)] bg-[var(--offer)] text-white hover:border-navy hover:bg-navy";
 
 /** The offers from the CRM (prices included), as comparison cards side by side on large screens. */
 export async function OfferList() {
@@ -86,54 +91,37 @@ export async function OfferList() {
         const lists = (extra?.lists ?? [{ label: "Inclus :", items: INCLUDES }])
           .map((list) => ({ label: list.label, items: list.items === INCLUDES ? offer.includes : list.items }))
           .filter((list) => list.items.length > 0);
-        const featured = FEATURED?.slug === slug;
+        const sessions = `${offer.sessionsCount} ${offer.sessionsCount > 1 ? "séances" : "séance"}`;
         return (
           <li
             key={offer.id}
             id={slug}
             style={{ "--offer": offerColor(slug) } as React.CSSProperties}
-            className={cn(
-              "relative flex scroll-mt-28 flex-col rounded-b-[12px] border border-t-4 p-7 transition-[translate,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-[0_14px_32px_rgba(23,37,54,0.12)] motion-reduce:hover:translate-y-0 md:p-8",
-              featured
-                ? "jg-on-navy border-navy border-t-gold bg-navy text-white"
-                : "border-[var(--jg-light-gray)] border-t-[var(--offer)] bg-white",
-            )}
+            className="relative flex scroll-mt-28 flex-col rounded-b-[12px] border border-t-[6px] border-[color-mix(in_srgb,var(--offer)_35%,white)] border-t-[var(--offer)] bg-[color-mix(in_srgb,var(--offer)_5%,white)] p-7 transition-[translate,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-[0_14px_32px_rgba(23,37,54,0.12)] motion-reduce:hover:translate-y-0 md:p-8"
           >
-            {featured && (
-              <p className="absolute -top-4 left-7 rounded-[4px] bg-gold px-3 py-1 font-heading text-[12px] font-semibold tracking-[0.06em] text-navy md:left-8">
-                {FEATURED.badge}
-              </p>
-            )}
-            <p className={cn("font-heading text-[15px] font-semibold tabular-nums", featured ? "text-gold" : "text-[var(--offer)]")}>
-              {String(i + 1).padStart(2, "0")}
-            </p>
-            <h2
-              className={cn(
-                "mt-3 font-heading text-[1.0625rem] leading-snug font-semibold tracking-[0.04em] uppercase",
-                featured ? "text-white" : "text-[var(--offer)]",
-              )}
-            >
-              {offer.name}
+            <h2 className="font-heading text-[1.0625rem] leading-snug font-semibold tracking-[0.04em] text-[var(--offer)] uppercase">
+              <span className="tabular-nums">{String(i + 1).padStart(2, "0")}</span> — {offer.name}
             </h2>
-            {offer.tagline && (
-              <p className={cn("mt-2 font-heading leading-snug font-medium lg:min-h-[3em]", featured ? "text-gold" : "text-navy")}>
-                {offer.tagline}
+            {extra?.kind && (
+              <p className="mt-1 text-[15px] font-semibold text-navy">
+                {extra.kind} · {sessions}
               </p>
             )}
-            <p className={cn("mt-6 font-heading text-[2.25rem] leading-none font-semibold tabular-nums", featured ? "text-gold" : "text-navy")}>
+            {offer.tagline && <p className="mt-3 font-heading leading-snug font-medium text-navy lg:min-h-[3em]">{offer.tagline}</p>}
+            <p className="mt-6 font-heading text-[2.25rem] leading-none font-semibold text-navy tabular-nums">
               {formatMoney(offer.priceEur, "EUR")}
             </p>
-            <p className={cn("mt-2 text-[15px]", featured ? "text-white/85" : "text-muted-foreground")}>
+            <p className="mt-2 text-[15px] text-muted-foreground">
               {offer.priceChf != null && <>{formatMoney(offer.priceChf, "CHF")} · </>}
-              {offer.sessionsCount} {extra?.sessions ?? (offer.sessionsCount > 1 ? "séances" : "séance")} de {SESSION_LENGTH}
+              {extra?.sessions ? `${offer.sessionsCount} ${extra.sessions}` : `${sessions} de ${SESSION_LENGTH}`}
             </p>
             {lists.map((list) => (
               <div key={list.label} className="mt-6">
-                <p className={cn("font-semibold", featured ? "text-white" : "text-navy")}>{list.label}</p>
-                <ul className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1.5 text-[15px]">
+                <p className="font-semibold text-navy">{list.label}</p>
+                <ul className="mt-2 grid gap-y-1.5 text-[15px]">
                   {list.items.map((item) => (
                     <li key={item} className="flex items-start gap-2">
-                      <Check aria-hidden className={cn("mt-1 size-4 shrink-0", featured ? "text-gold" : "text-[var(--offer)]")} />
+                      <Check aria-hidden className="mt-1 size-4 shrink-0 text-[var(--offer)]" />
                       {item}
                     </li>
                   ))}
@@ -142,25 +130,15 @@ export async function OfferList() {
             ))}
             {offer.description && (
               <details className="group mt-6">
-                <summary
-                  className={cn(
-                    "flex cursor-pointer list-none items-center gap-1.5 text-[15px] font-semibold underline-offset-4 hover:underline [&::-webkit-details-marker]:hidden",
-                    featured ? "text-white" : "text-navy",
-                  )}
-                >
+                <summary className="flex cursor-pointer list-none items-center gap-1.5 text-[15px] font-semibold text-navy underline-offset-4 hover:underline [&::-webkit-details-marker]:hidden">
                   <ChevronDown aria-hidden className="size-4 transition-transform group-open:rotate-180" />
-                  Voir le détail
+                  En détail
                 </summary>
-                <p className={cn("mt-3 text-[15px]", featured && "text-white/90")}>{offer.description}</p>
+                <p className="mt-3 text-[15px]">{offer.description}</p>
               </details>
             )}
             <div className="mt-auto pt-7">
-              <ButtonLink
-                href={extra?.href ?? bookingHref(`offre-${slug}`)}
-                variant={featured ? "accent" : extra?.secondary ? "secondary" : "primary"}
-                block
-                className={cn(!featured && (extra?.secondary ? OFFER_OUTLINE : OFFER_FILLED))}
-              >
+              <ButtonLink href={extra?.href ?? bookingHref(`offre-${slug}`)} variant="primary" block className={OFFER_BUTTON}>
                 {extra?.cta ?? "Réserver un échange stratégique"}
                 <ArrowRight aria-hidden />
               </ButtonLink>
