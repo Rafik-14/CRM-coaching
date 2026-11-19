@@ -8,10 +8,13 @@ import {
   numeric,
   pgEnum,
   pgTable,
+  smallint,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
+import type { ScoringResult } from "../../lib/revelateur/scoring";
 
 const timestamps = {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
@@ -714,4 +717,81 @@ export const eventPhotosRelations = relations(eventPhotos, ({ one }) => ({
 
 export const eventQuotesRelations = relations(eventQuotes, ({ one }) => ({
   event: one(events, { fields: [eventQuotes.eventId], references: [events.id] }),
+}));
+
+// ---------------------------------------------------------------------------
+// Test Signature JG® — Le Révélateur (dossier maître v2.0 + annexes 02 and 07).
+// Participants of the test are kept apart from coaching contacts: a finished test
+// never creates a contact, a prospect or a client.
+// ---------------------------------------------------------------------------
+
+export const revelateurSessionStatus = pgEnum("revelateur_session_status", ["in_progress", "complete", "invalid"]);
+
+/** Screen the person is on: welcome text, one of the 30 statements, the open question or the summary. */
+export const revelateurStep = pgEnum("revelateur_step", ["welcome", "question", "open", "recap"]);
+
+/**
+ * One passation. Found again through an opaque cookie (only its SHA-256 is stored), on the same
+ * device for 30 days after the last activity. A new passation is always a new session.
+ */
+export const revelateurSessions = pgTable(
+  "revelateur_sessions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tokenHash: text("token_hash").notNull().unique(),
+    status: revelateurSessionStatus("status").notNull().default("in_progress"),
+    step: revelateurStep("step").notNull().default("welcome"),
+    /** 0–29: the statement on screen when step = question. */
+    questionIndex: smallint("question_index").notNull().default(0),
+    questionnaireVersion: text("questionnaire_version").notNull(),
+    /** Optional open question — never scored, never changes a result. */
+    openAnswer: text("open_answer"),
+    startedAt: timestamp("started_at", { withTimezone: true }).notNull().defaultNow(),
+    lastActivityAt: timestamp("last_activity_at", { withTimezone: true }).notNull().defaultNow(),
+    /** Explicit final confirmation: from then on the answers are frozen. */
+    confirmedAt: timestamp("confirmed_at", { withTimezone: true }),
+  },
+  (t) => [index("revelateur_sessions_status_idx").on(t.status, t.lastActivityAt)],
+);
+
+/** Raw answers 1–5: the source of truth. Corrected values are always recomputed, never stored here. */
+export const revelateurAnswers = pgTable(
+  "revelateur_answers",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    sessionId: uuid("session_id")
+      .notNull()
+      .references(() => revelateurSessions.id, { onDelete: "cascade" }),
+    /** Q01 … Q30 */
+    questionId: text("question_id").notNull(),
+    rawValue: smallint("raw_value").notNull(),
+    answeredAt: timestamp("answered_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("revelateur_answers_session_question_uq").on(t.sessionId, t.questionId)],
+);
+
+/** Immutable, versioned snapshot of the scoring engine output for one confirmed session. */
+export const revelateurResults = pgTable("revelateur_results", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  sessionId: uuid("session_id")
+    .notNull()
+    .unique()
+    .references(() => revelateurSessions.id, { onDelete: "cascade" }),
+  questionnaireVersion: text("questionnaire_version").notNull(),
+  scoringEngineVersion: text("scoring_engine_version").notNull(),
+  snapshot: jsonb("snapshot").$type<ScoringResult>().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const revelateurSessionsRelations = relations(revelateurSessions, ({ many, one }) => ({
+  answers: many(revelateurAnswers),
+  result: one(revelateurResults),
+}));
+
+export const revelateurAnswersRelations = relations(revelateurAnswers, ({ one }) => ({
+  session: one(revelateurSessions, { fields: [revelateurAnswers.sessionId], references: [revelateurSessions.id] }),
+}));
+
+export const revelateurResultsRelations = relations(revelateurResults, ({ one }) => ({
+  session: one(revelateurSessions, { fields: [revelateurResults.sessionId], references: [revelateurSessions.id] }),
 }));
