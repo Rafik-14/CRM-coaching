@@ -434,3 +434,40 @@
     }
   }
 }
+
+
+/* ---- Test Signature JG® — Le Révélateur ----
+   Light, luminous direction (dossier maître v2.0 §3): ivory, measured champagne, touches of teal,
+   fine geometric lines. No cosmic particles, halos or dark dominant backgrounds. */
+@keyframes rv-develop {
+  0% { opacity: 0; filter: blur(6px); transform: translateY(4px); }
+  60% { opacity: 1; }
+  100% { opacity: 1; filter: none; transform: none; }
+}
+@keyframes rv-fade-out { to { opacity: 0; filter: blur(4px); } }
+@keyframes rv-draw { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes rv-stroke { from { stroke-dashoffset: var(--len, 400); } to { stroke-dashoffset: 0; } }
+@keyframes rv-breathe { 0%, 100% { opacity: .35; } 50% { opacity: .9; } }
+
+.rv-develop { animation: rv-develop .9s ease both; }
+.rv-out { animation: rv-fade-out .35s ease forwards; }
+.rv-gold-line { height: 1px; background: var(--gold); transform-origin: left; animation: rv-draw .7s ease both; }
+.rv-screen { animation: rv-develop .45s ease both; }
+.rv-line { fill: none; stroke-linecap: round; stroke-dasharray: var(--len, 400); animation: rv-stroke 1.6s ease forwards; }
+.rv-node { animation: rv-breathe 2.4s ease-in-out infinite; }
+
+.rv-film { display: grid; grid-template-columns: repeat(30, minmax(0, 1fr)); gap: 3px; }
+.rv-film > i { height: 3px; background: var(--jg-light-gray); border-radius: 1px; }
+.rv-film > i[data-on="true"] { background: var(--jg-navy); }
+.rv-film > i[data-current="true"] { background: var(--gold); }
+
+.rv-marker { display: grid; place-items: center; width: 28px; height: 28px; flex: none; }
+.rv-marker > i { display: block; border-radius: 9999px; border: 1.5px solid var(--jg-navy); background: #fff; transition: background-color .15s, box-shadow .15s; }
+.rv-option:has(input:checked) .rv-marker > i { background: var(--gold); box-shadow: 0 0 0 4px color-mix(in oklab, var(--gold) 30%, transparent); }
+.rv-option:has(input:checked) { border-color: var(--jg-navy); }
+.rv-option:has(input:focus-visible) { outline: 2px solid var(--jg-navy); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .rv-develop, .rv-out, .rv-gold-line, .rv-screen, .rv-line, .rv-node { animation: none !important; }
+  .rv-line { stroke-dasharray: none; }
+}

@@ -13,6 +13,7 @@ import { runDueEmails } from "@/server/sequences";
 import { claimEventReminders, claimEventThanks, releaseClaim } from "@/server/events";
 import { sendEventMail } from "@/server/event-mail";
 import { events } from "@/server/db/schema";
+import { deleteExpiredSessions } from "@/server/revelateur/session";
 
 /**
  * Scheduled jobs, run by POST /api/cron/run (every 5 minutes on the server: system cron).
@@ -100,7 +101,15 @@ const purgeOldTokens: Job = {
   },
 };
 
-export const JOBS: Job[] = [markStuckEmails, sessionReminders("24h"), sessionReminders("1h"), sendScheduledEmails, eventMails("reminder"), eventMails("thanks"), purgeOldTokens];
+/** Révélateur: unfinished passations (and their answers) are deleted 30 days after the last activity (v2.0 §4). */
+const purgeUnfinishedRevelateur: Job = {
+  name: "purgeUnfinishedRevelateur",
+  async run(now) {
+    return { deleted: await deleteExpiredSessions(db, now) };
+  },
+};
+
+export const JOBS: Job[] = [markStuckEmails, sessionReminders("24h"), sessionReminders("1h"), sendScheduledEmails, eventMails("reminder"), eventMails("thanks"), purgeOldTokens, purgeUnfinishedRevelateur];
 
 /** Runs every job in order; one failing job never stops the others. */
 export async function runJobs(now = new Date()) {
