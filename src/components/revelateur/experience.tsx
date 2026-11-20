@@ -163,20 +163,24 @@ function Intro({ lines, onStart, pending }: { lines: readonly string[]; onStart:
   const [showFinal, setShowFinal] = useState(false);
   const [step, setStep] = useState(0);
 
+  // The sequence is scheduled once, when the intro appears. (Depending on `beats` — a new array on
+  // every render — restarted it after each line, so only the first line ever showed.)
+  const beatCount = beats.length;
+  const finalCount = final.length;
   useEffect(() => {
     const timers: number[] = [];
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       timers.push(window.setTimeout(() => { setShowFinal(true); setStep(99); }, 0));
       return () => timers.forEach(clearTimeout);
     }
-    beats.forEach((_, i) => {
+    for (let i = 0; i < beatCount; i++) {
       timers.push(window.setTimeout(() => { setBeat(i); setOut(false); }, i * 1400));
       timers.push(window.setTimeout(() => setOut(true), i * 1400 + 1100));
-    });
-    timers.push(window.setTimeout(() => setShowFinal(true), beats.length * 1400));
-    for (let k = 1; k <= final.length + 1; k++) timers.push(window.setTimeout(() => setStep(k), beats.length * 1400 + k * 800));
+    }
+    timers.push(window.setTimeout(() => setShowFinal(true), beatCount * 1400));
+    for (let k = 1; k <= finalCount + 1; k++) timers.push(window.setTimeout(() => setStep(k), beatCount * 1400 + k * 800));
     return () => timers.forEach(clearTimeout);
-  }, [beats, final.length]);
+  }, [beatCount, finalCount]);
 
   const skip = () => { setShowFinal(true); setStep(99); };
   const [title, subtitle, l1, l2, meta] = final;
