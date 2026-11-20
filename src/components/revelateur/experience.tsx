@@ -178,7 +178,8 @@ function Intro({ lines, onStart, pending }: { lines: readonly string[]; onStart:
       timers.push(window.setTimeout(() => setOut(true), i * 1400 + 1100));
     }
     timers.push(window.setTimeout(() => setShowFinal(true), beatCount * 1400));
-    for (let k = 1; k <= finalCount + 1; k++) timers.push(window.setTimeout(() => setStep(k), beatCount * 1400 + k * 800));
+    // The title appears as soon as the four opening lines are done (no blank pause), then one line every 0.8 s.
+    for (let k = 1; k <= finalCount + 1; k++) timers.push(window.setTimeout(() => setStep(k), beatCount * 1400 + (k - 1) * 800 + 50));
     return () => timers.forEach(clearTimeout);
   }, [beatCount, finalCount]);
 
@@ -276,12 +277,27 @@ function Question({
 }) {
   const num = String(screen.number).padStart(2, "0");
   const count = screen.answered.filter(Boolean).length;
-  // Keys 1–5 choose (no automatic move); Enter continues once answered.
+  // Keys 1–5 choose (no automatic move); Enter continues once answered. An Enter pressed while the
+  // choice is still being saved is remembered and carried out as soon as the save is done.
+  const [enterQueued, setEnterQueued] = useState(false);
+  const goOn = fromRecap ? onBackToRecap : onNext;
+  useEffect(() => {
+    if (!enterQueued || pending) return;
+    const t = window.setTimeout(() => {
+      setEnterQueued(false);
+      if (screen.value !== null) goOn();
+    }, 0);
+    return () => clearTimeout(t);
+  }, [enterQueued, pending, screen.value, goOn]);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLElement && e.target.closest("textarea, input[type=text], input[type=email]")) return;
-      if (/^[1-5]$/.test(e.key)) onAnswer(Number(e.key));
-      else if (e.key === "Enter" && screen.value !== null && !(e.target instanceof HTMLButtonElement)) (fromRecap ? onBackToRecap : onNext)();
+      if (/^[1-5]$/.test(e.key)) {
+        if (!pending) onAnswer(Number(e.key));
+      } else if (e.key === "Enter" && screen.value !== null && !(e.target instanceof HTMLButtonElement)) {
+        if (pending) setEnterQueued(true);
+        else goOn();
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -306,7 +322,15 @@ function Question({
           {screen.text}
         </legend>
         <p className="mt-4 text-[15px] text-[var(--jg-anthracite)]">Dans quelle mesure cette affirmation est-elle vraie pour vous&nbsp;?</p>
-        <div className="mt-8 grid gap-2 md:grid-cols-5 md:gap-0 md:border-y md:border-[var(--jg-light-gray)]">
+        {/* While a choice is saved or the next statement loads, the options are paused: a click there would
+            otherwise land on the previous statement (slow connections). */}
+        <div
+          className={cn(
+            "mt-8 grid gap-2 transition-opacity md:grid-cols-5 md:gap-0 md:border-y md:border-[var(--jg-light-gray)]",
+            pending && "pointer-events-none opacity-60",
+          )}
+          aria-busy={pending}
+        >
           {scale.map((label, i) => {
             const value = i + 1;
             const size = [22, 17, 12, 17, 22][i];
@@ -323,7 +347,9 @@ function Question({
                   name={`answer-${screen.id}`}
                   value={value}
                   checked={screen.value === value}
-                  onChange={() => onAnswer(value)}
+                  onChange={() => {
+                    if (!pending) onAnswer(value);
+                  }}
                   className="sr-only"
                 />
                 <span className={"rv-marker"} aria-hidden>

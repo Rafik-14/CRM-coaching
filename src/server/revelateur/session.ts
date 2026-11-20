@@ -225,7 +225,12 @@ export async function confirmSession(db: AnyDb, sessionId: string): Promise<Conf
       .set({ status: "complete", confirmedAt: new Date(), lastActivityAt: new Date() })
       .where(and(eq(revelateurSessions.id, sessionId), eq(revelateurSessions.status, "in_progress")))
       .returning({ id: revelateurSessions.id });
-    if (!frozen) return { ok: false as const, error: "Cette passation n'est plus modifiable." };
+    if (!frozen) {
+      // A simultaneous confirmation (double click) froze it first: once that one has committed,
+      // its result is the result — answer with it instead of an error.
+      const done = await tx.query.revelateurResults.findFirst({ where: eq(revelateurResults.sessionId, sessionId) });
+      return done ? { ok: true as const, result: done.snapshot } : { ok: false as const, error: "Cette passation n'est plus modifiable." };
+    }
 
     const result = scoreAnswers(check.answers);
     await tx

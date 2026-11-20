@@ -29,13 +29,18 @@ const COOKIE = "jg_revelateur";
 
 export type RevelateurState = { screen: Screen; error?: string };
 
+/**
+ * Set once, when a passation starts. Setting a cookie in a server action makes Next.js re-render the
+ * page, so it is not refreshed on every answer: the cookie simply lives longer than the resume period
+ * and the server enforces the 30 days since the last activity (findSession).
+ */
 async function setCookie(token: string) {
   (await cookies()).set(COOKIE, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/revelateur",
-    maxAge: RESUME_DAYS * 86_400,
+    maxAge: 3 * RESUME_DAYS * 86_400,
   });
 }
 
@@ -49,9 +54,6 @@ async function withSession(run: (s: SessionRow) => Promise<SessionRow | void>): 
   if (!session) return { screen: { kind: "welcome" }, error: "Votre session a expiré. Vous pouvez recommencer l'expérience." };
   try {
     const next = (await run(session)) ?? session;
-    // keep the cookie alive for 30 days after each activity
-    const token = (await cookies()).get(COOKIE)?.value;
-    if (token) await setCookie(token);
     return { screen: await screenFor(db, next) };
   } catch (e) {
     const fresh = (await findSession(db, (await cookies()).get(COOKIE)?.value)) ?? session;
@@ -64,7 +66,7 @@ async function withSession(run: (s: SessionRow) => Promise<SessionRow | void>): 
 export async function startRevelateur(): Promise<RevelateurState> {
   const existing = await current();
   if (existing && existing.status === "in_progress") return { screen: await screenFor(db, existing) };
-  if (rateLimited(`revelateur:start:${await clientIp()}`, 10, 60 * 60_000)) {
+  if (rateLimited(`revelateur:start:${await clientIp()}`, 30, 60 * 60_000)) {
     return { screen: { kind: "welcome" }, error: "Trop de tentatives. Réessayez dans quelques minutes." };
   }
   const { token, session } = await createSession(db);
@@ -75,7 +77,7 @@ export async function startRevelateur(): Promise<RevelateurState> {
 /** After a confirmed passation: start a brand-new one (a new session, the previous one is untouched). */
 export async function restartRevelateur(): Promise<RevelateurState> {
   if (!revelateurEnabled()) throw new Error("Indisponible.");
-  if (rateLimited(`revelateur:start:${await clientIp()}`, 10, 60 * 60_000)) {
+  if (rateLimited(`revelateur:start:${await clientIp()}`, 30, 60 * 60_000)) {
     return { screen: { kind: "complete" }, error: "Trop de tentatives. Réessayez dans quelques minutes." };
   }
   const { token, session } = await createSession(db);
@@ -93,6 +95,11 @@ export async function answerRevelateur(questionId: string, value: number): Promi
 }
 
 export async function moveRevelateur(m: Move): Promise<RevelateurState> {
+  // « Commencer » after the session expired (or the cookie was cleared): open a new one first.
+  if (m?.to === "start" && !(await current())) {
+    const opened = await startRevelateur();
+    if (opened.error) return opened;
+  }
   return withSession((s) => move(db, s, m));
 }
 

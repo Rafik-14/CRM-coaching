@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { SiteTheme } from "@/components/site/site-theme";
 import { OWNERSHIP_NOTICE } from "@/server/revelateur/questionnaire";
 
 /**
@@ -9,6 +10,8 @@ import { OWNERSHIP_NOTICE } from "@/server/revelateur/questionnaire";
 export default function RevelateurLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="jg-site flex min-h-dvh flex-col bg-[var(--jg-ivory)] text-[var(--jg-anthracite)]">
+      {/* Always light, like the public site — even when arriving from the CRM in dark mode. */}
+      <SiteTheme />
       <header className="mx-auto flex w-full max-w-[1100px] items-center justify-between px-4 py-5">
         <Link href="/revelateur" className="inline-flex items-center gap-3 font-heading text-[12px] font-semibold tracking-[.2em] text-navy uppercase">
           <Image src="/brand/jg-monogram.svg" alt="" width={26} height={28} unoptimized />
