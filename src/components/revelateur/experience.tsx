@@ -173,13 +173,15 @@ function Intro({ lines, onStart, pending }: { lines: readonly string[]; onStart:
       timers.push(window.setTimeout(() => { setShowFinal(true); setStep(99); }, 0));
       return () => timers.forEach(clearTimeout);
     }
+    // Each opening line takes 2.2 s: 0.9 s to appear, about 1 s fully sharp and readable, 0.3 s to fade.
+    // Then the title screen builds up line by line (0.6 s apart): about 11 s in all (dossier v2.0 §2).
+    const BEAT = 2200;
     for (let i = 0; i < beatCount; i++) {
-      timers.push(window.setTimeout(() => { setBeat(i); setOut(false); }, i * 1400));
-      timers.push(window.setTimeout(() => setOut(true), i * 1400 + 1100));
+      timers.push(window.setTimeout(() => { setBeat(i); setOut(false); }, i * BEAT));
+      timers.push(window.setTimeout(() => setOut(true), i * BEAT + 1900));
     }
-    timers.push(window.setTimeout(() => setShowFinal(true), beatCount * 1400));
-    // The title appears as soon as the four opening lines are done (no blank pause), then one line every 0.8 s.
-    for (let k = 1; k <= finalCount + 1; k++) timers.push(window.setTimeout(() => setStep(k), beatCount * 1400 + (k - 1) * 800 + 50));
+    timers.push(window.setTimeout(() => setShowFinal(true), beatCount * BEAT));
+    for (let k = 1; k <= finalCount + 1; k++) timers.push(window.setTimeout(() => setStep(k), beatCount * BEAT + (k - 1) * 600 + 50));
     return () => timers.forEach(clearTimeout);
   }, [beatCount, finalCount]);
 
