@@ -126,7 +126,7 @@ export function RevelateurExperience({ initial, resumed, texts }: { initial: Scr
 
   const atelier = phase === "screen" && screen.kind === "question";
   return (
-    <div ref={live} className="flex flex-1 flex-col">
+    <div ref={live} className="flex flex-1 flex-col bg-[var(--jg-ivory)]">
       <div className={cn("rv-curtain", !curtain && "is-up")} aria-hidden>
         <span>Le Révélateur</span>
       </div>

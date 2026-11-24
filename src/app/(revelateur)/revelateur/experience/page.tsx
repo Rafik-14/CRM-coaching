@@ -15,9 +15,10 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
+// The fallback is navy, so the story page's closed curtain never flashes white before ours.
 export default function ExperiencePage() {
   return (
-    <Suspense fallback={<div className="flex-1" />}>
+    <Suspense fallback={<div className="rv-curtain" aria-hidden><span>Le Révélateur</span></div>}>
       <Experience />
     </Suspense>
   );
