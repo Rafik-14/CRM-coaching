@@ -468,6 +468,8 @@
 .rv-option:has(input:focus-visible) { outline: 2px solid var(--jg-navy); outline-offset: 2px; }
 
 /* ---- The curtain: navy, closes on the story page and lifts on the test (one movement) ---- */
+.rv-sound { position: fixed; right: max(18px, env(safe-area-inset-right, 0px)); top: 14px; z-index: 6; background: none; border: 0; padding: 6px 4px; cursor: pointer; font-family: var(--font-heading); font-size: 10.5px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: color-mix(in oklab, var(--jg-navy) 62%, transparent); }
+.rv-sound:hover, .rv-sound:focus-visible { color: var(--jg-navy); }
 .rv-curtain { position: fixed; inset: 0; z-index: 90; display: grid; place-items: center; background: var(--jg-navy); clip-path: inset(0 0 0 0); transition: clip-path 1.3s cubic-bezier(.77, 0, .18, 1); pointer-events: none; }
 .rv-curtain span { font-family: var(--font-heading); font-size: 11px; font-weight: 600; letter-spacing: .26em; text-transform: uppercase; color: var(--gold); transition: opacity .5s; }
 .rv-curtain.is-up { clip-path: inset(0 0 100% 0); }

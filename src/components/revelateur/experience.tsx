@@ -18,6 +18,7 @@ import {
 import type { Screen } from "@/server/revelateur/session";
 import { AtelierStage, PARTS, partOf } from "./atelier";
 import { playPreparation } from "./preparation";
+import { cue, setSoundOn, soundOn, unlockOnFirstGesture } from "./sound";
 
 export type ExperienceTexts = {
   welcome: { title: string; paragraphs: readonly string[]; closing: string };
@@ -48,6 +49,11 @@ export function RevelateurExperience({ initial, resumed, texts }: { initial: Scr
   const [explain, setExplain] = useState<number | null>(initial?.kind === "question" ? partOf(initial.number) : null);
   const [leaving, setLeaving] = useState(false);
   const [pulseKey, setPulseKey] = useState(0);
+  const [sound, setSound] = useState(true);
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- the saved choice lives in localStorage, read after hydration
+  useEffect(() => { setSound(soundOn()); return unlockOnFirstGesture(); }, []);
+  useEffect(() => { if (explain !== null) cue("part"); }, [explain]);
+  useEffect(() => { if (phase === "ready") cue("done"); }, [phase]);
   const [curtain, setCurtain] = useState(true);
   const live = useRef<HTMLDivElement>(null);
 
@@ -126,10 +132,20 @@ export function RevelateurExperience({ initial, resumed, texts }: { initial: Scr
 
   const atelier = phase === "screen" && screen.kind === "question";
   return (
-    <div ref={live} className="flex flex-1 flex-col bg-[var(--jg-ivory)]">
+    <div ref={live} className="flex flex-1 flex-col bg-[#e9e5dc]">
       <div className={cn("rv-curtain", !curtain && "is-up")} aria-hidden>
         <span>Le Révélateur</span>
       </div>
+
+      <button
+        type="button"
+        className="rv-sound"
+        aria-pressed={sound}
+        aria-label={sound ? "Couper le son" : "Activer le son"}
+        onClick={() => { const on = !sound; setSound(on); setSoundOn(on); }}
+      >
+        {sound ? "Son · oui" : "Son · non"}
+      </button>
 
       {atelier && screen.kind === "question" && (
         <div className={cn("rv-atelier", explain !== null && "is-full")} aria-busy={pending}>
@@ -156,6 +172,7 @@ export function RevelateurExperience({ initial, resumed, texts }: { initial: Scr
                   fromRecap={fromRecap}
                   onAnswer={(v) => {
                     setPulseKey((k) => k + 1);
+                    cue("select");
                     setScreen({ ...screen, value: v });
                     run(() => answerRevelateur(screen.id, v));
                   }}
