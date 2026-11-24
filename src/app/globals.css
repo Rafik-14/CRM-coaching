@@ -464,14 +464,17 @@
 .rv-marker { display: grid; place-items: center; width: 28px; height: 28px; flex: none; }
 .rv-marker > i { display: block; border-radius: 9999px; border: 1.5px solid var(--jg-navy); background: #fff; transition: background-color .15s, box-shadow .15s; }
 .rv-option:has(input:checked) .rv-marker > i { background: var(--gold); box-shadow: 0 0 0 4px color-mix(in oklab, var(--gold) 30%, transparent); }
-.rv-option:has(input:checked) { border-color: var(--jg-navy); }
+.rv-option { border: 1px solid color-mix(in oklab, var(--gold) 50%, transparent); border-radius: 16px; background: color-mix(in oklab, var(--gold) 32%, #fffdf8); transition: background-color .2s ease, border-color .2s ease, transform .2s ease; -webkit-tap-highlight-color: transparent; }
+.rv-option:hover { background: color-mix(in oklab, var(--gold) 44%, #fffdf8); border-color: color-mix(in oklab, var(--gold) 80%, transparent); }
+.rv-option:active { transform: scale(.985); }
+.rv-option:has(input:checked) { background: color-mix(in oklab, var(--gold) 66%, #fffdf8); border-color: var(--jg-navy); }
 .rv-option:has(input:focus-visible) { outline: 2px solid var(--jg-navy); outline-offset: 2px; }
 
 /* ---- The curtain: navy, closes on the story page and lifts on the test (one movement) ---- */
 .rv-sound { position: fixed; right: max(18px, env(safe-area-inset-right, 0px)); top: 14px; z-index: 6; background: none; border: 0; padding: 6px 4px; cursor: pointer; font-family: var(--font-heading); font-size: 10.5px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: color-mix(in oklab, var(--jg-navy) 62%, transparent); }
 .rv-sound:hover, .rv-sound:focus-visible { color: var(--jg-navy); }
 .rv-curtain { position: fixed; inset: 0; z-index: 90; display: grid; place-items: center; background: var(--jg-navy); clip-path: inset(0 0 0 0); transition: clip-path 1.3s cubic-bezier(.77, 0, .18, 1); pointer-events: none; }
-.rv-curtain span { font-family: var(--font-heading); font-size: 11px; font-weight: 600; letter-spacing: .26em; text-transform: uppercase; color: var(--gold); transition: opacity .5s; }
+.rv-curtain span { font-family: var(--font-heading); font-size: clamp(20px, 2.6vw, 28px); font-weight: 700; letter-spacing: .28em; padding-left: .3em; text-transform: uppercase; color: var(--gold); transition: opacity .5s; }
 .rv-curtain.is-up { clip-path: inset(0 0 100% 0); }
 .rv-curtain.is-up span { opacity: 0; }
 .rv-curtain.is-up.is-down { clip-path: inset(0 0 0 0); }
@@ -525,14 +528,16 @@
   .rv-panel { margin-left: 0; padding-top: calc(40svh + 8px); justify-content: flex-start; transform: none; }
   .rv-atelier.is-full .rv-panel { transform: none; }
   .rv-atelier.is-full .rv-artwrap { left: 0; bottom: 46%; }
-  .rv-art { width: min(80%, 34svh); }
+  .rv-art { width: min(92%, 37svh); }
   .rv-atelier.is-full .rv-art { width: min(72%, 42svh); }
   .rv-stage-part { bottom: 14px; }
+  .rv-panel { padding-inline: 12px; }
+  .rv-stage-brand, .rv-stage-part { left: max(30px, 8vw); }
   .rv-stage-legal { bottom: calc(10px + env(safe-area-inset-bottom, 0px)); font-size: 10px; line-height: 1.35; }
-  .rv-atelier.is-full .rv-art { width: min(64%, 30svh); }
-  .rv-atelier.is-full .rv-artwrap { bottom: auto; top: 54px; height: 34svh; }
+  .rv-atelier.is-full .rv-art { width: min(92%, 38svh); }
+  .rv-atelier.is-full .rv-artwrap { bottom: auto; top: 40px; height: 37svh; align-items: end; }
   .rv-stage-name { font-size: 18px; }
-  .rv-explain { left: 24px; right: 24px; top: auto; bottom: calc(92px + env(safe-area-inset-bottom, 0px)); max-height: calc(100svh - 150px); overflow-y: auto; overscroll-behavior: contain; max-width: none; transform: none; gap: 12px; }
+  .rv-explain { left: max(30px, 8vw, env(safe-area-inset-left, 0px)); right: max(30px, 8vw); top: auto; bottom: calc(92px + env(safe-area-inset-bottom, 0px)); max-height: calc(100svh - 150px); overflow-y: auto; overscroll-behavior: contain; max-width: none; transform: none; gap: 12px; }
   .rv-explain.is-hidden { transform: translateY(24px); }
   .rv-explain.is-leaving { transform: translateY(-70svh); }
   .rv-explain-title { font-size: clamp(26px, 7vw, 34px); }
@@ -544,8 +549,8 @@
   .rv-explain-text { font-size: 14px; line-height: 1.5; }
   .rv-explain-image { display: none; }
   .rv-explain-title { font-size: clamp(22px, 6.4vw, 28px); }
-  .rv-atelier.is-full .rv-art { width: min(44%, 18svh); }
-  .rv-atelier.is-full .rv-artwrap { top: 52px; height: 20svh; }
+  .rv-atelier.is-full .rv-art { width: min(70%, 27svh); }
+  .rv-atelier.is-full .rv-artwrap { top: 40px; height: 28svh; }
 }
 
 /* ---- The story page (/revelateur) ---- */

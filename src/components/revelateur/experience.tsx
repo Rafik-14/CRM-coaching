@@ -174,7 +174,15 @@ export function RevelateurExperience({ initial, resumed, texts }: { initial: Scr
                     setPulseKey((k) => k + 1);
                     cue("select");
                     setScreen({ ...screen, value: v });
-                    run(() => answerRevelateur(screen.id, v));
+                    // A tap is enough: once the answer is saved, the next statement follows on its own
+                    // (not when correcting an answer from the summary).
+                    const auto = !fromRecapRef.current;
+                    run(async () => {
+                      const r = await answerRevelateur(screen.id, v);
+                      if (r.error || !auto) return r;
+                      await new Promise((ok) => setTimeout(ok, 420));
+                      return moveRevelateur({ to: "next" });
+                    });
                   }}
                   onPrevious={() => run(() => moveRevelateur({ to: "previous" }))}
                   onNext={() => run(() => moveRevelateur({ to: "next" }))}
@@ -311,7 +319,7 @@ function Question({
 }) {
   const num = String(screen.number).padStart(2, "0");
   const count = screen.answered.filter(Boolean).length;
-  // Keys 1–5 choose (no automatic move); Enter continues once answered. An Enter pressed while the
+  // Keys 1–5 choose (and move on, like a tap); Enter continues once answered. An Enter pressed while the
   // choice is still being saved is remembered and carried out as soon as the save is done.
   const [enterQueued, setEnterQueued] = useState(false);
   const goOn = fromRecap ? onBackToRecap : onNext;
@@ -360,7 +368,7 @@ function Question({
             otherwise land on the previous statement (slow connections). */}
         <div
           className={cn(
-            "mt-8 grid gap-2 transition-opacity md:grid-cols-5 md:gap-0 md:border-y md:border-[var(--jg-light-gray)]",
+            "mt-8 grid gap-2.5 transition-opacity md:grid-cols-5 md:gap-3",
             pending && "pointer-events-none opacity-60",
           )}
           aria-busy={pending}
@@ -373,8 +381,17 @@ function Question({
                 key={value}
                 className={cn(
                   "rv-option",
-                  "flex cursor-pointer items-center gap-4 rounded-[7px] border border-[var(--jg-light-gray)] bg-white px-4 py-3.5 transition-colors hover:border-navy md:flex-col md:rounded-none md:border-0 md:bg-transparent md:px-2 md:py-6 md:text-center md:hover:bg-white",
+                  "relative flex cursor-pointer items-center gap-4 px-4 py-3.5 md:flex-col md:px-2 md:py-6 md:text-center",
                 )}
+                // A tap answers without letting the browser scroll the page to the (hidden) radio.
+                onClick={(e) => {
+                  if (e.target instanceof HTMLInputElement) return;
+                  e.preventDefault();
+                  e.currentTarget.querySelector("input")?.focus({ preventScroll: true });
+                  if (pending) return;
+                  if (screen.value !== value) onAnswer(value);
+                  else if (!fromRecap) onNext(); // same answer kept: just move on
+                }}
               >
                 <input
                   type="radio"
@@ -403,13 +420,9 @@ function Question({
         <button type="button" onClick={onPrevious} disabled={pending} className="inline-flex min-h-11 items-center gap-2 font-heading text-[15px] font-semibold text-[var(--jg-anthracite)] hover:text-navy">
           <ArrowLeft aria-hidden className="size-4" /> Précédente
         </button>
-        {fromRecap ? (
+        {fromRecap && (
           <button type="button" onClick={onBackToRecap} disabled={pending || screen.value === null} className={siteButton()}>
             Retour au récapitulatif <Check aria-hidden />
-          </button>
-        ) : (
-          <button type="button" onClick={onNext} disabled={pending || screen.value === null} className={siteButton({ variant: screen.value === null ? "secondary" : "primary" })}>
-            {screen.number === screen.total ? "Terminer" : "Suivante"} <ArrowRight aria-hidden />
           </button>
         )}
       </div>
