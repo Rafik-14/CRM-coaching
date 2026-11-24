@@ -595,7 +595,7 @@ html.rs-locked, html.rs-locked body { overflow: hidden; }
 .rs-k.is-on { color: var(--gold-ink2); }
 .rs-thread-svg { display: block; width: 100%; height: 180px; overflow: visible; margin-top: -4svh; }
 .rs-thread-svg path { stroke-dasharray: 1; stroke-dashoffset: 1; }
-.rs-thread-dot { opacity: 0; transition: opacity 1.1s ease; }
+.rs-thread-dot { opacity: 0; transition: opacity .45s ease; }
 .rs-field { padding-block: 16svh; }
 .rs-under { display: flex; justify-content: space-between; align-items: baseline; gap: 24px; flex-wrap: wrap; margin-top: 28px; }
 .rs-under .rs-mid { max-width: 22ch; }

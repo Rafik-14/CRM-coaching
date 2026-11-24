@@ -75,6 +75,31 @@ export function RevelateurStory({ texts }: { texts: StoryTexts }) {
       blocks.forEach((b) => b.classList.add("is-in"));
       return;
     }
+    // Slower, damped wheel scrolling: each wheel notch is capped and eased, so a fast flick never
+    // rushes through the story. Touch, keyboard and scrollbar keep their native behaviour.
+    let target = window.scrollY,
+      cur = window.scrollY,
+      gliding = false,
+      glide = 0;
+    const maxY = () => document.documentElement.scrollHeight - window.innerHeight;
+    const step = () => {
+      cur += (target - cur) * 0.07;
+      if (Math.abs(target - cur) < 0.5) cur = target;
+      window.scrollTo(0, cur);
+      if (cur === target) { gliding = false; return; }
+      glide = requestAnimationFrame(step);
+    };
+    const onWheel = (e: WheelEvent) => {
+      if (e.ctrlKey || e.deltaMode === 2) return;
+      e.preventDefault();
+      if (!gliding) { target = cur = window.scrollY; }
+      const d = Math.max(-70, Math.min(70, e.deltaMode === 1 ? e.deltaY * 32 : e.deltaY));
+      target = Math.max(0, Math.min(maxY(), target + d * 0.8));
+      if (!gliding) { gliding = true; glide = requestAnimationFrame(step); }
+    };
+    const onNativeScroll = () => { if (!gliding) target = cur = window.scrollY; };
+    window.addEventListener("wheel", onWheel, { passive: false });
+    window.addEventListener("scroll", onNativeScroll, { passive: true });
     const hero = el.querySelector<HTMLElement>("[data-hero]"),
       cue = el.querySelector<HTMLElement>("[data-cue]");
     const expand = el.querySelector<HTMLElement>("[data-expand]"),
@@ -91,7 +116,8 @@ export function RevelateurStory({ texts }: { texts: StoryTexts }) {
     const foot = el.querySelector<HTMLElement>("[data-foot]"),
       bar = el.querySelector<HTMLElement>("[data-progress]");
     const clamp = (v: number) => Math.max(0, Math.min(1, v));
-    let raf = 0;
+    let raf = 0,
+      fr: number[] = [];
     const frameLoop = () => {
       const st = window.scrollY,
         H = window.innerHeight;
@@ -125,10 +151,11 @@ export function RevelateurStory({ texts }: { texts: StoryTexts }) {
         if (im) im.style.translate = `0 ${c * -40}px`;
       });
       if (thread && path) {
+        if (!fr.length) fr = dotFractions(path, dots);
         const tr = thread.getBoundingClientRect(),
           p = clamp((H * 0.7 - tr.top) / (tr.height * 0.85));
         path.style.strokeDashoffset = String(1 - p);
-        dots.forEach((g, i) => (g.style.opacity = p > i / 4.4 ? "1" : "0"));
+        dots.forEach((g, i) => (g.style.opacity = p >= (fr[i] ?? i / 4) - 0.005 ? "1" : "0"));
         words.forEach((k, i) =>
           k.classList.toggle("is-on", p > 0.15 + i * 0.22),
         );
@@ -170,6 +197,9 @@ export function RevelateurStory({ texts }: { texts: StoryTexts }) {
     window.addEventListener("mousemove", magnet);
     return () => {
       cancelAnimationFrame(raf);
+      cancelAnimationFrame(glide);
+      window.removeEventListener("wheel", onWheel);
+      window.removeEventListener("scroll", onNativeScroll);
       offs.forEach((f) => f());
       window.removeEventListener("mousemove", magnet);
     };
@@ -328,21 +358,22 @@ export function RevelateurStory({ texts }: { texts: StoryTexts }) {
               pathLength={1}
               fill="none"
               stroke="#a8823f"
-              strokeWidth="1.2"
+              strokeWidth="2.6"
               vectorEffect="non-scaling-stroke"
             />
             {P.map(([x, y]) => (
-              <g key={x} data-thread-dot className="rs-thread-dot">
+              <g key={x} data-thread-dot data-x={x} className="rs-thread-dot">
                 <ellipse
                   cx={x}
                   cy={y}
-                  rx="11"
-                  ry="11"
+                  rx="17"
+                  ry="17"
                   fill="none"
-                  stroke="rgba(168,130,63,.35)"
+                  stroke="rgba(168,130,63,.55)"
+                  strokeWidth="1.6"
                   vectorEffect="non-scaling-stroke"
                 />
-                <ellipse cx={x} cy={y} rx="4.5" ry="4.5" fill="#172536" />
+                <ellipse cx={x} cy={y} rx="7.5" ry="7.5" fill="#172536" />
               </g>
             ))}
           </svg>
@@ -488,6 +519,20 @@ export function RevelateurStory({ texts }: { texts: StoryTexts }) {
 }
 
 /** Lines of text that rise one after another when their block scrolls into view. */
+/** Share of the thread's length at which each dot sits (the path runs left to right). */
+function dotFractions(path: SVGPathElement, dots: SVGGElement[]): number[] {
+  const L = path.getTotalLength();
+  return dots.map((g) => {
+    const x = Number(g.dataset.x);
+    let lo = 0, hi = L;
+    for (let i = 0; i < 24; i++) {
+      const mid = (lo + hi) / 2;
+      if (path.getPointAtLength(mid).x < x) lo = mid; else hi = mid;
+    }
+    return hi / L;
+  });
+}
+
 function Lines({ lines, className }: { lines: string[]; className?: string }) {
   return (
     <>
