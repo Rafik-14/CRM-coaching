@@ -7,7 +7,7 @@ import { RevelateurExperience } from "@/components/revelateur/experience";
 import { SCALE_LABELS } from "@/lib/revelateur/scoring";
 import { db } from "@/server/db";
 import { revelateurEnabled } from "@/server/revelateur/flag";
-import { INTRO_LINES, OPEN_QUESTION, PREPARATION_TEXT, SAVE_NOTICE, WELCOME_TEXT } from "@/server/revelateur/questionnaire";
+import { OPEN_QUESTION, OWNERSHIP_NOTICE, PREPARATION_TEXT, SAVE_NOTICE, WELCOME_TEXT } from "@/server/revelateur/questionnaire";
 import { findSession, screenFor } from "@/server/revelateur/session";
 
 export const metadata: Metadata = {
@@ -36,12 +36,12 @@ async function Experience() {
       initial={initial}
       resumed={!!session && session.status === "in_progress" && session.step !== "welcome"}
       texts={{
-        intro: INTRO_LINES,
         welcome: WELCOME_TEXT,
         openQuestion: OPEN_QUESTION,
         saveNotice: SAVE_NOTICE,
         preparation: PREPARATION_TEXT,
         scale: SCALE_LABELS,
+        ownership: OWNERSHIP_NOTICE,
       }}
     />
   );

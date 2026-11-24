@@ -1,6 +1,7 @@
 "use server";
 
 import { cookies } from "next/headers";
+import { DIMENSIONS, QUESTION_DIMENSIONS, QUESTION_IDS } from "@/lib/revelateur/scoring";
 import { db } from "@/server/db";
 import { clientIp, rateLimited } from "@/server/rate-limit";
 import { revelateurEnabled } from "@/server/revelateur/flag";
@@ -110,12 +111,16 @@ export async function saveOpenAndContinue(text: string, direction: "next" | "pre
   });
 }
 
-export type ConfirmState = { ok: true } | { ok: false; error: string };
+/**
+ * After confirmation the answers are frozen; `axes` gives, for each statement in order (Q01 → Q30),
+ * the axis (0–4) its summary row flies to in the preparation animation. Sent only once confirmed.
+ */
+export type ConfirmState = { ok: true; axes: number[] } | { ok: false; error: string };
 
 /** Explicit, final confirmation (v2.0 §2 step 7). Idempotent: a double click gives one result. */
 export async function confirmRevelateur(): Promise<ConfirmState> {
   const session = await current();
   if (!session) return { ok: false, error: "Votre session a expiré." };
   const r = await confirmSession(db, session.id);
-  return r.ok ? { ok: true } : { ok: false, error: r.error };
+  return r.ok ? { ok: true, axes: QUESTION_IDS.map((id) => DIMENSIONS.indexOf(QUESTION_DIMENSIONS[id])) } : { ok: false, error: r.error };
 }

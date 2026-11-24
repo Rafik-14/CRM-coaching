@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
+import Image from "next/image";
+import Link from "next/link";
 import { ArrowLeft, ArrowRight, Check, Pencil } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { siteButton } from "@/components/site/button";
@@ -14,29 +16,39 @@ import {
   type RevelateurState,
 } from "@/server/actions/revelateur";
 import type { Screen } from "@/server/revelateur/session";
+import { AtelierStage, PARTS, partOf } from "./atelier";
+import { playPreparation } from "./preparation";
 
 export type ExperienceTexts = {
-  intro: readonly string[];
   welcome: { title: string; paragraphs: readonly string[]; closing: string };
   openQuestion: string;
   saveNotice: string;
   preparation: { title: string; lead: string };
   scale: readonly string[];
+  ownership: string;
 };
 
-type Phase = "intro" | "screen" | "preparing" | "ready";
+type Phase = "boot" | "screen" | "preparing" | "ready";
 
 /**
- * The passation, screen by screen (dossier maître v2.0 §2): immersion → welcome → 30 statements
- * (no automatic move) → open question → summary → final confirmation → preparation.
+ * The passation (dossier maître v2.0 §2): the story page hands over behind a navy curtain → each part
+ * is explained full screen → its statements, one at a time beside the part's drawing (no automatic
+ * move) → open question → summary → final confirmation → preparation.
  * State lives on the server; this component only shows the screen it receives.
  */
 export function RevelateurExperience({ initial, resumed, texts }: { initial: Screen | null; resumed: boolean; texts: ExperienceTexts }) {
-  const [phase, setPhase] = useState<Phase>(initial === null ? "intro" : initial.kind === "complete" ? "ready" : "screen");
+  const [phase, setPhase] = useState<Phase>(initial === null || (initial.kind === "welcome" && !resumed) ? "boot" : initial.kind === "complete" ? "ready" : "screen");
   const [screen, setScreen] = useState<Screen>(initial ?? { kind: "welcome" });
   const [error, setError] = useState<string>();
   const [pending, startTransition] = useTransition();
   const [fromRecap, setFromRecap] = useState(false);
+  const fromRecapRef = useRef(false);
+  const [prep, setPrep] = useState<{ answers: string[]; axes: number[] }>();
+  // The part explained full screen (null: the questions are shown), and the explanation sliding away.
+  const [explain, setExplain] = useState<number | null>(initial?.kind === "question" ? partOf(initial.number) : null);
+  const [leaving, setLeaving] = useState(false);
+  const [pulseKey, setPulseKey] = useState(0);
+  const [curtain, setCurtain] = useState(true);
   const live = useRef<HTMLDivElement>(null);
 
   const apply = useCallback((r: RevelateurState) => {
@@ -44,6 +56,13 @@ export function RevelateurExperience({ initial, resumed, texts }: { initial: Scr
       // A new screen (next statement, summary…) starts at the top — on a phone the page may be scrolled.
       const changed = prev.kind !== r.screen.kind || (prev.kind === "question" && r.screen.kind === "question" && prev.id !== r.screen.id);
       if (changed) window.scrollTo({ top: 0 });
+      // Entering a part (going forward, or arriving at the questions): explain it first. Never when
+      // going back, nor when correcting an answer from the summary.
+      if (r.screen.kind === "question" && !fromRecapRef.current) {
+        const n = r.screen.number, part = partOf(n);
+        const forwardIntoPart = prev.kind === "question" && n === prev.number + 1 && PARTS[part].first === n;
+        if (forwardIntoPart || prev.kind === "welcome") setExplain(part);
+      }
       return r.screen;
     });
     setError(r.error);
@@ -51,172 +70,168 @@ export function RevelateurExperience({ initial, resumed, texts }: { initial: Scr
     requestAnimationFrame(() => live.current?.querySelector<HTMLElement>("[data-focus]")?.focus({ preventScroll: true }));
   }, []);
   const run = (action: () => Promise<RevelateurState>) => startTransition(async () => apply(await action()));
+  const setRecapMode = (on: boolean) => { fromRecapRef.current = on; setFromRecap(on); };
 
-  const start = () =>
+  // Arriving from the story page: open (or resume) the passation behind the curtain, go straight to
+  // the first statement, then lift the curtain onto the explanation of the first part.
+  useEffect(() => {
+    if (phase !== "boot") {
+      const t = window.setTimeout(() => setCurtain(false), 350);
+      return () => window.clearTimeout(t);
+    }
+    let cancelled = false;
     startTransition(async () => {
-      const r = await startRevelateur();
-      setPhase("screen");
+      let r = await startRevelateur();
+      if (!r.error && r.screen.kind === "welcome") r = await moveRevelateur({ to: "start" });
+      if (cancelled) return;
       apply(r);
+      setPhase("screen");
+      window.setTimeout(() => setCurtain(false), 250);
     });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- runs once, on arrival
+  }, []);
 
+  const begin = () => {
+    if (leaving) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    setLeaving(true);
+    setExplain(null);
+    window.setTimeout(() => setLeaving(false), reduce ? 0 : 1100);
+  };
+
+  // The summary stays on screen while the answers are frozen; then its rows become the five points.
   const confirm = () =>
     startTransition(async () => {
-      setPhase("preparing");
-      const began = Date.now();
+      if (screen.kind !== "recap") return;
+      const answers = screen.items.map((it) => it.label);
       const r = await confirmRevelateur();
       if (!r.ok) {
-        setPhase("screen");
         setError(r.error);
         return;
       }
+      window.scrollTo({ top: 0 });
+      setPrep({ answers, axes: r.axes });
+      setPhase("preparing");
       // v2.0 §3: about 5–7 s, never an artificial wait beyond that; shorter if motion is reduced.
-      const min = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 800 : 5500;
-      setTimeout(() => setPhase("ready"), Math.max(0, min - (Date.now() - began)));
+      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      setTimeout(() => setPhase("ready"), reduce ? 2500 : 6800);
     });
 
+  const errorBox = error && (
+    <p role="alert" className="mx-auto mt-6 w-full max-w-[860px] rounded-[7px] border border-[#e3bdb5] bg-[#fbf1ef] px-4 py-3 text-[15px] text-[#9a3b2e]">
+      {error}
+    </p>
+  );
+
+  const atelier = phase === "screen" && screen.kind === "question";
   return (
     <div ref={live} className="flex flex-1 flex-col">
-      {phase === "intro" && <Intro lines={texts.intro} onStart={start} pending={pending} />}
-      {phase === "preparing" && <Preparation texts={texts.preparation} />}
-      {phase === "ready" && (
-        <Ready
-          onRestart={() =>
-            startTransition(async () => {
-              const r = await restartRevelateur();
-              setPhase("screen");
-              apply(r);
-            })
-          }
-          pending={pending}
-        />
-      )}
-      {phase === "screen" && (
-        <div className="flex flex-1 flex-col" aria-busy={pending}>
-          {error && (
-            <p role="alert" className="mx-auto mt-6 w-full max-w-[860px] rounded-[7px] border border-[#e3bdb5] bg-[#fbf1ef] px-4 py-3 text-[15px] text-[#9a3b2e]">
-              {error}
-            </p>
-          )}
-          {screen.kind === "welcome" && (
-            <Welcome
-              texts={texts.welcome}
-              resumed={resumed}
-              pending={pending}
-              onStart={() => run(() => moveRevelateur({ to: "start" }))}
-            />
-          )}
-          {screen.kind === "question" && (
-            <Question
-              key={screen.id}
-              screen={screen}
-              scale={texts.scale}
-              saveNotice={texts.saveNotice}
-              pending={pending}
-              fromRecap={fromRecap}
-              onAnswer={(v) => {
-                setScreen({ ...screen, value: v });
-                run(() => answerRevelateur(screen.id, v));
-              }}
-              onPrevious={() => run(() => moveRevelateur({ to: "previous" }))}
-              onNext={() => run(() => moveRevelateur({ to: "next" }))}
-              onBackToRecap={() => {
-                setFromRecap(false);
-                run(() => moveRevelateur({ to: "recap" }));
-              }}
-            />
-          )}
-          {screen.kind === "open" && (
-            <OpenQuestion
-              question={texts.openQuestion}
-              initial={screen.value}
-              pending={pending}
-              onMove={(text, dir) => run(() => saveOpenAndContinue(text, dir))}
-            />
-          )}
-          {screen.kind === "recap" && (
-            <Recap
-              screen={screen}
-              pending={pending}
-              onEdit={(index) => {
-                setFromRecap(true);
-                run(() => moveRevelateur({ to: "question", index }));
-              }}
-              onEditOpen={() => run(() => moveRevelateur({ to: "previous" }))}
-              onConfirm={confirm}
-            />
-          )}
+      <div className={cn("rv-curtain", !curtain && "is-up")} aria-hidden>
+        <span>Le Révélateur</span>
+      </div>
+
+      {atelier && screen.kind === "question" && (
+        <div className={cn("rv-atelier", explain !== null && "is-full")} aria-busy={pending}>
+          <AtelierStage
+            part={explain ?? partOf(screen.number)}
+            full={explain !== null}
+            leaving={leaving}
+            pulseKey={pulseKey}
+            answered={screen.answered}
+            current={screen.number}
+            ownership={texts.ownership}
+            onBegin={begin}
+          />
+          <div className="rv-panel">
+            {explain === null && (
+              <>
+                {errorBox}
+                <Question
+                  key={screen.id}
+                  screen={screen}
+                  scale={texts.scale}
+                  saveNotice={texts.saveNotice}
+                  pending={pending}
+                  fromRecap={fromRecap}
+                  onAnswer={(v) => {
+                    setPulseKey((k) => k + 1);
+                    setScreen({ ...screen, value: v });
+                    run(() => answerRevelateur(screen.id, v));
+                  }}
+                  onPrevious={() => run(() => moveRevelateur({ to: "previous" }))}
+                  onNext={() => run(() => moveRevelateur({ to: "next" }))}
+                  onBackToRecap={() => {
+                    setRecapMode(false);
+                    run(() => moveRevelateur({ to: "recap" }));
+                  }}
+                />
+                <p className="rv-panel-legal">{texts.ownership}</p>
+              </>
+            )}
+          </div>
         </div>
+      )}
+
+      {!atelier && (
+        <Classic ownership={texts.ownership}>
+          {phase === "preparing" && prep && <Preparation texts={texts.preparation} answers={prep.answers} axes={prep.axes} />}
+          {phase === "ready" && (
+            <Ready
+              onRestart={() =>
+                startTransition(async () => {
+                  let r = await restartRevelateur();
+                  if (!r.error && r.screen.kind === "welcome") r = await moveRevelateur({ to: "start" });
+                  setPhase("screen");
+                  apply(r);
+                })
+              }
+              pending={pending}
+            />
+          )}
+          {phase === "screen" && (
+            <div className="flex flex-1 flex-col" aria-busy={pending}>
+              {errorBox}
+              {screen.kind === "welcome" && (
+                <Welcome texts={texts.welcome} resumed={resumed} pending={pending} onStart={() => run(() => moveRevelateur({ to: "start" }))} />
+              )}
+              {screen.kind === "open" && (
+                <OpenQuestion question={texts.openQuestion} initial={screen.value} pending={pending} onMove={(text, dir) => run(() => saveOpenAndContinue(text, dir))} />
+              )}
+              {screen.kind === "recap" && (
+                <Recap
+                  screen={screen}
+                  pending={pending}
+                  onEdit={(index) => {
+                    setRecapMode(true);
+                    run(() => moveRevelateur({ to: "question", index }));
+                  }}
+                  onEditOpen={() => run(() => moveRevelateur({ to: "previous" }))}
+                  onConfirm={confirm}
+                />
+              )}
+            </div>
+          )}
+        </Classic>
       )}
     </div>
   );
 }
 
-// ---------------------------------------------------------------------------
-// Immersion (≈ 11 s, skippable, respects reduced motion)
-// ---------------------------------------------------------------------------
-
-function Intro({ lines, onStart, pending }: { lines: readonly string[]; onStart: () => void; pending: boolean }) {
-  const beats = lines.slice(0, 4);
-  const final = lines.slice(4);
-  const [beat, setBeat] = useState(0);
-  const [out, setOut] = useState(false);
-  const [showFinal, setShowFinal] = useState(false);
-  const [step, setStep] = useState(0);
-
-  // The sequence is scheduled once, when the intro appears. (Depending on `beats` — a new array on
-  // every render — restarted it after each line, so only the first line ever showed.)
-  const beatCount = beats.length;
-  const finalCount = final.length;
-  useEffect(() => {
-    const timers: number[] = [];
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      timers.push(window.setTimeout(() => { setShowFinal(true); setStep(99); }, 0));
-      return () => timers.forEach(clearTimeout);
-    }
-    // Each opening line takes 2.2 s: 0.9 s to appear, about 1 s fully sharp and readable, 0.3 s to fade.
-    // Then the title screen builds up line by line (0.6 s apart): about 11 s in all (dossier v2.0 §2).
-    const BEAT = 2200;
-    for (let i = 0; i < beatCount; i++) {
-      timers.push(window.setTimeout(() => { setBeat(i); setOut(false); }, i * BEAT));
-      timers.push(window.setTimeout(() => setOut(true), i * BEAT + 1900));
-    }
-    timers.push(window.setTimeout(() => setShowFinal(true), beatCount * BEAT));
-    for (let k = 1; k <= finalCount + 1; k++) timers.push(window.setTimeout(() => setStep(k), beatCount * BEAT + (k - 1) * 600 + 50));
-    return () => timers.forEach(clearTimeout);
-  }, [beatCount, finalCount]);
-
-  const skip = () => { setShowFinal(true); setStep(99); };
-  const [title, subtitle, l1, l2, meta] = final;
-
+/** Open question, summary, confirmation and the end: the calm frame with the JG® mark and the notice. */
+function Classic({ children, ownership }: { children: React.ReactNode; ownership: string }) {
   return (
-    <section className="relative flex flex-1 items-center justify-center px-4 py-16 text-center" aria-label="Introduction">
-      {!showFinal ? (
-        <p key={beat} aria-live="polite" className={cn("rv-develop", out && "rv-out", beat === 0 ? "font-heading text-[13px] font-semibold tracking-[.3em] text-[var(--jg-gold-ink)]" : "jg-h1 max-w-[18ch] text-navy")}>
-          {beats[beat]}
-        </p>
-      ) : (
-        <div className="mx-auto max-w-[760px]">
-          <div className={cn(step >= 1 ? "rv-develop" : "opacity-0")}>
-            <h1 className="font-heading text-[clamp(2.25rem,6vw,4.5rem)] font-semibold tracking-[.06em] text-navy">{title}</h1>
-            <p className="mt-3 font-heading text-[13px] font-semibold tracking-[.3em] text-[var(--jg-gold-ink)] uppercase">{subtitle}</p>
-            <div className={cn("mx-auto mt-8 w-16", "rv-gold-line")} />
-          </div>
-          <p className={cn("mt-8 font-heading text-[clamp(1.125rem,2.2vw,1.5rem)] font-medium text-navy", step >= 2 ? "rv-develop" : "opacity-0")}>{l1}</p>
-          <p className={cn("mt-3 text-[17px]", step >= 3 ? "rv-develop" : "opacity-0")}>{l2}</p>
-          <p className={cn("mt-8 font-heading text-[12px] font-semibold tracking-[.22em] uppercase text-[var(--jg-anthracite)]", step >= 4 ? "rv-develop" : "opacity-0")}>{meta}</p>
-          <div className={cn("mt-8", step >= 5 ? "rv-develop" : "opacity-0")}>
-            <button type="button" className={siteButton()} onClick={onStart} disabled={pending} data-focus>
-              Je commence l&apos;expérience <ArrowRight aria-hidden />
-            </button>
-          </div>
-        </div>
-      )}
-      {step < 5 && (
-        <button type="button" onClick={skip} className="absolute right-4 bottom-4 px-2 py-3 font-heading text-[12px] font-semibold tracking-[.16em] text-[var(--jg-anthracite)] uppercase hover:text-navy">
-          Passer l&apos;introduction
-        </button>
-      )}
-    </section>
+    <div className="flex min-h-dvh flex-col">
+      <header className="mx-auto flex w-full max-w-[1100px] items-center justify-between px-4 py-5">
+        <Link href="/revelateur" className="inline-flex items-center gap-3 font-heading text-[12px] font-semibold tracking-[.2em] text-navy uppercase">
+          <Image src="/brand/jg-monogram.svg" alt="" width={26} height={28} unoptimized />
+          Le Révélateur
+        </Link>
+        <span className="font-heading text-[11px] font-semibold tracking-[.16em] text-[var(--jg-anthracite)] uppercase">Test Signature JG®</span>
+      </header>
+      <div className="flex flex-1 flex-col">{children}</div>
+      <footer className="mx-auto w-full max-w-[1100px] px-4 py-6 text-center text-[12px] leading-relaxed text-[var(--jg-anthracite)]">{ownership}</footer>
+    </div>
   );
 }
 
@@ -492,39 +507,15 @@ function Recap({
   );
 }
 
-/** « Votre valeur prend forme. » — fine lines connect five points (the five dimensions), on ivory. */
-function Preparation({ texts }: { texts: ExperienceTexts["preparation"] }) {
-  const pts = [0, 1, 2, 3, 4].map((i) => {
-    const a = ((-90 + i * 72) * Math.PI) / 180;
-    return [120 + Math.cos(a) * 80, 120 + Math.sin(a) * 80] as const;
-  });
-  const edges: [number, number][] = [[0, 1], [1, 2], [2, 3], [3, 4], [4, 0], [0, 2], [1, 3], [2, 4], [3, 0], [4, 1]];
+/** « Votre valeur prend forme. » — the summary becomes the five points (see ./preparation.ts). */
+function Preparation({ texts, answers, axes }: { texts: ExperienceTexts["preparation"]; answers: string[]; axes: number[] }) {
+  const stage = useRef<HTMLDivElement>(null);
+  useEffect(() => (stage.current ? playPreparation(stage.current, answers, axes) : undefined), [answers, axes]);
   return (
-    <section className="flex flex-1 flex-col items-center justify-center px-4 py-16 text-center" aria-live="polite">
-      <svg viewBox="0 0 240 240" className="w-[200px] md:w-[240px]" aria-hidden>
-        {edges.map(([a, b], i) => {
-          const len = Math.hypot(pts[a][0] - pts[b][0], pts[a][1] - pts[b][1]);
-          return (
-            <line
-              key={i}
-              x1={pts[a][0]}
-              y1={pts[a][1]}
-              x2={pts[b][0]}
-              y2={pts[b][1]}
-              className={"rv-line"}
-              stroke={i < 5 ? "var(--gold)" : "var(--jg-teal)"}
-              strokeOpacity={i < 5 ? 0.9 : 0.45}
-              strokeWidth={i < 5 ? 1.4 : 1}
-              style={{ ["--len" as string]: len, animationDelay: `${i * 0.35}s` }}
-            />
-          );
-        })}
-        {pts.map(([x, y], i) => (
-          <circle key={i} cx={x} cy={y} r={4} fill="var(--jg-navy)" className={"rv-node"} style={{ animationDelay: `${i * 0.3}s` }} />
-        ))}
-      </svg>
-      <h1 className={cn("jg-h2 mt-10 text-navy", "rv-develop")}>{texts.title}</h1>
-      <p className={cn("mt-4 max-w-[520px] text-[17px]", "rv-develop")} style={{ animationDelay: ".6s" }}>
+    <section className="mx-auto flex w-full max-w-[960px] flex-1 flex-col px-4 py-8 md:py-12" aria-live="polite">
+      <h1 className="sr-only">{texts.title}</h1>
+      <div ref={stage} className="relative h-[460px] w-full overflow-hidden rounded-[14px] border border-[var(--jg-light-gray)] bg-[#f8f6f2] sm:h-[400px]" aria-hidden />
+      <p className="rv-develop mx-auto mt-6 max-w-[520px] text-center text-[17px]" style={{ animationDelay: "4.4s" }}>
         {texts.lead}
       </p>
     </section>
