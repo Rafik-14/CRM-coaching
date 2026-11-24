@@ -109,6 +109,7 @@ export function RevelateurStory({ texts }: { texts: StoryTexts }) {
       shadeEl = el.querySelector<HTMLElement>("[data-shade]");
     const thread = el.querySelector<HTMLElement>("[data-thread]"),
       path = el.querySelector<SVGPathElement>("[data-thread-path]");
+    const labels = [...el.querySelectorAll<HTMLElement>("[data-thread-label]")];
     const dots = [...el.querySelectorAll<SVGGElement>("[data-thread-dot]")],
       words = [...el.querySelectorAll<HTMLElement>("[data-k]")];
     const photos = [...el.querySelectorAll<HTMLElement>("[data-px]")],
@@ -154,8 +155,15 @@ export function RevelateurStory({ texts }: { texts: StoryTexts }) {
         if (!fr.length) fr = dotFractions(path, dots);
         const tr = thread.getBoundingClientRect(),
           p = clamp((H * 0.7 - tr.top) / (tr.height * 0.85));
-        path.style.strokeDashoffset = String(1 - p);
-        dots.forEach((g, i) => (g.style.opacity = p >= (fr[i] ?? i / 4) - 0.005 ? "1" : "0"));
+        // The line is driven by the drawing's own position on screen, so it draws while it is in view.
+        const sr = path.ownerSVGElement!.getBoundingClientRect(),
+          q = clamp((H * 0.92 - sr.top) / (H * 0.5));
+        path.style.strokeDashoffset = String(1 - q);
+        dots.forEach((g, i) => {
+          const on = q >= (fr[i] ?? i / 4) - 0.005;
+          g.style.opacity = on ? "1" : "0";
+          labels[i]?.classList.toggle("is-on", on);
+        });
         words.forEach((k, i) =>
           k.classList.toggle("is-on", p > 0.15 + i * 0.22),
         );
@@ -346,6 +354,7 @@ export function RevelateurStory({ texts }: { texts: StoryTexts }) {
           </div>
         </div>
         <div className="rs-wrap">
+          <div className="rs-thread-box">
           <svg
             className="rs-thread-svg"
             viewBox={`0 0 ${W} ${TH}`}
@@ -359,7 +368,6 @@ export function RevelateurStory({ texts }: { texts: StoryTexts }) {
               fill="none"
               stroke="#a8823f"
               strokeWidth="2.6"
-              vectorEffect="non-scaling-stroke"
             />
             {P.map(([x, y]) => (
               <g key={x} data-thread-dot data-x={x} className="rs-thread-dot">
@@ -377,6 +385,14 @@ export function RevelateurStory({ texts }: { texts: StoryTexts }) {
               </g>
             ))}
           </svg>
+          <div className="rs-thread-labels" aria-hidden>
+            {THREAD_LABELS.map((t, i) => (
+              <span key={t} data-thread-label className="rs-thread-label" style={{ left: `${P[i][0] / 10}%`, top: `${(P[i][1] / TH) * 100}%` }}>
+                {t}
+              </span>
+            ))}
+          </div>
+          </div>
         </div>
       </section>
 
@@ -532,6 +548,9 @@ function dotFractions(path: SVGPathElement, dots: SVGGElement[]): number[] {
     return hi / L;
   });
 }
+
+/** DRAFT wording — to be approved by Jérémy. */
+const THREAD_LABELS = ["Les liens", "Les constantes", "Les corrélations", "Ce qui vous distingue", "Votre valeur"];
 
 function Lines({ lines, className }: { lines: string[]; className?: string }) {
   return (
