@@ -119,24 +119,48 @@ export function RevelateurStory({ texts }: { texts: StoryTexts }) {
     const clamp = (v: number) => Math.max(0, Math.min(1, v));
     let raf = 0,
       fr: number[] = [];
+    // One pass per scroll change: every layout read first, then every write, so the browser lays the
+    // page out once per frame instead of once per element. Idle frames cost nothing.
+    let lastSt = -1,
+      lastH = 0,
+      idle = 0;
     const frameLoop = () => {
       const st = window.scrollY,
         H = window.innerHeight;
-      blocks.forEach((b) => {
-        if (
-          !b.classList.contains("is-in") &&
-          b.getBoundingClientRect().top < H * 0.86
-        )
-          b.classList.add("is-in");
+      if (st === lastSt && H === lastH && idle > 8) {
+        raf = requestAnimationFrame(frameLoop);
+        return;
+      }
+      idle = st === lastSt ? idle + 1 : 0;
+      lastSt = st;
+      lastH = H;
+
+      // ---- reads
+      const pending = blocks.filter((bl) => !bl.classList.contains("is-in"));
+      const pendingTop = pending.map((bl) => bl.getBoundingClientRect().top);
+      const er = expand && frame ? expand.getBoundingClientRect() : null;
+      const pr = photos.map((ph) => {
+        if (!ph.classList.contains("is-in")) return null;
+        const r = ph.getBoundingClientRect();
+        return r.bottom > -H && r.top < H * 2 ? r : null;
+      });
+      const tr = thread && path ? thread.getBoundingClientRect() : null;
+      const sr = tr ? path!.ownerSVGElement!.getBoundingClientRect() : null;
+      if (tr && !fr.length) fr = dotFractions(path!, dots);
+      const footTop = fab && foot ? foot.getBoundingClientRect().top : 0;
+      const max = document.documentElement.scrollHeight - H;
+
+      // ---- writes
+      pending.forEach((bl, i) => {
+        if (pendingTop[i] < H * 0.86) bl.classList.add("is-in");
       });
       if (hero) {
-        hero.style.transform = `translateY(${st * 0.3}px)`;
+        hero.style.transform = `translate3d(0, ${st * 0.3}px, 0)`;
         hero.style.opacity = String(1 - clamp(st / (H * 0.7)));
       }
       if (cue) cue.style.opacity = st > 20 ? "0" : "1";
-      if (expand && frame) {
-        const r = expand.getBoundingClientRect(),
-          pe = clamp((H - r.top) / (H * 0.85)),
+      if (er && frame) {
+        const pe = clamp((H - er.top) / (H * 0.85)),
           iv = (1 - pe) * 10,
           ih = (1 - pe) * 42;
         frame.style.clipPath = `inset(${iv}% ${ih}% ${iv}% ${ih}% round 22px)`;
@@ -144,37 +168,27 @@ export function RevelateurStory({ texts }: { texts: StoryTexts }) {
         if (cap) cap.style.opacity = pe > 0.9 ? "1" : "0";
         if (shadeEl) shadeEl.style.opacity = pe > 0.72 ? "1" : "0";
       }
-      photos.forEach((p) => {
-        if (!p.classList.contains("is-in")) return;
-        const b = p.getBoundingClientRect(),
-          c = (b.top + b.height / 2 - H / 2) / H,
-          im = p.querySelector<HTMLElement>("img");
+      photos.forEach((ph, i) => {
+        const r = pr[i];
+        if (!r) return;
+        const c = (r.top + r.height / 2 - H / 2) / H,
+          im = ph.querySelector<HTMLElement>("img");
         if (im) im.style.translate = `0 ${c * -40}px`;
       });
-      if (thread && path) {
-        if (!fr.length) fr = dotFractions(path, dots);
-        const tr = thread.getBoundingClientRect(),
-          p = clamp((H * 0.7 - tr.top) / (tr.height * 0.85));
+      if (tr && sr && path) {
+        const p = clamp((H * 0.7 - tr.top) / (tr.height * 0.85));
         // The line is driven by the drawing's own position on screen, so it draws while it is in view.
-        const sr = path.ownerSVGElement!.getBoundingClientRect(),
-          q = clamp((H * 0.92 - sr.top) / (H * 0.5));
+        const q = clamp((H * 0.92 - sr.top) / (H * 0.5));
         path.style.strokeDashoffset = String(1 - q);
         dots.forEach((g, i) => {
           const on = q >= (fr[i] ?? i / 4) - 0.005;
           g.style.opacity = on ? "1" : "0";
           labels[i]?.classList.toggle("is-on", on);
         });
-        words.forEach((k, i) =>
-          k.classList.toggle("is-on", p > 0.15 + i * 0.22),
-        );
+        words.forEach((k, i) => k.classList.toggle("is-on", p > 0.15 + i * 0.22));
       }
-      const max = document.documentElement.scrollHeight - H;
       if (bar) bar.style.height = `${max > 0 ? (st / max) * 100 : 0}%`;
-      if (fab && foot)
-        fab.classList.toggle(
-          "is-on",
-          st > H * 0.6 && foot.getBoundingClientRect().top > H * 0.4,
-        );
+      if (fab && foot) fab.classList.toggle("is-on", st > H * 0.6 && footTop > H * 0.4);
       raf = requestAnimationFrame(frameLoop);
     };
     raf = requestAnimationFrame(frameLoop);
