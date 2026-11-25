@@ -14,7 +14,6 @@ import {
   type RevelateurState,
 } from "@/server/actions/revelateur";
 import type { Screen } from "@/server/revelateur/session";
-import { playPreparation } from "../preparation";
 import { cinemaAudio } from "./audio";
 import { CinemaHUD } from "./hud";
 import { C, COLUMN_META, gsap, reducedMotion, SECTION_GROUPS, SplitText, useGSAP } from "./gsap";
@@ -28,7 +27,7 @@ export type CinemaTexts = {
   ownership: string;
 };
 
-type Stage = "boot" | "interlude" | "question" | "open" | "review" | "preparing" | "confirmed";
+type Stage = "boot" | "interlude" | "question" | "open" | "review" | "confirmed";
 type Mode = "boot" | "forward" | "back" | "stay";
 type QuestionScreen = Extract<Screen, { kind: "question" }>;
 type RecapScreen = Extract<Screen, { kind: "recap" }>;
@@ -47,7 +46,6 @@ export function CinemaExperience({ initialComplete, fromStart, texts }: { initia
   const [group, setGroup] = useState(0);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string>();
-  const [prep, setPrep] = useState<{ answers: string[]; axes: number[] }>();
   const [retry, setRetry] = useState(0); // remounts the statement after a failed save
 
   const apply = useCallback(
@@ -103,7 +101,7 @@ export function CinemaExperience({ initialComplete, fromStart, texts }: { initia
 
   useEffect(() => {
     world.stage =
-      stage === "boot" ? "interlude" : stage === "preparing" || stage === "confirmed" ? "confirmed" : stage === "review" ? "review" : stage;
+      stage === "boot" ? "interlude" : stage === "confirmed" ? "confirmed" : stage === "review" ? "review" : stage;
     setWorld({ gravityActive: stage === "question" });
     if (stage !== "question") {
       setWorld({ hovered: null });
@@ -141,7 +139,6 @@ export function CinemaExperience({ initialComplete, fromStart, texts }: { initia
   const confirm = async () => {
     if (screen.kind !== "recap") return;
     setPending(true);
-    const answers = screen.items.map((it) => it.label);
     const r = await confirmRevelateur().catch(() => ({ ok: false as const, error: "Une erreur est survenue. Réessayez." }));
     setPending(false);
     if (!r.ok) return setError(r.error);
@@ -149,9 +146,7 @@ export function CinemaExperience({ initialComplete, fromStart, texts }: { initia
     surgeWorld();
     cinemaAudio.playReveal();
     window.scrollTo({ top: 0 });
-    setPrep({ answers, axes: r.axes });
-    setStage("preparing");
-    window.setTimeout(() => setStage("confirmed"), reducedMotion() ? 2500 : 6800);
+    setStage("confirmed");
   };
 
   const q = screen.kind === "question" ? screen : null;
@@ -208,7 +203,6 @@ export function CinemaExperience({ initialComplete, fromStart, texts }: { initia
           onConfirm={confirm}
         />
       )}
-      {stage === "preparing" && prep && <Preparing texts={texts.preparation} answers={prep.answers} axes={prep.axes} />}
       {stage === "confirmed" && (
         <Confirmed
           ownership={texts.ownership}
@@ -514,10 +508,10 @@ function LightColumns({
       ref={root}
       onPointerMove={(e) => {
         if (locked || e.pointerType !== "mouse") return;
-        const r = e.currentTarget.getBoundingClientRect(), ratio = Math.min(Math.max((e.clientX - r.left) / Math.max(r.width, 1), 0), 1);
-        setWorld({ gravityX: ratio * 2 - 1 });
-        to.current.rot?.((ratio * 2 - 1) * 4.4);
-        setRatio(ratio);
+        // The reticle sticks to the nearest of the five points (no free sliding between them).
+        const r = e.currentTarget.getBoundingClientRect(), ratio = Math.min(Math.max((e.clientX - r.left) / Math.max(r.width, 1), 0), 0.999);
+        const nearest = Math.min(5, Math.floor(ratio * 5) + 1);
+        if (nearest !== hovered) activate(nearest);
       }}
       onPointerLeave={() => {
         if (locked) return;
@@ -965,21 +959,6 @@ function Review({
           </div>,
           document.body,
         )}
-    </section>
-  );
-}
-
-/** « Votre valeur prend forme. » (v2.0 §3): the summary rows gather into five points, then the shape closes. */
-function Preparing({ texts, answers, axes }: { texts: { title: string; lead: string }; answers: string[]; axes: number[] }) {
-  const box = useRef<HTMLDivElement>(null);
-  useEffect(() => (box.current ? playPreparation(box.current, answers, axes) : undefined), [answers, axes]);
-  return (
-    <section className="mx-auto flex min-h-[100dvh] w-full max-w-[960px] flex-col justify-center px-5 pt-24 pb-10" aria-live="polite">
-      <h1 className="text-center font-display text-[30px] font-extralight tracking-[-0.02em] text-[#F8F6F2] sm:text-[40px]">{texts.title}</h1>
-      <div ref={box} className="relative mt-8 h-[440px] w-full overflow-hidden rounded-[14px] border border-[#D4A866]/25 bg-[#F8F6F2] sm:h-[400px]" aria-hidden />
-      <p className="rv-develop mx-auto mt-6 max-w-[520px] text-center text-[16px] font-light text-[#F8F6F2]/80" style={{ animationDelay: "4.4s" }}>
-        {texts.lead}
-      </p>
     </section>
   );
 }

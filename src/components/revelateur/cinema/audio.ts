@@ -141,6 +141,84 @@ class CinemaAudio {
     o.stop(now + 1.6);
   }
 
+  /** A short reverb tail (generated, no file) so the overture sounds like a room, not a synth. */
+  private room(ctx: AudioContext, seconds = 3.2) {
+    const len = Math.floor(ctx.sampleRate * seconds), ir = ctx.createBuffer(2, len, ctx.sampleRate);
+    for (let ch = 0; ch < 2; ch++) {
+      const d = ir.getChannelData(ch);
+      for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.6);
+    }
+    const conv = ctx.createConvolver();
+    conv.buffer = ir;
+    return conv;
+  }
+
+  /**
+   * The overture under the logo reveal (≈5 s), timed on the drawing: a deep swell and rising air while
+   * the letters draw, a soft low impact when the gold mark lands (~2.3 s), then a warm chord that opens
+   * as the curtain lifts (~3.6 s) and fades out.
+   */
+  playOverture() {
+    const ctx = this.ensure();
+    if (!ctx) return;
+    const t = ctx.currentTime + 0.05;
+    const master = ctx.createGain(), wet = ctx.createGain(), verb = this.room(ctx);
+    master.gain.value = 0.9;
+    wet.gain.value = 0.55;
+    master.connect(ctx.destination);
+    master.connect(verb).connect(wet).connect(ctx.destination);
+    const out = master;
+
+    // 1. Deep swell (C1 → C2 octave rising slowly), the floor of the room.
+    const sub = ctx.createOscillator(), subG = ctx.createGain();
+    sub.type = "sine";
+    sub.frequency.setValueAtTime(32.7, t);
+    sub.frequency.exponentialRampToValueAtTime(65.4, t + 3.4);
+    subG.gain.setValueAtTime(0.0001, t);
+    subG.gain.exponentialRampToValueAtTime(0.16, t + 2.2);
+    subG.gain.exponentialRampToValueAtTime(0.0001, t + 5.2);
+    sub.connect(subG).connect(out);
+    sub.start(t);
+    sub.stop(t + 5.3);
+
+    // 2. Rising air (filtered noise) while the monogram draws itself.
+    if (this.noise) {
+      const src = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+      src.buffer = this.noise;
+      src.loop = true;
+      f.type = "bandpass";
+      f.Q.value = 0.9;
+      f.frequency.setValueAtTime(180, t);
+      f.frequency.exponentialRampToValueAtTime(2400, t + 2.25);
+      f.frequency.exponentialRampToValueAtTime(500, t + 3.4);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.05, t + 2.1);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 2.6);
+      src.connect(f).connect(g).connect(out);
+      src.start(t);
+      src.stop(t + 2.7);
+    }
+
+    // 3. The gold mark lands: a soft, low impact.
+    const hit = t + 2.3, boom = ctx.createOscillator(), bg = ctx.createGain();
+    boom.type = "sine";
+    boom.frequency.setValueAtTime(90, hit);
+    boom.frequency.exponentialRampToValueAtTime(38, hit + 0.5);
+    bg.gain.setValueAtTime(0.0001, hit);
+    bg.gain.linearRampToValueAtTime(0.22, hit + 0.02);
+    bg.gain.exponentialRampToValueAtTime(0.0001, hit + 1.4);
+    boom.connect(bg).connect(out);
+    boom.start(hit);
+    boom.stop(hit + 1.5);
+
+    // 4. The curtain lifts: a warm, slowly opening chord with a faint glassy shimmer on top.
+    const open = t + 3.3;
+    [65.41, 130.81, 196, 261.63, 329.63, 392, 493.88].forEach((f, i) =>
+      this.tone(ctx, i < 2 ? "sine" : "triangle", f, open + i * 0.05, i < 2 ? 0.05 : 0.02, 4.2, [600, 2400]),
+    );
+    [1046.5, 1318.5, 1568].forEach((f, i) => this.tone(ctx, "sine", f, open + 0.25 + i * 0.12, 0.006, 3.2));
+  }
+
   /** Gentle chord when the answers are confirmed. */
   playReveal() {
     const ctx = this.ensure();
