@@ -148,6 +148,13 @@
       "when": 1795626323334,
       "tag": "0020_revelateur_deliveries",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1795641872936,
+      "tag": "0021_revelateur_interpretation",
+      "breakpoints": true
     }
   ]
 }

@@ -12,6 +12,7 @@ import {
   type QuestionId,
   type ScoringResult,
 } from "@/lib/revelateur/scoring";
+import { interpret } from "./interpretation";
 import { QUESTION_TEXTS } from "./question-texts";
 
 /**
@@ -233,6 +234,8 @@ export async function confirmSession(db: AnyDb, sessionId: string): Promise<Conf
     }
 
     const result = scoreAnswers(check.answers);
+    const session = await tx.query.revelateurSessions.findFirst({ where: eq(revelateurSessions.id, sessionId) });
+    const interpretation = interpret(check.answers, result, session?.openAnswer ?? null);
     await tx
       .insert(revelateurResults)
       .values({
@@ -240,6 +243,8 @@ export async function confirmSession(db: AnyDb, sessionId: string): Promise<Conf
         questionnaireVersion: result.questionnaireVersion,
         scoringEngineVersion: SCORING_ENGINE_VERSION,
         snapshot: result,
+        interpretationEngineVersion: interpretation.meta.interpretationEngineVersion,
+        interpretation,
       })
       .onConflictDoNothing({ target: revelateurResults.sessionId });
     return { ok: true as const, result };

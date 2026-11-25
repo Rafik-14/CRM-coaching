@@ -15,6 +15,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 import type { ScoringResult } from "../../lib/revelateur/scoring";
+import type { Interpretation } from "../revelateur/interpretation";
 
 const timestamps = {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
@@ -780,6 +781,9 @@ export const revelateurResults = pgTable("revelateur_results", {
   questionnaireVersion: text("questionnaire_version").notNull(),
   scoringEngineVersion: text("scoring_engine_version").notNull(),
   snapshot: jsonb("snapshot").$type<ScoringResult>().notNull(),
+  /** Interpretation decisions (annexe 03), computed once from the frozen answers; never recomputed. */
+  interpretationEngineVersion: text("interpretation_engine_version"),
+  interpretation: jsonb("interpretation").$type<Interpretation>(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

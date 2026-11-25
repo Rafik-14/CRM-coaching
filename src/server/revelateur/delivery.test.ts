@@ -2,7 +2,7 @@ import { after, before, describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { eq } from "drizzle-orm";
 import { createTestDb } from "../db/test-db";
-import { revelateurDeliveries } from "../db/schema";
+import { revelateurDeliveries, revelateurResults } from "../db/schema";
 import { QUESTION_IDS } from "@/lib/revelateur/scoring";
 import {
   MAX_ATTEMPTS,
@@ -44,6 +44,15 @@ describe("Révélateur report delivery", () => {
     buildPdf: async () => pdf,
     send: async (d) => (sent.push(d.email), { ok: true, id: null }),
     ...over,
+  });
+
+  it("stores the interpretation once, with the frozen result (versioned, traceable)", async () => {
+    const id = await confirmed();
+    const row = await t.db.query.revelateurResults.findFirst({ where: eq(revelateurResults.sessionId, id) });
+    assert.ok(row?.interpretation);
+    assert.equal(row.interpretationEngineVersion, row.interpretation.meta.interpretationEngineVersion);
+    assert.equal(row.interpretation.qualityControl.status, "ok");
+    assert.deepEqual(row.interpretation.configuration, row.snapshot.configuration);
   });
 
   it("validates and normalises the address; masks it for the screen", () => {
