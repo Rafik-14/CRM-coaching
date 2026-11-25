@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useState, useTransition } from "react";
-import { Loader2, Plus, Trash2 } from "lucide-react";
+import { Loader2, Play, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,7 +18,7 @@ import { ConfirmDialog } from "@/components/confirm-dialog";
 import { FormField } from "@/components/form-field";
 import { formatMoney, offerPrice } from "@/lib/format";
 import { PAYMENT_STATUSES, paymentLabel } from "@/lib/validations/phase1";
-import { assignPackage, removeClientPackage, setPaymentStatus } from "@/server/actions/client-data";
+import { assignPackage, removeClientPackage, setPaymentStatus, startCoaching } from "@/server/actions/client-data";
 import type { ActionState } from "@/server/actions/coaching";
 
 type ClientPackage = {
@@ -119,36 +119,91 @@ function PackageRow({ cp }: { cp: ClientPackage }) {
   );
 }
 
-function AssignPackageDialog({
+function AssignPackageDialog(props: { contactId: string; currency: string; options: PackageOption[] }) {
+  return (
+    <PackageDialog
+      {...props}
+      action={assignPackage}
+      title="Attribuer un accompagnement"
+      submitLabel="Attribuer"
+      successMessage="Accompagnement attribué"
+      trigger={
+        <Button variant="outline" size="sm" className="justify-self-start">
+          <Plus /> Attribuer un accompagnement
+        </Button>
+      }
+    />
+  );
+}
+
+/**
+ * « Démarrer l’accompagnement » on a prospect's page: the person becomes a client with the chosen programme
+ * (pre-selected: the offer recommended after the Échange stratégique, if any).
+ */
+export function StartCoachingDialog(props: {
+  contactId: string;
+  currency: string;
+  options: PackageOption[];
+  defaultPackageId?: string;
+}) {
+  return (
+    <PackageDialog
+      {...props}
+      action={startCoaching}
+      title="Démarrer l’accompagnement"
+      submitLabel="Démarrer"
+      successMessage="Accompagnement démarré : la personne est maintenant cliente"
+      intro="La personne devient cliente et reçoit l’e-mail de bienvenue avec le questionnaire."
+      trigger={
+        <Button>
+          <Play /> Démarrer l’accompagnement
+        </Button>
+      }
+    />
+  );
+}
+
+function PackageDialog({
   contactId,
   currency,
   options,
+  defaultPackageId,
+  action,
+  title,
+  submitLabel,
+  successMessage,
+  intro,
+  trigger,
 }: {
   contactId: string;
   currency: string;
   options: PackageOption[];
+  defaultPackageId?: string;
+  action: (prev: ActionState, fd: FormData) => Promise<ActionState>;
+  title: string;
+  submitLabel: string;
+  successMessage: string;
+  intro?: string;
+  trigger: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
   const [state, formAction, pending] = useActionState<ActionState, FormData>(async (prev, fd) => {
-    const r = await assignPackage(prev, fd);
+    const r = await action(prev, fd);
     if (r.ok) {
       setOpen(false);
-      toast.success("Accompagnement attribué");
+      toast.success(successMessage);
     } else if (r.error) toast.error(r.error);
     return r;
   }, {});
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="justify-self-start">
-          <Plus /> Attribuer un accompagnement
-        </Button>
-      </DialogTrigger>
+      <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Attribuer un accompagnement</DialogTitle>
+          <DialogTitle>{title}</DialogTitle>
           <DialogDescription>
+            {intro && <>{intro} </>}
             Prix en {currency === "CHF" ? "francs suisses" : "euros"} (devise du contact). Les séances effectuées seront
             décomptées automatiquement.
           </DialogDescription>
@@ -156,7 +211,7 @@ function AssignPackageDialog({
         <form action={formAction} className="grid gap-4">
           <input type="hidden" name="contactId" value={contactId} />
           <FormField label="Accompagnement" htmlFor="packageId" error={state.fieldErrors?.packageId?.[0]}>
-            <Select name="packageId" defaultValue={options[0]?.id}>
+            <Select name="packageId" defaultValue={defaultPackageId ?? options[0]?.id}>
               <SelectTrigger id="packageId" className="w-full">
                 <SelectValue placeholder="Choisissez un accompagnement" />
               </SelectTrigger>
@@ -190,7 +245,7 @@ function AssignPackageDialog({
             </Button>
             <Button type="submit" disabled={pending || options.length === 0}>
               {pending && <Loader2 className="animate-spin" />}
-              Attribuer
+              {submitLabel}
             </Button>
           </DialogFooter>
         </form>

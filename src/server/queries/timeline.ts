@@ -23,6 +23,8 @@ const actionLabels: Record<string, { title: string; kind: TimelineEvent["kind"] 
   session_rescheduled: { title: "Séance reprogrammée", kind: "update" },
   note_saved: { title: "Note de séance rédigée", kind: "update" },
   package_assigned: { title: "Accompagnement attribué", kind: "stage" },
+  offer_recommended: { title: "Offre recommandée", kind: "stage" },
+  coaching_started: { title: "Accompagnement démarré", kind: "stage" },
   case_study_saved: { title: "Étude de cas mise à jour", kind: "update" },
   goal_created: { title: "Objectif ajouté", kind: "update" },
   document_added: { title: "Document ajouté", kind: "update" },
