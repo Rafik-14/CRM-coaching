@@ -2,18 +2,19 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { connection } from "next/server";
-import { ChevronLeft, ChevronRight, Globe, Presentation } from "lucide-react";
+import { ArrowUpRight, ChevronLeft, ChevronRight, Globe, Plus, Presentation } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/page-header";
-import { getCalendarSessions, type CalendarSession } from "@/server/queries/calendar";
-import { eventsBetween } from "@/server/queries/events";
+import { getCalendarSessions, getOpenTasks, type CalendarSession } from "@/server/queries/calendar";
+import { eventsBetween, listCoachEvents } from "@/server/queries/events";
 import { listScheduleOptions } from "@/server/queries/contacts";
 import { ScheduleSessionDialog } from "@/components/coaching/schedule-session-dialog";
 import { cn } from "@/lib/utils";
-import { APP_TIME_ZONE } from "@/lib/format";
+import { APP_TIME_ZONE, formatDate, fullName, isOverdue } from "@/lib/format";
+import { TaskCheckbox } from "@/components/task-checkbox";
 
-export const metadata: Metadata = { title: "Calendrier" };
+export const metadata: Metadata = { title: "Agenda" };
 
 const WEEKDAYS = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
 const monthFmt = new Intl.DateTimeFormat("fr-FR", { month: "long", year: "numeric", timeZone: APP_TIME_ZONE });
@@ -32,13 +33,16 @@ const chip: Record<CalendarSession["status"], string> = {
 export default function CalendarPage({ searchParams }: PageProps<"/calendrier">) {
   return (
     <>
-      <PageHeader title="Calendrier" description="Toutes vos séances et échanges stratégiques">
+      <PageHeader title="Agenda" description="Vos séances, vos tâches et vos événements">
         <Suspense fallback={<Skeleton className="h-9 w-52" />}>
           <PlanButton />
         </Suspense>
       </PageHeader>
       <Suspense fallback={<Skeleton className="h-[36rem] rounded-2xl" />}>
         <Calendar searchParams={searchParams} />
+      </Suspense>
+      <Suspense fallback={<Skeleton className="mt-6 h-56 rounded-2xl" />}>
+        <TasksAndEvents />
       </Suspense>
     </>
   );
@@ -229,5 +233,89 @@ function Legend({ className, label }: { className: string; label: string }) {
       <span className={cn("size-2.5 rounded-sm", className)} />
       {label}
     </span>
+  );
+}
+
+/**
+ * Under the month grid: open to-dos and upcoming events. In the simplified CRM (Nov. 2026) tasks and events have no
+ * menu entry of their own; their full pages stay one click away.
+ */
+async function TasksAndEvents() {
+  await connection();
+  const [openTasks, { upcoming }] = await Promise.all([getOpenTasks(), listCoachEvents()]);
+  const nextEvents = upcoming.filter((e) => e.status !== "cancelled").slice(0, 4);
+  const more = (href: string, label: string) => (
+    <Link href={href} className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
+      {label} <ArrowUpRight className="size-3.5" />
+    </Link>
+  );
+  return (
+    <div className="mt-6 grid gap-6 lg:grid-cols-2">
+      <section className="min-w-0 rounded-2xl border border-border bg-card p-5">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <h2 className="font-semibold">À faire</h2>
+          {more("/taches", "Toutes les tâches")}
+        </div>
+        {openTasks.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Aucune tâche en attente.</p>
+        ) : (
+          <ul className="divide-y divide-border">
+            {openTasks.map((t) => (
+              <li key={t.id} className="flex items-center gap-3 py-2.5">
+                <TaskCheckbox id={t.id} done={t.done} />
+                <span className="min-w-0 flex-1 truncate text-sm">
+                  {t.title}
+                  {t.contact && <span className="text-muted-foreground"> · {fullName(t.contact)}</span>}
+                </span>
+                <span
+                  className={isOverdue(t.dueAt, t.done) ? "text-xs font-medium text-destructive" : "text-xs text-muted-foreground"}
+                >
+                  {formatDate(t.dueAt)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section className="min-w-0 rounded-2xl border border-border bg-card p-5">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <h2 className="font-semibold">Événements</h2>
+          <div className="flex items-center gap-3">
+            {more("/mes-evenements", "Tous les événements")}
+            <Button asChild size="sm" variant="secondary">
+              <Link href="/mes-evenements/nouveau">
+                <Plus /> Nouvel événement
+              </Link>
+            </Button>
+          </div>
+        </div>
+        {nextEvents.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Aucun événement à venir.</p>
+        ) : (
+          <ul className="grid gap-2">
+            {nextEvents.map((e) => (
+              <li key={e.id}>
+                <Link
+                  href={`/mes-evenements/${e.id}`}
+                  className="flex items-center gap-3 rounded-xl bg-muted/50 p-3 transition-colors hover:bg-muted"
+                >
+                  <span className="grid min-w-0 flex-1">
+                    <span className="truncate font-medium">{e.title}</span>
+                    <span className="text-xs text-muted-foreground first-letter:uppercase">
+                      {dayFmt.format(e.startsAt)} · {timeFmt.format(e.startsAt)}
+                      {e.status === "draft" ? " · brouillon" : ""}
+                    </span>
+                  </span>
+                  <span className="shrink-0 text-sm text-muted-foreground tabular-nums">
+                    {e.capacity ? `${e.taken} / ${e.capacity}` : `${e.taken} inscrit${e.taken > 1 ? "s" : ""}`}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+    </div>
   );
 }

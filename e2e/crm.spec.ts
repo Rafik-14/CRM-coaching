@@ -7,14 +7,14 @@ import { openContact, testEmail } from "./helpers";
 test.describe("CRM", () => {
   test("toutes les pages du CRM s’ouvrent", async ({ page }) => {
     for (const [path, title] of [
-      ["/tableau-de-bord", /Bonjour|Bonsoir|Tableau de bord/],
-      ["/contacts", /Contacts/],
+      ["/tableau-de-bord", /Bonjour|Bonsoir/],
+      ["/contacts", /Clients/],
       ["/pipeline", /Pipeline/],
-      ["/calendrier", /Calendrier/],
+      ["/calendrier", /Agenda/],
       ["/taches", /Tâches/],
       ["/mes-evenements", /Événements/],
       ["/analyses", /Analyses/],
-      ["/parametres", /Paramètres/],
+      ["/parametres", /Réglages/],
     ] as const) {
       await page.goto(path);
       await expect(page.getByRole("heading", { level: 1 }).first(), path).toContainText(title);

@@ -41,7 +41,9 @@ export default function TransformationsPage() {
           <CaseHeader name="Yannick" domain="Comptabilité / gestion" photo={yannick} />
           <div className="mt-12 grid gap-10">
             <CaseBlock label="Avant">
-              <CaseQuote>Je sais ce que je fais, mais j’ai du mal à expliquer ce qui me correspond vraiment.</CaseQuote>
+              <CaseQuote>
+                J’avais du mal à savoir vers quoi je voulais aller et à mettre des mots sur ce qui me définissait vraiment.
+              </CaseQuote>
               <p>
                 Yannick avait notamment du mal à se projeter professionnellement et à mettre des mots précis sur ce qui
                 l’animait réellement.
@@ -111,7 +113,8 @@ export default function TransformationsPage() {
           <div className="mt-12 grid gap-10">
             <CaseBlock label="Avant">
               <CaseQuote>
-                Je sais parfaitement ce que je fais. Mais j’ai du mal à expliquer clairement ce que j’apporte réellement.
+                Je savais expliquer mon métier et mon expertise, mais pas toujours ce qu’ils apportaient concrètement aux
+                organisations.
               </CaseQuote>
               <p>
                 Après près de 30 ans de carrière dans l’industrie et la recherche, Alexandre disposait d’une expertise
