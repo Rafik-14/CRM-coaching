@@ -18,13 +18,13 @@ export const CASES = [
     slug: "yannick",
     name: "Yannick",
     domain: "Comptabilité / gestion",
-    teaser: "Je sais ce que je fais, mais j’ai du mal à expliquer ce qui me correspond vraiment.",
+    teaser: "J’avais du mal à savoir vers quoi je voulais aller et à mettre des mots sur ce qui me définissait vraiment.",
   },
   {
     slug: "alexandre",
     name: "Alexandre",
     domain: "Data, BI & transformation des organisations",
-    teaser: "Je sais parfaitement ce que je fais. Mais j’ai du mal à expliquer clairement ce que j’apporte réellement.",
+    teaser: "Je savais expliquer mon métier et mon expertise, mais pas toujours ce qu’ils apportaient concrètement aux organisations.",
   },
 ] as const;
 
