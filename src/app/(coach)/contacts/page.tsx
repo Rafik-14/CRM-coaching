@@ -14,14 +14,14 @@ import { cn } from "@/lib/utils";
 import { ContactFilters } from "./contact-filters";
 import { ContactsTable } from "./contacts-table";
 
-export const metadata: Metadata = { title: "Contacts" };
+export const metadata: Metadata = { title: "Clients" };
 
 type SP = PageProps<"/contacts">["searchParams"];
 
 export default function ContactsPage({ searchParams }: PageProps<"/contacts">) {
   return (
     <>
-      <PageHeader title="Contacts" description="Suivez vos prospects et vos clients">
+      <PageHeader title="Clients" description="Vos clients et vos nouveaux contacts">
         <Suspense fallback={<Skeleton className="h-9 w-64" />}>
           <HeaderActions searchParams={searchParams} />
         </Suspense>

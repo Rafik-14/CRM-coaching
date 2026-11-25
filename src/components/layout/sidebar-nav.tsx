@@ -31,8 +31,9 @@ export function NavLinks({
 }) {
   return (
     <nav className="grid gap-1 px-3">
-      {navItems.map(({ href, label, icon: Icon }) => {
-        const active = !!pathname && (pathname === href || pathname.startsWith(`${href}/`));
+      {navItems.map(({ href, label, icon: Icon, also }) => {
+        const active =
+          !!pathname && [href, ...also].some((h: string) => pathname === h || pathname.startsWith(`${h}/`));
         return (
           <Link
             key={href}

@@ -66,7 +66,7 @@ export async function sendClientBookingLink(contactId: string): Promise<ActionSt
   const mail = clientBookingLink({ firstName: contact.firstName, url: clientBookingUrl(link.token), sessionMinutes });
   const result = await sendEmail({ ...mail, to: contact.email, contactId: contact.id, templateKey: "client_booking_link" });
   refresh();
-  return result.ok ? { ok: true, message: `Lien envoyé à ${contact.email}.` } : { error: "L’envoi a échoué (voir Paramètres › E-mails)." };
+  return result.ok ? { ok: true, message: `Lien envoyé à ${contact.email}.` } : { error: "L’envoi a échoué (voir Réglages › E-mails)." };
 }
 
 // ------------------------------------------------------------------ public /reserver/seance/<token>

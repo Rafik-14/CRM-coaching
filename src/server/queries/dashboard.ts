@@ -1,83 +1,68 @@
 import "server-only";
-import { and, asc, count, desc, eq, gte, inArray, lt, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, gte, inArray, isNull, lt, sql } from "drizzle-orm";
 import { db } from "@/server/db";
-import {
-  clientPackages,
-  clients,
-  coachingSessions,
-  contacts,
-  packages,
-  pipelineStages,
-  tasks,
-} from "@/server/db/schema";
+import { clientPackages, clients, coachingSessions, contacts, packages, pipelineStages, tasks } from "@/server/db/schema";
 import { requireCoach } from "@/server/dal";
-import { addMoney, APP_TIME_ZONE, type MoneyByCurrency } from "@/lib/format";
-import { DISCOVERY_TYPE } from "@/lib/validations/coaching";
+import { addMoney, type MoneyByCurrency } from "@/lib/format";
 
 const DAY = 86_400_000;
 
-/** Relative change, or null when there is no previous value to compare with. */
-const trend = (current: number, previous: number) => (previous > 0 ? (current - previous) / previous : null);
-
-function startOfWeek(d: Date) {
-  const x = new Date(d);
-  x.setHours(0, 0, 0, 0);
-  x.setDate(x.getDate() - ((x.getDay() + 6) % 7)); // Monday
-  return x;
-}
-
 /**
- * Calendar month key in the app's time zone (« 2026-10 »), used to bucket the 12-month activity chart.
- * The zone is written as a literal (not a bound parameter) so the SELECT and GROUP BY expressions are identical.
+ * The home screen, in the order Jérémy reads it (Nov. 2026, « CRM simplifié »):
+ * 1. his clients (active ones with their programme, then the newest contacts), 2. his earnings, 3. today and to-dos.
+ * No charts: the 12-month activity, weekly sessions and sources graphs were removed from the home screen.
  */
-const TZ_LITERAL = /^[A-Za-z0-9_/+-]+$/.test(APP_TIME_ZONE) ? APP_TIME_ZONE : "Europe/Zurich";
-const monthKey = (col: unknown) => sql<string>`to_char(${col} at time zone ${sql.raw(`'${TZ_LITERAL}'`)}, 'YYYY-MM')`;
-const keyOf = (d: Date) =>
-  new Intl.DateTimeFormat("en-CA", { year: "numeric", month: "2-digit", timeZone: APP_TIME_ZONE }).format(d).slice(0, 7);
-
-export type ActivityMonth = { key: string; start: Date; contacts: number; calls: number; clients: number };
-
-export async function getDashboard() {
+export async function getHome() {
   const user = await requireCoach();
 
   const now = new Date();
   const startOfDay = new Date(now);
   startOfDay.setHours(0, 0, 0, 0);
   const in7Days = new Date(startOfDay.getTime() + 7 * DAY);
-  const d30 = new Date(now.getTime() - 30 * DAY);
-  const d60 = new Date(now.getTime() - 60 * DAY);
-  const weeksStart = new Date(startOfWeek(now).getTime() - 7 * 7 * DAY); // 8 weeks incl. current
-  // 12 calendar months, current month included (a few hours of margin for the time-zone shift).
-  const monthsStart = new Date(now.getFullYear(), now.getMonth() - 11, 1);
-  const monthsQueryStart = new Date(monthsStart.getTime() - DAY);
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const startOfYear = new Date(now.getFullYear(), 0, 1);
 
-  const [
-    [activeClients],
-    [newLeads30],
-    [newLeadsPrev],
-    [done30],
-    [donePrev],
-    revenueRows,
-    upcoming,
-    dueTasks,
-    recentContacts,
-    sessionsForChart,
-    sources,
-    contactsByMonth,
-    callsByMonth,
-    clientsByMonth,
-  ] = await Promise.all([
-    db.select({ n: count() }).from(clients).where(eq(clients.status, "active")),
-    db.select({ n: count() }).from(contacts).where(gte(contacts.createdAt, d30)),
-    db.select({ n: count() }).from(contacts).where(and(gte(contacts.createdAt, d60), lt(contacts.createdAt, d30))),
+  const [activeClients, newContacts, revenueRows, [activeCount], upcoming, dueTasks] = await Promise.all([
+    // Active clients, each with their latest programme and how far along it is.
     db
-      .select({ n: count() })
-      .from(coachingSessions)
-      .where(and(eq(coachingSessions.status, "done"), gte(coachingSessions.startsAt, d30), lt(coachingSessions.startsAt, now))),
+      .select({
+        contactId: contacts.id,
+        firstName: contacts.firstName,
+        lastName: contacts.lastName,
+        packageName: packages.name,
+        sessionsUsed: clientPackages.sessionsUsed,
+        sessionsCount: packages.sessionsCount,
+      })
+      .from(clients)
+      .innerJoin(contacts, eq(clients.contactId, contacts.id))
+      .leftJoin(
+        clientPackages,
+        eq(
+          clientPackages.id,
+          sql`(select cp.id from client_packages cp where cp.client_id = ${clients.id} order by cp.purchased_at desc limit 1)`,
+        ),
+      )
+      .leftJoin(packages, eq(clientPackages.packageId, packages.id))
+      .where(eq(clients.status, "active"))
+      .orderBy(desc(clients.startDate))
+      .limit(8),
+    // The newest contacts who are not clients yet, with their status.
     db
-      .select({ n: count() })
-      .from(coachingSessions)
-      .where(and(eq(coachingSessions.status, "done"), gte(coachingSessions.startsAt, d60), lt(coachingSessions.startsAt, d30))),
+      .select({
+        id: contacts.id,
+        firstName: contacts.firstName,
+        lastName: contacts.lastName,
+        source: contacts.source,
+        createdAt: contacts.createdAt,
+        stageName: pipelineStages.name,
+        stageColor: pipelineStages.color,
+      })
+      .from(contacts)
+      .leftJoin(clients, eq(clients.contactId, contacts.id))
+      .leftJoin(pipelineStages, eq(contacts.stageId, pipelineStages.id))
+      .where(isNull(clients.id))
+      .orderBy(desc(contacts.createdAt))
+      .limit(5),
     db
       .select({
         // Price/currency frozen on the sale (fallback: package list price for old rows).
@@ -87,7 +72,8 @@ export async function getDashboard() {
       })
       .from(clientPackages)
       .innerJoin(packages, eq(clientPackages.packageId, packages.id))
-      .where(and(inArray(clientPackages.paymentStatus, ["paid", "partial"]), gte(clientPackages.purchasedAt, d60))),
+      .where(and(inArray(clientPackages.paymentStatus, ["paid", "partial"]), gte(clientPackages.purchasedAt, startOfYear))),
+    db.select({ n: count() }).from(clients).where(eq(clients.status, "active")),
     db.query.coachingSessions.findMany({
       where: and(
         eq(coachingSessions.status, "planned"),
@@ -104,103 +90,23 @@ export async function getDashboard() {
       limit: 6,
       with: { contact: true },
     }),
-    db
-      .select({
-        id: contacts.id,
-        firstName: contacts.firstName,
-        lastName: contacts.lastName,
-        source: contacts.source,
-        createdAt: contacts.createdAt,
-        estimatedValue: contacts.estimatedValue,
-        currency: contacts.currency,
-        stageName: pipelineStages.name,
-        stageColor: pipelineStages.color,
-      })
-      .from(contacts)
-      .leftJoin(pipelineStages, eq(contacts.stageId, pipelineStages.id))
-      .orderBy(desc(contacts.createdAt))
-      .limit(5),
-    db
-      .select({ startsAt: coachingSessions.startsAt, status: coachingSessions.status })
-      .from(coachingSessions)
-      .where(and(gte(coachingSessions.startsAt, weeksStart), sql`${coachingSessions.status} in ('done', 'planned')`)),
-    db
-      .select({ source: sql<string>`coalesce(${contacts.source}, 'Inconnue')`, n: count() })
-      .from(contacts)
-      .groupBy(sql`coalesce(${contacts.source}, 'Inconnue')`)
-      .orderBy(desc(count())),
-    // 12-month activity: new contacts, strategy calls held, new clients.
-    db
-      .select({ key: monthKey(contacts.createdAt), n: count() })
-      .from(contacts)
-      .where(gte(contacts.createdAt, monthsQueryStart))
-      .groupBy(monthKey(contacts.createdAt)),
-    db
-      .select({ key: monthKey(coachingSessions.startsAt), n: count() })
-      .from(coachingSessions)
-      .where(
-        and(
-          eq(coachingSessions.type, DISCOVERY_TYPE),
-          eq(coachingSessions.status, "done"),
-          gte(coachingSessions.startsAt, monthsQueryStart),
-          lt(coachingSessions.startsAt, now),
-        ),
-      )
-      .groupBy(monthKey(coachingSessions.startsAt)),
-    db
-      .select({ key: monthKey(clients.createdAt), n: count() })
-      .from(clients)
-      .where(gte(clients.createdAt, monthsQueryStart))
-      .groupBy(monthKey(clients.createdAt)),
   ]);
 
-  // Revenue per currency (EUR and CHF are never converted or summed together).
-  const revenue30: MoneyByCurrency = {};
-  const revenuePrev: MoneyByCurrency = {};
-  for (const r of revenueRows) addMoney(r.purchasedAt >= d30 ? revenue30 : revenuePrev, r.price, r.currency);
-  const currencies = new Set([...Object.keys(revenue30), ...Object.keys(revenuePrev)]);
-  const [only] = currencies;
-  // A trend only makes sense within one currency.
-  const revenueTrend = currencies.size === 1 ? trend(revenue30[only] ?? 0, revenuePrev[only] ?? 0) : null;
-
-  // Sessions per week (last 8 weeks, current week included)
-  const currentWeek = startOfWeek(now).getTime();
-  const weeks = Array.from({ length: 8 }, (_, i) => {
-    const start = weeksStart.getTime() + i * 7 * DAY;
-    return { start: new Date(start), done: 0, planned: 0, current: start === currentWeek };
-  });
-  for (const s of sessionsForChart) {
-    const idx = Math.floor((startOfWeek(s.startsAt).getTime() - weeksStart.getTime()) / (7 * DAY));
-    if (idx >= 0 && idx < 8) weeks[idx][s.status === "done" ? "done" : "planned"]++;
+  // Earnings per currency (EUR and CHF are never converted or summed together).
+  const month: MoneyByCurrency = {};
+  const year: MoneyByCurrency = {};
+  for (const r of revenueRows) {
+    addMoney(year, r.price, r.currency);
+    if (r.purchasedAt >= startOfMonth) addMoney(month, r.price, r.currency);
   }
-
-  const byKey = (rows: { key: string; n: number }[]) => new Map(rows.map((r) => [r.key, r.n]));
-  const [c, k, cl] = [byKey(contactsByMonth), byKey(callsByMonth), byKey(clientsByMonth)];
-  const months: ActivityMonth[] = Array.from({ length: 12 }, (_, i) => {
-    const start = new Date(monthsStart.getFullYear(), monthsStart.getMonth() + i, 15);
-    const key = keyOf(start);
-    return { key, start, contacts: c.get(key) ?? 0, calls: k.get(key) ?? 0, clients: cl.get(key) ?? 0 };
-  });
-
-  // Top 4 sources + "Autres"
-  const top = sources.slice(0, 4);
-  const others = sources.slice(4).reduce((n, s) => n + s.n, 0);
-  const sourceSlices = others ? [...top, { source: "Autres", n: others }] : top;
 
   return {
     firstName: user.name.split(" ")[0],
     sessionsToday: upcoming.filter((s) => s.startsAt < new Date(startOfDay.getTime() + DAY)).length,
-    stats: {
-      activeClients: activeClients.n,
-      newLeads: { value: newLeads30.n, previous: newLeadsPrev.n, trend: trend(newLeads30.n, newLeadsPrev.n) },
-      sessionsDone: { value: done30.n, previous: donePrev.n, trend: trend(done30.n, donePrev.n) },
-      revenue: { value: revenue30, trend: revenueTrend },
-    },
-    weeks,
-    months,
-    sourceSlices,
+    activeClients,
+    newContacts,
+    earnings: { month, year, activeClients: activeCount.n },
     upcoming,
     dueTasks,
-    recentContacts,
   };
 }

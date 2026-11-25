@@ -53,7 +53,7 @@ export async function sendQuestionnaire(contactId: string): Promise<ActionState>
   const result = await sendEmail({ ...mail, to: contact.email, contactId: contact.id, templateKey: "questionnaire_invite" });
   await db.insert(activityLog).values({ actorId: user.id, entity: "contact", entityId: contact.id, action: "questionnaire_sent" });
   refresh();
-  return result.ok ? { ok: true, message: `Questionnaire envoyé à ${contact.email}.` } : { error: "L’envoi a échoué (voir Paramètres › E-mails)." };
+  return result.ok ? { ok: true, message: `Questionnaire envoyé à ${contact.email}.` } : { error: "L’envoi a échoué (voir Réglages › E-mails)." };
 }
 
 /** « Copier le lien » without sending an e-mail (WhatsApp…). */

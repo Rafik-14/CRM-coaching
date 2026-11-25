@@ -27,12 +27,12 @@ import {
   TestEmailForm,
 } from "./settings-forms";
 
-export const metadata: Metadata = { title: "Paramètres" };
+export const metadata: Metadata = { title: "Réglages" };
 
 export default function SettingsPage({ searchParams }: PageProps<"/parametres">) {
   return (
     <>
-      <PageHeader title="Paramètres" description="Votre compte, votre activité et la configuration du CRM" />
+      <PageHeader title="Réglages" description="Votre compte, votre activité et la configuration du CRM" />
       <Suspense fallback={<Skeleton className="h-96 rounded-2xl" />}>
         <Settings searchParams={searchParams} />
       </Suspense>

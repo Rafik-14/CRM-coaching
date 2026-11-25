@@ -153,7 +153,7 @@ async function deliver(email: ScheduledEmail): Promise<DeliveryResult> {
   if (!contact) return { status: "skipped", reason: "Contact supprimé" };
   if (!contact.email) return { status: "skipped", reason: "Pas d’adresse e-mail" };
   const tpl = await getTemplate(key);
-  if (!tpl.enabled) return { status: "skipped", reason: "E-mail désactivé dans Paramètres" };
+  if (!tpl.enabled) return { status: "skipped", reason: "E-mail désactivé dans Réglages" };
   const essential = TEMPLATE_DEFS[key].essential;
   if (!essential && contact.emailOptOut) return { status: "skipped", reason: "La personne ne souhaite plus recevoir ces e-mails" };
 
@@ -174,7 +174,7 @@ async function deliver(email: ScheduledEmail): Promise<DeliveryResult> {
   const vars = await templateVars(contact, extra);
   const mail = templateContent(tpl.text, vars, essential ? undefined : await unsubscribeUrl(contact.id));
   const result = await sendEmail({ ...mail, to: contact.email, contactId: contact.id, templateKey: key });
-  return result.ok ? { status: "sent" } : { status: "failed", reason: "Envoi échoué (voir Paramètres › E-mails)" };
+  return result.ok ? { status: "sent" } : { status: "failed", reason: "Envoi échoué (voir Réglages › E-mails)" };
 }
 
 export function runDueEmails(now: Date) {

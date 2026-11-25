@@ -61,7 +61,7 @@ export async function sendContactEmail(contactId: string, _prev: ActionState, fo
   });
   await db.insert(activityLog).values({ actorId: user.id, entity: "contact", entityId: contact.id, action: "email_sent" });
   refresh();
-  if (!result.ok) return { error: "L’envoi a échoué : voir Paramètres › E-mails." };
+  if (!result.ok) return { error: "L’envoi a échoué : voir Réglages › E-mails." };
   const optOutNote = key && !TEMPLATE_DEFS[key].essential && contact.emailOptOut;
   return {
     ok: true,
