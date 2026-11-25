@@ -217,7 +217,7 @@ export function CinemaExperience({ initialComplete, fromStart, texts }: { initia
       )}
 
       {error && (
-        <p role="alert" className="fixed bottom-[max(4.5rem,env(safe-area-inset-bottom))] left-1/2 z-50 w-[min(92vw,520px)] -translate-x-1/2 border border-[#D4A866]/40 bg-[#0E1825]/92 px-4 py-3 text-center text-[14px] text-[#F8F6F2] backdrop-blur-md">
+        <p role="alert" className="fixed bottom-[max(4.5rem,env(safe-area-inset-bottom))] left-1/2 z-50 w-[min(92vw,520px)] -translate-x-1/2 border border-[#D4A866]/40 bg-[#0E1825]/92 px-4 py-3 text-center text-[14px] text-[#F8F6F2]">
           {error}
         </p>
       )}
@@ -265,12 +265,12 @@ function Interlude({ group, onDone }: { group: number; onDone: () => void }) {
         if (split)
           tl.fromTo(
             split.chars,
-            { yPercent: 118, rotationX: -58, opacity: 0, filter: "blur(8px)", color: C.goldBright, transformOrigin: "50% 100% -20px" },
-            { yPercent: 0, rotationX: 0, opacity: 1, filter: "blur(0px)", color: C.ivory, duration: 0.85, stagger: { amount: 0.34 }, ease: "dr.develop" },
+            { yPercent: 118, rotationX: -58, opacity: 0, color: C.goldBright, transformOrigin: "50% 100% -20px" },
+            { yPercent: 0, rotationX: 0, opacity: 1, color: C.ivory, duration: 0.85, stagger: { amount: 0.34 }, ease: "dr.develop" },
             0.3,
           );
         tl.fromTo(".shutter-sub", { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.6, ease: "dr.cinema" }, 0.55)
-          .to(".shutter-content", { opacity: 0, y: -14, filter: "blur(4px)", duration: 0.4, ease: "dr.exit" }, 1.75)
+          .to(".shutter-content", { opacity: 0, y: -14, duration: 0.4, ease: "dr.exit" }, 1.75)
           .to(".shutter-top", { yPercent: -100, duration: 0.52, ease: "dr.exit" }, 1.85)
           .to(".shutter-bottom", { yPercent: 100, duration: 0.52, ease: "dr.exit" }, 1.85)
           .to(".shutter-veil", { opacity: 0, duration: 0.45 }, 1.88);
@@ -286,7 +286,7 @@ function Interlude({ group, onDone }: { group: number; onDone: () => void }) {
 
   return (
     <section ref={root} onClick={finish} className="fixed inset-0 z-50 flex cursor-pointer items-center justify-center overflow-hidden select-none" aria-label={`Série ${g.roman} — ${g.rangeLabel}`}>
-      <div aria-hidden className="shutter-veil pointer-events-none absolute inset-0 bg-[#0E1825]/70 backdrop-blur-[2px]" />
+      <div aria-hidden className="shutter-veil pointer-events-none absolute inset-0 bg-[#0E1825]/70" />
       <div aria-hidden className="shutter-top pointer-events-none absolute inset-x-0 top-0 h-[12vh] border-b border-[#D4A866]/20 bg-[#0B141F] md:h-[14vh]" />
       <div aria-hidden className="shutter-bottom pointer-events-none absolute inset-x-0 bottom-0 h-[12vh] border-t border-[#D4A866]/20 bg-[#0B141F] md:h-[14vh]" />
       <div className="shutter-content relative z-10 flex flex-col items-center px-6 text-center">
@@ -408,8 +408,8 @@ function LightColumns({
           .fromTo(".stmt-prompt", { opacity: 0, y: 6 }, { opacity: 1, y: 0, duration: 0.65, ease: "dr.cinema" }, 0.04)
           .fromTo(
             s.words,
-            { yPercent: 122, rotationX: -48, opacity: 0, filter: "blur(7px)", transformOrigin: "50% 100% -18px" },
-            { yPercent: 0, rotationX: 0, opacity: 1, filter: "blur(0px)", duration: 0.84, stagger: { amount: 0.4, ease: "power2.out" } },
+            { yPercent: 122, rotationX: -48, opacity: 0, transformOrigin: "50% 100% -18px" },
+            { yPercent: 0, rotationX: 0, opacity: 1, duration: 0.84, stagger: { amount: 0.4, ease: "power2.out" } },
             0.08,
           )
           .fromTo(s.chars, { color: C.goldBright }, { color: C.ivory, duration: 0.72, stagger: { amount: 0.56 }, ease: "power2.out" }, 0.16);
@@ -456,7 +456,7 @@ function LightColumns({
     to.current.rot?.(0);
     const words = split.current?.words;
     if (words?.length && !reducedMotion())
-      gsap.to(words, { yPercent: -108, rotationX: 40, opacity: 0, filter: "blur(5px)", transformOrigin: "50% 0% -14px", duration: 0.4, stagger: { amount: 0.16, from: v <= 2 ? "start" : v >= 4 ? "end" : "center" }, ease: "dr.exit" });
+      gsap.to(words, { yPercent: -108, rotationX: 40, opacity: 0, transformOrigin: "50% 0% -14px", duration: 0.4, stagger: { amount: 0.16, from: v <= 2 ? "start" : v >= 4 ? "end" : "center" }, ease: "dr.exit" });
     else if (statement.current) gsap.to(statement.current, { y: -30, opacity: 0, duration: 0.42, ease: "dr.exit" });
     onCommit(v);
   };
@@ -931,7 +931,7 @@ function Review({
 
       {asking &&
         createPortal(
-          <div role="alertdialog" aria-modal="true" aria-labelledby="rvc-confirm-title" className="fixed inset-0 z-[70] flex items-center justify-center bg-[#0B141F]/90 p-6 backdrop-blur-xl">
+          <div role="alertdialog" aria-modal="true" aria-labelledby="rvc-confirm-title" className="fixed inset-0 z-[70] flex items-center justify-center bg-[#0B141F]/90 p-6">
             <div className="relative w-full max-w-lg py-12 text-center text-[#F8F6F2]">
               <span aria-hidden className="mx-auto mb-8 block h-px w-24 bg-[#D4A866]/60" />
               <p className="font-film text-[10.5px] tracking-[0.26em] text-[#D4A866] uppercase">Confirmation définitive</p>

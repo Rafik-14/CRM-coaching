@@ -23,6 +23,8 @@ class CinemaAudio {
 
   setEnabled(v: boolean) {
     this.on = v;
+    if (!v) this.stopBed();
+    else this.startBed();
     try {
       window.localStorage.setItem(KEY, v ? "on" : "off");
     } catch {}
@@ -158,9 +160,21 @@ class CinemaAudio {
    * the letters draw, a soft low impact when the gold mark lands (~2.3 s), then a warm chord that opens
    * as the curtain lifts (~3.6 s) and fades out.
    */
-  playOverture() {
+  playOverture(now = false) {
     const ctx = this.ensure();
     if (!ctx) return;
+    if (ctx.state !== "running" && !now) {
+      // Sound not allowed yet: it opens on the first touch instead (see wake()).
+      this.overturePending = true;
+      ctx.resume().then(() => {
+        if (this.overturePending && ctx.state === "running") {
+          this.overturePending = false;
+          this.playOverture(true);
+          this.startBed();
+        }
+      }).catch(() => {});
+      return;
+    }
     const t = ctx.currentTime + 0.05;
     const master = ctx.createGain(), wet = ctx.createGain(), verb = this.room(ctx);
     master.gain.value = 0.9;
@@ -217,20 +231,80 @@ class CinemaAudio {
       this.tone(ctx, i < 2 ? "sine" : "triangle", f, open + i * 0.05, i < 2 ? 0.05 : 0.02, 4.2, [600, 2400]),
     );
     [1046.5, 1318.5, 1568].forEach((f, i) => this.tone(ctx, "sine", f, open + 0.25 + i * 0.12, 0.006, 3.2));
+    this.startBed();
   }
 
-  /** A first touch during the reveal lets the queued overture play. */
+  private overturePending = false;
+  private bed: { gain: GainNode; stop: () => void } | null = null;
+
+  /** True once the browser lets this page play sound. */
+  get audible() {
+    return this.ctx?.state === "running";
+  }
+
+  /**
+   * First click / tap / key on the page. If the browser held the overture back, it plays now (so the
+   * immersion still opens with its sound), then the quiet ambient bed starts.
+   */
   wake() {
-    if (this.ctx?.state === "suspended") this.ctx.resume().catch(() => {});
+    if (!this.on) return;
+    const ctx = this.ensure();
+    if (!ctx) return;
+    const go = () => {
+      if (this.overturePending) {
+        this.overturePending = false;
+        this.playOverture(true);
+      }
+      this.startBed();
+    };
+    if (ctx.state === "running") go();
+    else ctx.resume().then(go).catch(() => {});
+  }
+
+  /** A very quiet, slowly breathing pad under the whole experience (two low voices + soft air). */
+  startBed() {
+    if (this.bed || !this.on) return;
+    const ctx = this.ensure();
+    if (!ctx || ctx.state !== "running") return;
+    const t = ctx.currentTime, gain = ctx.createGain(), lp = ctx.createBiquadFilter();
+    lp.type = "lowpass";
+    lp.frequency.value = 420;
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(0.022, t + 6);
+    lp.connect(gain).connect(ctx.destination);
+    const voices = [65.41, 98.0, 130.81].map((f, i) => {
+      const o = ctx.createOscillator(), g = ctx.createGain(), lfo = ctx.createOscillator(), lg = ctx.createGain();
+      o.type = "sine";
+      o.frequency.value = f * (1 + (i - 1) * 0.0015);
+      g.gain.value = i === 0 ? 0.9 : 0.45;
+      lfo.frequency.value = 0.05 + i * 0.03;
+      lg.gain.value = 0.35;
+      lfo.connect(lg).connect(g.gain);
+      o.connect(g).connect(lp);
+      o.start(t);
+      lfo.start(t);
+      return [o, lfo];
+    });
+    this.bed = {
+      gain,
+      stop: () => {
+        const n = ctx.currentTime;
+        gain.gain.cancelScheduledValues(n);
+        gain.gain.setValueAtTime(Math.max(gain.gain.value, 0.0001), n);
+        gain.gain.exponentialRampToValueAtTime(0.0001, n + 1.2);
+        voices.flat().forEach((o) => o.stop(n + 1.3));
+      },
+    };
+  }
+
+  stopBed() {
+    this.bed?.stop();
+    this.bed = null;
   }
 
   /** After the reveal: if the browser never let the overture start, drop it so it cannot play late. */
   dropIfSilent() {
-    if (this.ctx && this.ctx.state !== "running") {
-      this.ctx.close().catch(() => {});
-      this.ctx = null;
-      this.noise = null;
-    }
+    /* kept for compatibility: the overture now waits for the first touch instead of being dropped */
   }
 
   /** Gentle chord when the answers are confirmed. */

@@ -220,10 +220,13 @@ export function CinemaWorld() {
     } catch {
       return; // no WebGL: the navy background of the page stays
     }
-    const dpr = () => Math.min(window.devicePixelRatio || 1, coarse ? 1 : 1.5);
+    // The field is soft: rendering it at reduced resolution is invisible and cuts the GPU work 2–4×.
+    const dpr = () => (coarse ? 0.5 : 0.7) * Math.min(window.devicePixelRatio || 1, 1.5);
     renderer.setPixelRatio(dpr());
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.domElement.style.display = "block";
+    renderer.domElement.style.width = "100%";
+    renderer.domElement.style.height = "100%";
     box.appendChild(renderer.domElement);
 
     const scene = new THREE.Scene();

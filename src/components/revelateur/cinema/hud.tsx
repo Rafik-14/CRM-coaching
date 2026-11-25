@@ -28,23 +28,31 @@ export function CinemaHUD({ progress }: { progress?: { index: number; answered: 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- the saved choice lives in localStorage, read after hydration
     setSound(cinemaAudio.enabled);
+    // Any first touch on the page unlocks the sound (browsers require a gesture) and starts the ambience.
+    const wake = () => cinemaAudio.wake();
+    window.addEventListener("pointerdown", wake, { once: true });
+    window.addEventListener("keydown", wake, { once: true });
     const onScroll = () => setScrolled(window.scrollY > 24);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("pointerdown", wake);
+      window.removeEventListener("keydown", wake);
+    };
   }, []);
 
   return (
     <div
       className={`pointer-events-none fixed top-0 right-0 left-0 z-40 flex items-center justify-between px-4 pt-[max(0.85rem,env(safe-area-inset-top))] pb-3 transition-all duration-500 sm:px-9 sm:py-5 ${
-        scrolled ? "border-b border-[#F8F6F2]/10 bg-[#0E1825]/85 backdrop-blur-md" : "border-b border-transparent bg-transparent"
+        scrolled ? "border-b border-[#F8F6F2]/10 bg-[#0E1825]/85" : "border-b border-transparent bg-transparent"
       }`}
     >
       <div className="pointer-events-auto flex items-center gap-4">
         <Link
           href="/revelateur"
           onClick={() => cinemaAudio.playTick()}
-          className="flex h-10 w-10 items-center justify-center border border-[#F8F6F2]/18 bg-[#0E1825]/65 backdrop-blur-md transition-colors hover:border-[#D4A866]"
+          className="flex h-10 w-10 items-center justify-center border border-[#F8F6F2]/18 bg-[#0E1825]/65 transition-colors hover:border-[#D4A866]"
           title="Retour à l'accueil du Révélateur"
           aria-label="Retour à l'accueil du Révélateur"
         >
@@ -96,7 +104,7 @@ export function CinemaHUD({ progress }: { progress?: { index: number; answered: 
         }}
         aria-pressed={sound}
         aria-label={sound ? "Couper le son" : "Activer le son"}
-        className="pointer-events-auto flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-[#F8F6F2]/20 bg-[#0E1825]/65 text-[#F8F6F2]/85 backdrop-blur-md transition-all hover:border-[#D4A866] hover:text-[#D4A866]"
+        className="pointer-events-auto flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-[#F8F6F2]/20 bg-[#0E1825]/65 text-[#F8F6F2]/85 transition-all hover:border-[#D4A866] hover:text-[#D4A866]"
       >
         {sound ? <Volume2 size={17} strokeWidth={1.4} className="text-[#D4A866]" /> : <VolumeX size={17} strokeWidth={1.4} />}
       </button>

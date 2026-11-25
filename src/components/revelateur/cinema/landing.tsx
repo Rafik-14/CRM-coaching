@@ -76,15 +76,15 @@ export function CinemaLanding({ texts, savedCount }: { texts: LandingTexts; save
         if (title)
           tl.fromTo(
             title.chars,
-            { yPercent: 120, rotationX: -62, opacity: 0, filter: "blur(9px)", color: "#E2C08A", transformOrigin: "50% 100% -24px" },
-            { yPercent: 0, rotationX: 0, opacity: 1, filter: "blur(0px)", color: "#F8F6F2", duration: 1.05, stagger: { amount: 0.44 }, ease: "dr.develop" },
+            { yPercent: 120, rotationX: -62, opacity: 0, color: "#E2C08A", transformOrigin: "50% 100% -24px" },
+            { yPercent: 0, rotationX: 0, opacity: 1, color: "#F8F6F2", duration: 1.05, stagger: { amount: 0.44 }, ease: "dr.develop" },
             0.16,
           );
         if (leadSplit)
           tl.fromTo(
             leadSplit.words,
-            { yPercent: 110, rotationX: -36, opacity: 0, filter: "blur(5px)" },
-            { yPercent: 0, rotationX: 0, opacity: 1, filter: "blur(0px)", duration: 0.78, stagger: { amount: 0.28 }, ease: "dr.develop" },
+            { yPercent: 110, rotationX: -36, opacity: 0 },
+            { yPercent: 0, rotationX: 0, opacity: 1, duration: 0.78, stagger: { amount: 0.28 }, ease: "dr.develop" },
             0.46,
           );
         tl.fromTo(".ov-beat", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.72, stagger: 0.09 }, 0.62);
@@ -152,7 +152,7 @@ export function CinemaLanding({ texts, savedCount }: { texts: LandingTexts; save
                 type="button"
                 onClick={() => launch(false)}
                 disabled={leaving}
-                className="inline-flex cursor-pointer items-center gap-2.5 border border-[#F8F6F2]/28 bg-[#0E1825]/55 px-6 py-4 font-display text-[11.5px] font-medium tracking-[0.15em] whitespace-nowrap text-[#F8F6F2] uppercase backdrop-blur-md transition-colors hover:border-[#D4A866] hover:text-[#D4A866]"
+                className="inline-flex cursor-pointer items-center gap-2.5 border border-[#F8F6F2]/28 bg-[#0E1825]/55 px-6 py-4 font-display text-[11.5px] font-medium tracking-[0.15em] whitespace-nowrap text-[#F8F6F2] uppercase transition-colors hover:border-[#D4A866] hover:text-[#D4A866]"
               >
                 <RotateCcw size={14} />
                 <span>Reprendre ({savedCount}/30)</span>
