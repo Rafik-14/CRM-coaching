@@ -304,7 +304,7 @@ class CinemaAudio {
 
   /** After the reveal: if the browser never let the overture start, drop it so it cannot play late. */
   dropIfSilent() {
-    /* kept for compatibility: the overture now waits for the first touch instead of being dropped */
+    this.overturePending = false; // later touches only start the ambient bed
   }
 
   /** Gentle chord when the answers are confirmed. */

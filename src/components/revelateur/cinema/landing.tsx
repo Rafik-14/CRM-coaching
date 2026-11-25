@@ -49,8 +49,8 @@ export function CinemaLanding({ texts, savedCount }: { texts: LandingTexts; save
   useEffect(() => {
     if (!revealed) return;
     document.documentElement.classList.remove("rs-locked");
-    const t = window.setTimeout(() => cinemaAudio.dropIfSilent(), 1000);
-    return () => window.clearTimeout(t);
+    // The overture belongs to the logo: if the browser held it back until now, it is not played late.
+    cinemaAudio.dropIfSilent();
   }, [revealed]);
 
   // The overture plays once the curtain has lifted.
@@ -180,8 +180,7 @@ export function CinemaLanding({ texts, savedCount }: { texts: LandingTexts; save
             <p className="font-display text-[16px] text-[#D4A866]">{texts.welcome.closing}</p>
           </div>
           <div className="mt-12 flex flex-col items-center">
-            {startButton()}
-            <p className="mt-12 max-w-2xl text-[11px] leading-[1.6] font-light text-[#F8F6F2]/45">{texts.ownership}</p>
+            <p className="max-w-2xl text-[11px] leading-[1.6] font-light text-[#F8F6F2]/45">{texts.ownership}</p>
           </div>
         </section>
       </div>
