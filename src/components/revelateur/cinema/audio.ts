@@ -219,6 +219,20 @@ class CinemaAudio {
     [1046.5, 1318.5, 1568].forEach((f, i) => this.tone(ctx, "sine", f, open + 0.25 + i * 0.12, 0.006, 3.2));
   }
 
+  /** A first touch during the reveal lets the queued overture play. */
+  wake() {
+    if (this.ctx?.state === "suspended") this.ctx.resume().catch(() => {});
+  }
+
+  /** After the reveal: if the browser never let the overture start, drop it so it cannot play late. */
+  dropIfSilent() {
+    if (this.ctx && this.ctx.state !== "running") {
+      this.ctx.close().catch(() => {});
+      this.ctx = null;
+      this.noise = null;
+    }
+  }
+
   /** Gentle chord when the answers are confirmed. */
   playReveal() {
     const ctx = this.ensure();

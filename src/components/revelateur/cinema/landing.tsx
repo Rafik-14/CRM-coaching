@@ -22,7 +22,6 @@ export type LandingTexts = {
 export function CinemaLanding({ texts, savedCount }: { texts: LandingTexts; savedCount: number }) {
   const root = useRef<HTMLDivElement>(null);
   const router = useRouter();
-  const [entered, setEntered] = useState(false); // the person stepped in (this also unlocks the sound)
   const [revealed, setRevealed] = useState(false);
   const [leaving, setLeaving] = useState(false);
   // INTRO_LINES: presents · "Vous avez une valeur." · "Savez-vous…" · 5 dimensions · title · subtitle · lead · ready · facts
@@ -33,22 +32,25 @@ export function CinemaLanding({ texts, savedCount }: { texts: LandingTexts; save
     setWorld({ gravityActive: false });
     router.prefetch("/revelateur/experience");
     document.documentElement.classList.add("rs-locked");
-    return () => document.documentElement.classList.remove("rs-locked");
-  }, [router]);
-  // Once in: the monogram draws itself over the overture, then the curtain lifts.
-  useEffect(() => {
-    if (!entered) return;
+    // The overture under the logo. Browsers may hold sound until a first click or tap: it is then
+    // queued, plays if the person touches the page during the reveal, and is dropped otherwise.
+    cinemaAudio.playOverture();
+    const wake = () => cinemaAudio.wake();
+    window.addEventListener("pointerdown", wake, { once: true });
+    window.addEventListener("keydown", wake, { once: true });
     const t = window.setTimeout(() => setRevealed(true), reducedMotion() ? 300 : 3600);
-    return () => window.clearTimeout(t);
-  }, [entered]);
-  const enter = (withSound: boolean) => {
-    if (entered) return;
-    cinemaAudio.setEnabled(withSound);
-    if (withSound) cinemaAudio.playOverture();
-    setEntered(true);
-  };
+    return () => {
+      window.clearTimeout(t);
+      window.removeEventListener("pointerdown", wake);
+      window.removeEventListener("keydown", wake);
+      document.documentElement.classList.remove("rs-locked");
+    };
+  }, [router]);
   useEffect(() => {
-    if (revealed) document.documentElement.classList.remove("rs-locked");
+    if (!revealed) return;
+    document.documentElement.classList.remove("rs-locked");
+    const t = window.setTimeout(() => cinemaAudio.dropIfSilent(), 1000);
+    return () => window.clearTimeout(t);
   }, [revealed]);
 
   // The overture plays once the curtain has lifted.
@@ -121,28 +123,12 @@ export function CinemaLanding({ texts, savedCount }: { texts: LandingTexts; save
 
   return (
     <>
-      <div className={`rvc-reveal ${revealed ? "is-gone" : ""}`} onClick={() => entered && setRevealed(true)}>
-        {entered ? (
-          <div aria-hidden>
-            <svg viewBox={MONOGRAM_VIEWBOX}>
-              <path className="rs-logo-letters" d={MONOGRAM_LETTERS} pathLength={1} fillRule="evenodd" />
-              <path className="rs-logo-mark" d={MONOGRAM_MARK} fillRule="evenodd" />
-            </svg>
-            <p>{presents}</p>
-          </div>
-        ) : (
-          // Browsers only allow sound after a gesture: an « Entrer » threshold opens the immersion.
-          <div className="rvc-gate">
-            <span className="rvc-gate-kicker">Le Révélateur · Test Signature JG®</span>
-            <button type="button" className="rvc-gate-enter" onClick={() => enter(true)} autoFocus>
-              Entrer
-            </button>
-            <span className="rvc-gate-hint">Expérience sonore · casque ou haut-parleurs conseillés</span>
-            <button type="button" className="rvc-gate-mute" onClick={() => enter(false)}>
-              Entrer sans le son
-            </button>
-          </div>
-        )}
+      <div className={`rvc-reveal ${revealed ? "is-gone" : ""}`} onClick={() => setRevealed(true)} aria-hidden>
+        <svg viewBox={MONOGRAM_VIEWBOX}>
+          <path className="rs-logo-letters" d={MONOGRAM_LETTERS} pathLength={1} fillRule="evenodd" />
+          <path className="rs-logo-mark" d={MONOGRAM_MARK} fillRule="evenodd" />
+        </svg>
+        <p>{presents}</p>
       </div>
       <div className={`rvc-veil ${leaving ? "is-on" : ""}`} aria-hidden />
       <CinemaHUD />
