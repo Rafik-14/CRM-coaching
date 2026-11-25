@@ -36,10 +36,13 @@ const nextConfig: NextConfig = {
   // Self-contained server bundle for the Docker image.
   output: "standalone",
   // OpenCV (notes scanner) is a large WebAssembly build: load it from node_modules at runtime, not bundled.
-  serverExternalPackages: ["@techstark/opencv-js"],
+  serverExternalPackages: ["@techstark/opencv-js", "@react-pdf/renderer"],
   // …and since it is required at runtime, ship it explicitly in the standalone build (pages using the scanner).
   outputFileTracingIncludes: {
     "/contacts/**": ["./node_modules/@techstark/opencv-js/package.json", "./node_modules/@techstark/opencv-js/dist/opencv.js"],
+    // Révélateur report PDF: brand fonts read from disk when the report is built (link page + cron).
+    "/revelateur/**": ["./src/server/revelateur/report-fonts/*"],
+    "/api/cron/**": ["./src/server/revelateur/report-fonts/*"],
   },
   experimental: {
     // Documents are capped at 10 MB (see lib/validations/documents.ts); leave room for form overhead.
