@@ -47,6 +47,7 @@ import {
   saveSessionNote,
   setSessionStatus,
 } from "@/server/actions/sessions";
+import { recommendOffer } from "@/server/actions/client-data";
 import type { ActionState } from "@/server/actions/coaching";
 
 type Status = (typeof SESSION_STATUSES)[number];
@@ -82,6 +83,7 @@ export function SessionCard({
   templates,
   templateId,
   upcoming,
+  recommend,
 }: {
   session: SessionCardData;
   /** All note templates; `templateId` is the one this session opens with (type / offer / default). */
@@ -89,10 +91,16 @@ export function SessionCard({
   templateId: string | null;
   /** Upcoming sessions are shown with a dashed border. */
   upcoming?: boolean;
+  /**
+   * Prospect's « Échange stratégique »: once marked done, ask which offer to recommend (moves the card to
+   * « Offre recommandée »).
+   */
+  recommend?: { contactId: string; options: { id: string; name: string }[] };
 }) {
   const templateFields = templates.find((t) => t.id === templateId)?.fields ?? [];
   const [noteOpen, setNoteOpen] = useState(false);
   const [rescheduleOpen, setRescheduleOpen] = useState(false);
+  const [recommendOpen, setRecommendOpen] = useState(false);
   const [pending, startTransition] = useTransition();
   const note = session.note;
   // Show answers in the template's order (jsonb doesn't keep key order), extra/old fields last.
@@ -105,7 +113,8 @@ export function SessionCard({
       if (r.error) return void toast.error(r.error);
       if (status === "done") {
         toast.success(r.counted ? "Séance effectuée · décomptée de l'accompagnement" : "Séance effectuée");
-        if (!note) setNoteOpen(true); // invite to write the note right away
+        if (recommend?.options.length) setRecommendOpen(true); // then the note, once the offer is chosen
+        else if (!note) setNoteOpen(true); // invite to write the note right away
       } else {
         toast.success(`Séance : ${sessionStatusLabel[status].toLowerCase()}`);
       }
@@ -228,6 +237,16 @@ export function SessionCard({
         templateId={templateId}
       />
       <RescheduleDialog open={rescheduleOpen} onOpenChange={setRescheduleOpen} session={session} />
+      {recommend && (
+        <RecommendDialog
+          open={recommendOpen}
+          onOpenChange={(o) => {
+            setRecommendOpen(o);
+            if (!o && !note) setNoteOpen(true);
+          }}
+          recommend={recommend}
+        />
+      )}
     </Card>
   );
 }
@@ -371,6 +390,63 @@ function RescheduleDialog({
             </Button>
           </DialogFooter>
         </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/** « Quelle offre recommandez-vous ? » after a prospect's Échange stratégique. « Plus tard » leaves the card where it is. */
+function RecommendDialog({
+  open,
+  onOpenChange,
+  recommend,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  recommend: { contactId: string; options: { id: string; name: string }[] };
+}) {
+  const [packageId, setPackageId] = useState(recommend.options[0]?.id ?? "");
+  const [pending, startTransition] = useTransition();
+  function save() {
+    startTransition(async () => {
+      const r = await recommendOffer(recommend.contactId, packageId);
+      if (r.error) return void toast.error(r.error);
+      toast.success("Offre recommandée enregistrée");
+      onOpenChange(false);
+    });
+  }
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Quelle offre recommandez-vous ?</DialogTitle>
+          <DialogDescription>
+            La personne passe à l’étape « Offre recommandée » du pipeline, avec le prix de cette offre.
+          </DialogDescription>
+        </DialogHeader>
+        <FormField label="Offre" htmlFor="recommended-offer">
+          <Select value={packageId} onValueChange={setPackageId}>
+            <SelectTrigger id="recommended-offer" className="w-full">
+              <SelectValue placeholder="Choisissez une offre" />
+            </SelectTrigger>
+            <SelectContent>
+              {recommend.options.map((p) => (
+                <SelectItem key={p.id} value={p.id}>
+                  {p.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </FormField>
+        <DialogFooter>
+          <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
+            Plus tard
+          </Button>
+          <Button type="button" onClick={save} disabled={pending || !packageId}>
+            {pending && <Loader2 className="animate-spin" />}
+            Enregistrer
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

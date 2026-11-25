@@ -16,7 +16,9 @@ import { CaseStudyDialog } from "@/components/coaching/case-study";
 import { ReopenCoachingButton } from "@/components/coaching/reopen-coaching-button";
 import { SessionCard } from "@/components/coaching/session-card";
 import { GoalsPanel } from "@/components/coaching/goals-panel";
-import { PackagesPanel } from "@/components/coaching/packages-panel";
+import { PackagesPanel, StartCoachingDialog } from "@/components/coaching/packages-panel";
+import { recommendedOffer } from "@/lib/pipeline";
+import { DISCOVERY_TYPE } from "@/lib/validations/coaching";
 import { DocumentsPanel } from "@/components/coaching/documents-panel";
 import { DeleteTaskButton, TaskDialog } from "@/components/coaching/task-dialog";
 import { ClientBookingLink } from "@/components/coaching/client-booking-link";
@@ -141,6 +143,14 @@ async function ContactDetail({
             disabledReason={scheduleBlocked}
             prospect={!client}
           />
+          {!client && packageOptions.length > 0 && (
+            <StartCoachingDialog
+              contactId={contact.id}
+              currency={contact.currency}
+              options={packageOptions}
+              defaultPackageId={packageOptions.find((p) => p.name === recommendedOffer(contact.tags))?.id}
+            />
+          )}
           <DeleteContactButton id={contact.id} name={name} />
         </div>
       </div>
@@ -441,6 +451,11 @@ async function ContactDetail({
                 templates={templates}
                 templateId={pickTemplateId(item.session, templates, client?.packages ?? [])}
                 upcoming={item.upcoming}
+                recommend={
+                  !client && item.session.type === DISCOVERY_TYPE
+                    ? { contactId: contact.id, options: packageOptions.map((p) => ({ id: p.id, name: p.name })) }
+                    : undefined
+                }
               />
             ),
           )}
