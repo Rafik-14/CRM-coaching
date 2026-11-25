@@ -141,6 +141,13 @@
       "when": 1795091228180,
       "tag": "0019_revelateur_sessions",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1795626323334,
+      "tag": "0020_revelateur_deliveries",
+      "breakpoints": true
     }
   ]
 }

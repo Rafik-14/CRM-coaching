@@ -7,7 +7,8 @@ import { CinemaExperience } from "@/components/revelateur/cinema/experience";
 import { SCALE_LABELS } from "@/lib/revelateur/scoring";
 import { db } from "@/server/db";
 import { revelateurEnabled } from "@/server/revelateur/flag";
-import { OPEN_QUESTION, OWNERSHIP_NOTICE, PREPARATION_TEXT, SAVE_NOTICE } from "@/server/revelateur/questionnaire";
+import { deliveryOf, stateOf } from "@/server/revelateur/delivery";
+import { END_TEXT, OPEN_QUESTION, OWNERSHIP_NOTICE, PREPARATION_TEXT, SAVE_NOTICE } from "@/server/revelateur/questionnaire";
 import { findSession } from "@/server/revelateur/session";
 
 export const metadata: Metadata = {
@@ -27,11 +28,13 @@ async function Experience({ searchParams }: { searchParams: Promise<{ depuis?: s
   await connection();
   if (!revelateurEnabled()) notFound();
   const session = await findSession(db, (await cookies()).get("jg_revelateur")?.value);
+  const delivery = session?.status === "complete" ? stateOf(await deliveryOf(db, session.id)) : ({ status: "none" } as const);
   return (
     <CinemaExperience
       initialComplete={session?.status === "complete"}
+      initialDelivery={delivery}
       fromStart={(await searchParams).depuis === "debut"}
-      texts={{ openQuestion: OPEN_QUESTION, saveNotice: SAVE_NOTICE, preparation: PREPARATION_TEXT, scale: SCALE_LABELS, ownership: OWNERSHIP_NOTICE }}
+      texts={{ openQuestion: OPEN_QUESTION, saveNotice: SAVE_NOTICE, preparation: PREPARATION_TEXT, scale: SCALE_LABELS, ownership: OWNERSHIP_NOTICE, end: END_TEXT }}
     />
   );
 }

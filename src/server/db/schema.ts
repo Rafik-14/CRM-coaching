@@ -783,13 +783,60 @@ export const revelateurResults = pgTable("revelateur_results", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+/**
+ * Delivery of the report (dossier v2.0 §2 steps 9–11, §8): the address is asked after confirmation,
+ * confirmed by a link, then the PDF is sent as an attachment. Used only for delivery and re-sending.
+ * awaiting_verification → (link) → awaiting_report → sending → sent | failed (retried, then given up).
+ */
+export const revelateurDeliveryStatus = pgEnum("revelateur_delivery_status", [
+  "awaiting_verification",
+  "awaiting_report",
+  "sending",
+  "sent",
+  "failed",
+]);
+
+export const revelateurDeliveries = pgTable(
+  "revelateur_deliveries",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    sessionId: uuid("session_id")
+      .notNull()
+      .unique()
+      .references(() => revelateurSessions.id, { onDelete: "cascade" }),
+    email: text("email").notNull(),
+    /** Optional first name (cahier §2): greeting only. */
+    firstName: text("first_name"),
+    status: revelateurDeliveryStatus("status").notNull().default("awaiting_verification"),
+    /** Hash of the confirmation-link token (never stored in clear). */
+    verifyTokenHash: text("verify_token_hash").unique(),
+    verifyExpiresAt: timestamp("verify_expires_at", { withTimezone: true }),
+    verifiedAt: timestamp("verified_at", { withTimezone: true }),
+    /** Confirmation e-mails sent (rate limit on « renvoyer le lien »). */
+    verifySends: smallint("verify_sends").notNull().default(0),
+    attempts: smallint("attempts").notNull().default(0),
+    lastError: text("last_error"),
+    nextAttemptAt: timestamp("next_attempt_at", { withTimezone: true }),
+    emailLogId: uuid("email_log_id").references(() => emailLog.id, { onDelete: "set null" }),
+    sentAt: timestamp("sent_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("revelateur_deliveries_status_idx").on(t.status, t.nextAttemptAt)],
+);
+
 export const revelateurSessionsRelations = relations(revelateurSessions, ({ many, one }) => ({
   answers: many(revelateurAnswers),
   result: one(revelateurResults),
+  delivery: one(revelateurDeliveries),
 }));
 
 export const revelateurAnswersRelations = relations(revelateurAnswers, ({ one }) => ({
   session: one(revelateurSessions, { fields: [revelateurAnswers.sessionId], references: [revelateurSessions.id] }),
+}));
+
+export const revelateurDeliveriesRelations = relations(revelateurDeliveries, ({ one }) => ({
+  session: one(revelateurSessions, { fields: [revelateurDeliveries.sessionId], references: [revelateurSessions.id] }),
 }));
 
 export const revelateurResultsRelations = relations(revelateurResults, ({ one }) => ({

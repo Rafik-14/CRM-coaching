@@ -1,10 +1,13 @@
 "use server";
 
+import { after } from "next/server";
 import { cookies } from "next/headers";
 import { DIMENSIONS, QUESTION_DIMENSIONS, QUESTION_IDS } from "@/lib/revelateur/scoring";
 import { db } from "@/server/db";
 import { clientIp, rateLimited } from "@/server/rate-limit";
+import { deliveryOf, requestDelivery, stateOf, type DeliveryState } from "@/server/revelateur/delivery";
 import { revelateurEnabled } from "@/server/revelateur/flag";
+import { sendVerification } from "@/server/revelateur/send-delivery";
 import {
   RESUME_DAYS,
   confirmSession,
@@ -123,4 +126,26 @@ export async function confirmRevelateur(): Promise<ConfirmState> {
   if (!session) return { ok: false, error: "Votre session a expiré." };
   const r = await confirmSession(db, session.id);
   return r.ok ? { ok: true, axes: QUESTION_IDS.map((id) => DIMENSIONS.indexOf(QUESTION_DIMENSIONS[id])) } : { ok: false, error: r.error };
+}
+
+export type DeliveryResult = { state: DeliveryState; error?: string };
+
+/**
+ * After confirmation: the address the report goes to (v2.0 §2 step 9). A confirmation link is sent; the
+ * report leaves once the address is confirmed. Also used to correct the address or re-send the link.
+ */
+export async function requestReport(email: string, firstName: string): Promise<DeliveryResult> {
+  const session = await current();
+  if (!session) return { state: { status: "none" }, error: "Votre session a expiré." };
+  if (rateLimited(`revelateur:report:${await clientIp()}`, 10, 60 * 60_000)) {
+    return { state: stateOf(await deliveryOf(db, session.id)), error: "Trop de tentatives. Réessayez dans quelques minutes." };
+  }
+  try {
+    const { token, delivery } = await requestDelivery(db, session.id, { email, firstName });
+    after(() => sendVerification(delivery, token));
+    return { state: stateOf(delivery) };
+  } catch (e) {
+    if (!isUserError(e)) console.error("[revelateur] report request failed", e instanceof Error ? e.name : "unknown");
+    return { state: stateOf(await deliveryOf(db, session.id)), error: isUserError(e) ? (e as Error).message : "Une erreur est survenue. Réessayez." };
+  }
 }

@@ -39,6 +39,8 @@ export type SendEmailInput = {
   templateKey: string;
   replyTo?: string | null;
   attachments?: { filename: string; content: string | Buffer; contentType: string }[];
+  /** Keep the address out of technical logs (Révélateur participants, dossier v2.0 §5). */
+  privateRecipient?: boolean;
 };
 
 /**
@@ -48,6 +50,7 @@ export type SendEmailInput = {
 export async function sendEmail(input: SendEmailInput): Promise<{ ok: boolean; id: string | null }> {
   const c = mailConfig();
   const realTo = c.redirectTo ?? input.to;
+  const logTo = input.privateRecipient ? "(adresse masquée)" : realTo;
   const subject = c.redirectTo ? `[Test → ${input.to}] ${input.subject}` : input.subject;
 
   let id: string | null = null;
@@ -77,13 +80,13 @@ export async function sendEmail(input: SendEmailInput): Promise<{ ok: boolean; i
         attachments: input.attachments,
       });
     } else {
-      console.info(`[e-mail · mode test] ${input.templateKey} → ${realTo} : ${subject}`);
+      console.info(`[e-mail · mode test] ${input.templateKey} → ${logTo} : ${input.privateRecipient ? input.subject : subject}`);
     }
     await db.update(emailLog).set({ status: "sent", providerId, sentAt: new Date() }).where(eq(emailLog.id, id));
     return { ok: true, id };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    console.error(`[e-mail] échec ${input.templateKey} → ${realTo} : ${message}`);
+    console.error(`[e-mail] échec ${input.templateKey} → ${logTo} : ${input.privateRecipient ? "voir email_log" : message}`);
     if (id) {
       await db
         .update(emailLog)

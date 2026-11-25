@@ -13,9 +13,11 @@ import {
   startRevelateur,
   type RevelateurState,
 } from "@/server/actions/revelateur";
+import type { DeliveryState } from "@/server/revelateur/delivery";
 import type { Screen } from "@/server/revelateur/session";
 import { cinemaAudio } from "./audio";
 import { CinemaHUD } from "./hud";
+import { ReportStep, type EndTexts } from "./report-step";
 import { C, COLUMN_META, gsap, reducedMotion, SECTION_GROUPS, SplitText, useGSAP } from "./gsap";
 import { setWorld, surgeWorld, world } from "./world";
 
@@ -25,6 +27,7 @@ export type CinemaTexts = {
   preparation: { title: string; lead: string };
   scale: readonly string[];
   ownership: string;
+  end: EndTexts;
 };
 
 type Stage = "boot" | "interlude" | "question" | "open" | "review" | "confirmed";
@@ -39,7 +42,17 @@ const wait = (ms: number) => new Promise((ok) => setTimeout(ok, ms));
  * the browser only ever receives the current statement, sends the person's choice, and shows the
  * next screen it is given (resume 30 days, scoring and freezing stay server-side).
  */
-export function CinemaExperience({ initialComplete, fromStart, texts }: { initialComplete: boolean; fromStart: boolean; texts: CinemaTexts }) {
+export function CinemaExperience({
+  initialComplete,
+  initialDelivery,
+  fromStart,
+  texts,
+}: {
+  initialComplete: boolean;
+  initialDelivery: DeliveryState;
+  fromStart: boolean;
+  texts: CinemaTexts;
+}) {
   const router = useRouter();
   const [stage, setStage] = useState<Stage>(initialComplete ? "confirmed" : "boot");
   const [screen, setScreen] = useState<Screen>({ kind: initialComplete ? "complete" : "welcome" });
@@ -47,6 +60,7 @@ export function CinemaExperience({ initialComplete, fromStart, texts }: { initia
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string>();
   const [retry, setRetry] = useState(0); // remounts the statement after a failed save
+  const [confirmedHere, setConfirmedHere] = useState(false); // a new confirmation: no address yet
 
   const apply = useCallback(
     (r: RevelateurState, mode: Mode) => {
@@ -146,6 +160,7 @@ export function CinemaExperience({ initialComplete, fromStart, texts }: { initia
     surgeWorld();
     cinemaAudio.playReveal();
     window.scrollTo({ top: 0 });
+    setConfirmedHere(true);
     setStage("confirmed");
   };
 
@@ -207,6 +222,8 @@ export function CinemaExperience({ initialComplete, fromStart, texts }: { initia
         <Confirmed
           ownership={texts.ownership}
           pending={pending}
+          delivery={initialComplete && !confirmedHere ? initialDelivery : { status: "none" }}
+          end={texts.end}
           onRestart={() =>
             run(async () => {
               const r = await restartRevelateur();
@@ -963,40 +980,46 @@ function Review({
   );
 }
 
-function Confirmed({ ownership, pending, onRestart }: { ownership: string; pending: boolean; onRestart: () => void }) {
+function Confirmed({
+  ownership,
+  pending,
+  delivery,
+  end,
+  onRestart,
+}: {
+  ownership: string;
+  pending: boolean;
+  delivery: DeliveryState;
+  end: EndTexts;
+  onRestart: () => void;
+}) {
   const root = useRef<HTMLElement>(null);
   useGSAP(
     () => {
       if (reducedMotion()) return;
-      gsap.timeline({ defaults: { ease: "dr.cinema" } })
-        .fromTo(".conf-badge", { scale: 0.7, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.65 }, 0.05)
-        .fromTo(".conf-reveal", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.78, stagger: 0.1 }, 0.2);
+      gsap.fromTo(".conf-reveal", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.78, stagger: 0.1, ease: "dr.cinema" });
     },
     { scope: root },
   );
   return (
     <section ref={root} className="relative flex min-h-[100dvh] w-full flex-col items-center justify-between px-6 pt-28 pb-10 text-center">
-      <div className="mx-auto my-auto flex max-w-xl flex-col items-center">
-        <div className="conf-badge flex h-12 w-12 items-center justify-center rounded-full border border-[#D4A866]/55 bg-[#D4A866]/12 text-[#E2C08A]">
-          <Check size={20} strokeWidth={1.4} />
-        </div>
-        <h1 className="conf-reveal mt-7 font-display text-[34px] leading-[1.12] font-extralight tracking-[-0.02em] text-[#F8F6F2] sm:text-[46px]">Vos réponses sont confirmées.</h1>
-        <p className="conf-reveal mt-5 max-w-lg text-[15.5px] leading-[1.8] font-light text-[#F8F6F2]/78">
-          Votre cartographie est calculée. L&apos;étape suivante — votre adresse e-mail, confirmée par un lien, pour recevoir votre rapport — est en cours de développement.
-        </p>
-        <div className="conf-reveal mt-10">
-          <button
-            type="button"
-            disabled={pending}
-            onClick={() => (cinemaAudio.playTick(), onRestart())}
-            className="group inline-flex cursor-pointer items-center gap-3 border border-[#D4A866] bg-[#D4A866] px-8 py-4 font-display text-[12px] font-semibold tracking-[0.16em] whitespace-nowrap text-[#172536] uppercase transition-all hover:bg-[#E2C08A]"
-          >
-            <RotateCcw size={15} />
-            <span>Faire une nouvelle passation</span>
-          </button>
-        </div>
+      <div className="conf-reveal mx-auto my-auto w-full">
+        {delivery.status === "none" && (
+          <p className="font-display mb-12 text-[15px] font-light tracking-[0.02em] text-[#F8F6F2]/70">Vos réponses sont confirmées.</p>
+        )}
+        <ReportStep initial={delivery} end={end} />
       </div>
-      <p className="conf-reveal max-w-2xl text-[11px] leading-[1.6] font-light text-[#F8F6F2]/45">{ownership}</p>
+      <div className="conf-reveal mt-12 flex flex-col items-center gap-6">
+        <button
+          type="button"
+          disabled={pending}
+          onClick={() => (cinemaAudio.playTick(), onRestart())}
+          className="font-film inline-flex cursor-pointer items-center gap-2 text-[10px] tracking-[0.2em] text-[#F8F6F2]/45 uppercase transition-colors hover:text-[#E2C08A]"
+        >
+          <RotateCcw size={12} /> Faire une nouvelle passation
+        </button>
+        <p className="max-w-2xl text-[11px] leading-[1.6] font-light text-[#F8F6F2]/45">{ownership}</p>
+      </div>
     </section>
   );
 }

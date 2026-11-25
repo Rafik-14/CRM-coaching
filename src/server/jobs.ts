@@ -13,6 +13,8 @@ import { runDueEmails } from "@/server/sequences";
 import { claimEventReminders, claimEventThanks, releaseClaim } from "@/server/events";
 import { sendEventMail } from "@/server/event-mail";
 import { events } from "@/server/db/schema";
+import { dueDeliveries, releaseStuckDeliveries } from "@/server/revelateur/delivery";
+import { runDelivery } from "@/server/revelateur/send-delivery";
 import { deleteExpiredSessions } from "@/server/revelateur/session";
 
 /**
@@ -109,7 +111,23 @@ const purgeUnfinishedRevelateur: Job = {
   },
 };
 
-export const JOBS: Job[] = [markStuckEmails, sessionReminders("24h"), sessionReminders("1h"), sendScheduledEmails, eventMails("reminder"), eventMails("thanks"), purgeOldTokens, purgeUnfinishedRevelateur];
+/** Révélateur reports: send those whose address is confirmed (retries with back-off after a failure). */
+const deliverRevelateurReports: Job = {
+  name: "deliverRevelateurReports",
+  async run(now) {
+    const released = await releaseStuckDeliveries(db, now);
+    const counts = { released, sent: 0, failed: 0, waitingReport: 0 };
+    for (const d of await dueDeliveries(db, now)) {
+      const r = await runDelivery(d.id);
+      if (r === "sent") counts.sent++;
+      else if (r === "failed") counts.failed++;
+      else if (r === "no_report") counts.waitingReport++;
+    }
+    return counts;
+  },
+};
+
+export const JOBS: Job[] = [markStuckEmails, sessionReminders("24h"), sessionReminders("1h"), sendScheduledEmails, eventMails("reminder"), eventMails("thanks"), purgeOldTokens, purgeUnfinishedRevelateur, deliverRevelateurReports];
 
 /** Runs every job in order; one failing job never stops the others. */
 export async function runJobs(now = new Date()) {
