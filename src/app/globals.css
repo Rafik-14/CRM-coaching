@@ -684,3 +684,27 @@ html.rs-locked, html.rs-locked body { overflow: hidden; }
   .rs-thread-svg path { stroke-dashoffset: 0; }
   .rs-thread-dot { opacity: 1; }
 }
+
+/* ---- Le Révélateur, cinema version (ported from the approved prototype) ---- */
+.rvc { --font-display: var(--font-heading); }
+.rvc .font-display { font-family: var(--font-heading); }
+.rvc .font-film { font-family: var(--font-film), ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+.rvc .split-line-mask { overflow: clip; padding-bottom: .1em; margin-bottom: -.1em; }
+.rvc .kinetic-type { perspective: 900px; font-kerning: none; }
+.rvc-grain { pointer-events: none; position: fixed; inset: -40%; width: 180%; height: 180%; z-index: 45; opacity: .018; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.88' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); animation: rvc-grain 8s steps(6) infinite; }
+@keyframes rvc-grain { 0%, 100% { transform: translate(0, 0); } 25% { transform: translate(-1.2%, .8%); } 50% { transform: translate(1%, -1.2%); } 75% { transform: translate(-.8%, -.8%); } }
+.rvc ::selection { background: rgba(212, 168, 102, .3); }
+/* Full-screen logo reveal (navy), the JG® monogram drawing itself, then the curtain lifts. */
+.rvc-reveal { position: fixed; inset: 0; z-index: 90; background: #172536; clip-path: inset(0 0 0 0); transition: clip-path 1.4s cubic-bezier(.77, 0, .18, 1); cursor: pointer; }
+.rvc-reveal.is-gone { clip-path: inset(0 0 100% 0); pointer-events: none; }
+.rvc-reveal svg { position: absolute; left: 50%; top: 50%; width: clamp(96px, 14vw, 140px); height: auto; transform: translate(-50%, -60%); animation: rs-logo-zoom 4.4s cubic-bezier(.22, .61, .36, 1) both; }
+.rvc-reveal p { position: absolute; left: 0; right: 0; top: calc(50% + clamp(70px, 9vw, 100px)); margin: 0; padding: 0 20px; text-align: center; font-family: var(--font-heading); font-size: clamp(13px, 1.4vw, 16px); font-weight: 600; letter-spacing: .26em; color: #d4a866; opacity: 0; animation: rv-fade-in 1.2s ease 2.3s forwards; }
+/* Navy veil between the landing and the passation. */
+.rvc-veil { position: fixed; inset: 0; z-index: 85; background: #172536; opacity: 0; pointer-events: none; transition: opacity .6s ease; }
+.rvc-veil.is-on { opacity: 1; pointer-events: auto; }
+@media (prefers-reduced-motion: reduce) {
+  .rvc-grain { animation: none; }
+  .rvc-reveal { transition: none; }
+  .rvc-reveal svg { animation: none; }
+}
+
