@@ -5,6 +5,7 @@ import { FinalCta, SectionHeading, Statement } from "@/components/site/blocks";
 import { Container, Eyebrow, GoldLine, Section } from "@/components/site/ui";
 import bilan from "@/assets/site/bilan-competences.webp";
 import ayrone from "@/assets/site/ayrone-logo.webp";
+import qualiopi from "@/assets/site/qualiopi.webp";
 
 export const metadata: Metadata = {
   title: "Bilan de compétences",
@@ -164,10 +165,12 @@ function AyronePartnership() {
       </div>
       <div className="flex flex-col gap-6 rounded-[12px] bg-ivory p-6 shadow-[0_6px_18px_rgba(23,37,54,0.06)] sm:flex-row sm:items-center md:p-7">
         <div className="flex min-w-0 items-center gap-4 sm:flex-1">
-          <p className="shrink-0 leading-tight">
-            <span className="block font-heading text-[1.375rem] font-bold text-navy">Qualiopi</span>
-            <span className="block text-[12px] text-navy">processus certifié</span>
-          </p>
+          <Image
+            src={qualiopi}
+            alt="Qualiopi, processus certifié, République française"
+            sizes="150px"
+            className="h-auto w-[150px] shrink-0 mix-blend-multiply"
+          />
           <p className="min-w-0 flex-1 text-[15px] leading-snug text-navy">
             Ayrone – Organisme de formation certifié <strong>Qualiopi</strong>
           </p>
