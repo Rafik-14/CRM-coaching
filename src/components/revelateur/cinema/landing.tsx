@@ -31,6 +31,11 @@ export function CinemaLanding({ texts, savedCount }: { texts: LandingTexts; save
   const reveal = useCallback(() => setRevealed(true), []);
 
   useEffect(() => {
+    // Next keeps this page alive (hidden) during the test: coming back via the JG® mark shows it again with
+    // its old « leaving » state, i.e. the navy veil on and the content faded out (a blank screen). Reset both.
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- restoring the page after the test, not derived state
+    setLeaving(false);
+    if (root.current) gsap.set(root.current, { opacity: 1 });
     setWorld({ stage: "landing" });
     setWorld({ gravityActive: false });
     router.prefetch("/revelateur/experience");
