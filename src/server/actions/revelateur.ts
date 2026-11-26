@@ -7,6 +7,7 @@ import { db } from "@/server/db";
 import { clientIp, rateLimited } from "@/server/rate-limit";
 import { logEvent, normalisePhone, requestCallback } from "@/server/revelateur/crm";
 import { deliveryOf, requestDelivery, stateOf, type DeliveryState } from "@/server/revelateur/delivery";
+import { contactForCallback } from "@/server/revelateur/crm-links";
 import { revelateurEnabled } from "@/server/revelateur/flag";
 import { sendVerification } from "@/server/revelateur/send-delivery";
 import {
@@ -154,7 +155,11 @@ export async function requestReport(email: string, firstName: string, callback?:
     // Callback request: only when the box was ticked, and the number is checked before anything is saved.
     if (callback) normalisePhone(callback.phone);
     const { token, delivery, participantId } = await requestDelivery(db, session.id, { email, firstName });
-    if (callback) await requestCallback(db, { sessionId: session.id, participantId, phone: callback.phone });
+    if (callback) {
+      const cb = await requestCallback(db, { sessionId: session.id, participantId, phone: callback.phone });
+      // Decision of 26 Nov: an explicit callback request enters the Pipeline (contact + « Rappeler » task).
+      after(() => contactForCallback(cb.id).then(() => undefined));
+    }
     after(() => sendVerification(delivery, token));
     return { state: stateOf(delivery) };
   } catch (e) {

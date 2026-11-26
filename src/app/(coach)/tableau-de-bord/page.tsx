@@ -8,6 +8,9 @@ import { TaskCheckbox } from "@/components/task-checkbox";
 import { NewContactButton } from "@/components/new-contact-button";
 import { EmptyState } from "@/components/empty-state";
 import { getHome } from "@/server/queries/dashboard";
+import { db } from "@/server/db";
+import { counters } from "@/server/revelateur/crm";
+import { revelateurEnabled } from "@/server/revelateur/flag";
 import { formatDate, formatDayTime, formatMoneyTotals, fullName, initials, isOverdue } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Accueil" };
@@ -81,6 +84,11 @@ async function Home() {
         </div>
         <NewContactButton />
       </div>
+
+      {/* Le Révélateur (annexe 07 §1.1): its three counters, visible right after logging in */}
+      <Suspense fallback={<Skeleton className="h-20 rounded-xl" />}>
+        <RevelateurStrip />
+      </Suspense>
 
       {/* 1 · Clients */}
       <Panel title="Mes clients" action={<SeeAll href="/contacts" />}>
@@ -222,5 +230,32 @@ function HomeSkeleton() {
         <Skeleton className="h-56 rounded-2xl" />
       </div>
     </div>
+  );
+}
+
+async function RevelateurStrip() {
+  if (!revelateurEnabled()) return null;
+  const c = await counters(db);
+  const items = [
+    { label: "Tests réalisés", n: c.tests, href: "/test-signature?vue=tests" },
+    { label: "Rappels à effectuer", n: c.callbacks, href: "/test-signature?vue=rappels" },
+    { label: "Appels découverte réservés", n: c.calls, href: "/test-signature?vue=rdv" },
+  ];
+  return (
+    <section className="rounded-xl border border-border bg-card px-5 py-4">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <Link href="/test-signature" className="text-[11px] font-semibold tracking-wider text-primary uppercase hover:underline">
+          Le Révélateur
+        </Link>
+        <div className="flex flex-wrap gap-6">
+          {items.map((i) => (
+            <Link key={i.label} href={i.href} className="group flex items-baseline gap-2">
+              <span className="text-2xl font-semibold tabular-nums">{i.n}</span>
+              <span className="text-sm text-muted-foreground group-hover:text-foreground">{i.label}</span>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }

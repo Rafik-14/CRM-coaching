@@ -5,6 +5,7 @@ import { db } from "@/server/db";
 import { activityLog } from "@/server/db/schema";
 import { requireCoach } from "@/server/dal";
 import { logEvent, setCallbackStatus } from "@/server/revelateur/crm";
+import { scheduleCallFromCallback } from "@/server/revelateur/crm-links";
 import { queueResend } from "@/server/revelateur/delivery";
 import { runDelivery } from "@/server/revelateur/send-delivery";
 import { isUserError } from "@/server/revelateur/session";
@@ -32,6 +33,19 @@ export async function resendReport(sessionId: string, newEmail: string): Promise
     if (r === "sent") return { ok: true, message: "Rapport envoyé." };
     if (r === "no_report") return { ok: false, message: "Le rapport n'a pas pu être produit (contrôle éditorial). Rien n'a été envoyé." };
     return { ok: false, message: "L'envoi a échoué ; une nouvelle tentative est programmée." };
+  } catch (e) {
+    return { ok: false, message: isUserError(e) ? (e as Error).message : "Une erreur est survenue." };
+  }
+}
+
+/** Jérémy books the discovery call from the callback request (while on the phone with the person). */
+export async function scheduleCallback(id: string, startsAtIso: string): Promise<CrmResult> {
+  const user = await requireCoach();
+  try {
+    await scheduleCallFromCallback(id, new Date(startsAtIso), user.id);
+    revalidatePath("/test-signature", "layout");
+    revalidatePath("/calendrier");
+    return { ok: true, message: "Appel découverte planifié dans l’agenda ; demande clôturée." };
   } catch (e) {
     return { ok: false, message: isUserError(e) ? (e as Error).message : "Une erreur est survenue." };
   }

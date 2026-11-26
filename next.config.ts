@@ -36,7 +36,7 @@ const nextConfig: NextConfig = {
   // Self-contained server bundle for the Docker image.
   output: "standalone",
   // OpenCV (notes scanner) is a large WebAssembly build: load it from node_modules at runtime, not bundled.
-  serverExternalPackages: ["@techstark/opencv-js", "@react-pdf/renderer"],
+  serverExternalPackages: ["@techstark/opencv-js", "@react-pdf/renderer", "exceljs"],
   // …and since it is required at runtime, ship it explicitly in the standalone build (pages using the scanner).
   outputFileTracingIncludes: {
     "/contacts/**": ["./node_modules/@techstark/opencv-js/package.json", "./node_modules/@techstark/opencv-js/dist/opencv.js"],

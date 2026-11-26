@@ -66,6 +66,14 @@ async function Participant({ params }: { params: PageProps<"/test-signature/part
                   <span>
                     {fmtDate(c.requestedAt)} · <strong>{CALLBACK_LABEL[c.status]}</strong> · {c.phone}
                     {c.outcome ? <span className="text-muted-foreground"> · {c.outcome}</span> : null}
+                    {c.contactId ? (
+                      <>
+                        {" · "}
+                        <Link href={`/contacts/${c.contactId}`} className="text-primary hover:underline">
+                          fiche client
+                        </Link>
+                      </>
+                    ) : null}
                   </span>
                   {(c.status === "pending" || c.status === "in_progress") && <CallbackActions id={c.id} status={c.status} />}
                 </li>

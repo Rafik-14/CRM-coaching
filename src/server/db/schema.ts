@@ -860,6 +860,8 @@ export const revelateurCallbacks = pgTable(
     status: revelateurCallbackStatus("status").notNull().default("pending"),
     /** Outcome noted by the coach when closing it (short, no answers copied). */
     outcome: text("outcome"),
+    /** The CRM contact created for this request (Pipeline), so the follow-up continues in the CRM. */
+    contactId: uuid("contact_id").references(() => contacts.id, { onDelete: "set null" }),
     /** The discovery call it turned into (APPOINTMENT_BOOKED). */
     appointmentId: uuid("appointment_id").references(() => coachingSessions.id, { onDelete: "set null" }),
     requestedAt: timestamp("requested_at", { withTimezone: true }).notNull().defaultNow(),

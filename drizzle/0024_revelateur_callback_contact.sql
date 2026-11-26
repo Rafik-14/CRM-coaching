@@ -1,0 +1,2 @@
+ALTER TABLE "revelateur_callbacks" ADD COLUMN "contact_id" uuid;--> statement-breakpoint
+ALTER TABLE "revelateur_callbacks" ADD CONSTRAINT "revelateur_callbacks_contact_id_contacts_id_fk" FOREIGN KEY ("contact_id") REFERENCES "public"."contacts"("id") ON DELETE set null ON UPDATE no action;

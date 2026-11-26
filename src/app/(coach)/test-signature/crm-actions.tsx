@@ -4,12 +4,13 @@ import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { resendReport, updateCallback } from "@/server/actions/revelateur-crm";
+import { resendReport, scheduleCallback, updateCallback } from "@/server/actions/revelateur-crm";
 
 /** Buttons to move a callback request along (annexe 07 §6.2). A callback never becomes an appointment by itself. */
 export function CallbackActions({ id, status }: { id: string; status: string }) {
   const [pending, start] = useTransition();
   const [outcome, setOutcome] = useState("");
+  const [when, setWhen] = useState("");
   const run = (s: "in_progress" | "completed" | "cancelled") =>
     start(async () => {
       const r = await updateCallback(id, s, outcome);
@@ -29,6 +30,23 @@ export function CallbackActions({ id, status }: { id: string; status: string }) 
       <Button size="sm" variant="ghost" disabled={pending} onClick={() => run("cancelled")}>
         Annuler
       </Button>
+      <span className="flex items-center gap-2">
+        <Input type="datetime-local" value={when} onChange={(e) => setWhen(e.target.value)} className="h-8 w-48" aria-label="Date et heure de l’appel découverte" />
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={pending || !when}
+          onClick={() =>
+            start(async () => {
+              // The input is in the coach's local time; send an absolute instant.
+              const r = await scheduleCallback(id, new Date(when).toISOString());
+              (r.ok ? toast.success : toast.error)(r.message);
+            })
+          }
+        >
+          Planifier l’appel découverte
+        </Button>
+      </span>
     </div>
   );
 }

@@ -73,6 +73,15 @@ async function Dashboard({ searchParams }: { searchParams: SP }) {
             </Link>
           ))}
         </nav>
+        <div className="flex items-center gap-2 text-sm">
+          <span className="text-muted-foreground">Exporter :</span>
+          <a href={`/test-signature/export?format=xlsx${period.key !== "tout" ? `&periode=${period.key}` : ""}`} className="rounded-md border border-border px-2.5 py-1 hover:border-primary">
+            XLSX
+          </a>
+          <a href={`/test-signature/export?format=pdf${period.key !== "tout" ? `&periode=${period.key}` : ""}`} className="rounded-md border border-border px-2.5 py-1 hover:border-primary">
+            PDF
+          </a>
+        </div>
         <form className="flex items-center gap-2" action="">
           {period.key !== "tout" && <input type="hidden" name="periode" value={period.key} />}
           <Input name="q" defaultValue={q} placeholder="Prénom ou adresse e-mail" className="h-9 w-64" aria-label="Rechercher un participant" />
