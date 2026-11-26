@@ -67,7 +67,7 @@ export function CinemaLanding({ texts, savedCount }: { texts: LandingTexts; save
     () => {
       if (!revealed || !root.current) return;
       if (reducedMotion()) {
-        gsap.set(".ov-beat, .ov-kicker", { opacity: 1 });
+        gsap.set(".ov-beat, .ov-kicker, .overture-title, .overture-lead", { opacity: 1 });
         return;
       }
       let title: SplitText | null = null, leadSplit: SplitText | null = null, tl: gsap.core.Timeline | null = null, cancelled = false;
@@ -76,7 +76,9 @@ export function CinemaLanding({ texts, savedCount }: { texts: LandingTexts; save
         const h1 = root.current.querySelector(".overture-title"), ld = root.current.querySelector(".overture-lead");
         if (h1) title = SplitText.create(h1, { type: "words, chars", mask: "words" });
         if (ld) leadSplit = SplitText.create(ld, { type: "lines, words", mask: "lines", linesClass: "split-line-mask" });
-        tl = gsap.timeline({ defaults: { ease: "dr.cinema" } });
+        // Wait for the curtain to finish lifting (1.4 s), so the overture is seen from its first frame.
+        tl = gsap.timeline({ defaults: { ease: "dr.cinema" }, delay: 1.1 });
+        tl.set([h1, ld], { opacity: 1 }, 0);
         tl.fromTo(".ov-kicker", { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.55 }, 0.06).to(
           ".ov-kicker",
           { duration: 0.9, scrambleText: { text: "UNE EXCLUSIVITÉ JG®", chars: "ABCDEFGHIJKLMNOPQRSTUVWXYZ·", revealDelay: 0.12, speed: 0.6 } },
@@ -158,11 +160,11 @@ export function CinemaLanding({ texts, savedCount }: { texts: LandingTexts; save
       <div ref={root} className="relative w-full text-[#F8F6F2]">
         <section className="relative flex min-h-[100dvh] w-full flex-col items-center justify-center px-5 pt-16 pb-10 text-center sm:px-6 sm:pt-20 sm:pb-16">
           <p className="ov-kicker font-film text-[10px] tracking-[0.28em] text-[#D4A866] uppercase opacity-0 sm:text-[10.5px]">Une exclusivité JG®</p>
-          <h1 className="overture-title kinetic-type mt-4 font-display text-[44px] leading-[1.04] font-extralight tracking-[-0.03em] text-[#F8F6F2] sm:mt-5 sm:text-[76px] md:text-[92px]">
+          <h1 className="overture-title kinetic-type mt-4 opacity-0 font-display text-[44px] leading-[1.04] font-extralight tracking-[-0.03em] text-[#F8F6F2] sm:mt-5 sm:text-[76px] md:text-[92px]">
             Le Révélateur
           </h1>
           <p className="ov-beat font-film mt-2 text-[10.5px] tracking-[0.26em] text-[#D4A866]/85 uppercase opacity-0 sm:mt-2.5 sm:text-[11px]">Test Signature JG®</p>
-          <p className="overture-lead kinetic-type mt-5 max-w-xl font-display text-[19px] leading-[1.4] font-light text-[#F8F6F2]/92 sm:mt-6 sm:text-[25px]">{lead}</p>
+          <p className="overture-lead kinetic-type mt-5 opacity-0 max-w-xl font-display text-[19px] leading-[1.4] font-light text-[#F8F6F2]/92 sm:mt-6 sm:text-[25px]">{lead}</p>
           <p className="ov-beat mt-2.5 max-w-lg text-[14.5px] leading-[1.58] font-light text-[#F8F6F2]/72 opacity-0 sm:mt-3 sm:text-[15px]">{dims}</p>
           <p className="ov-beat font-film mt-4 text-[10px] tracking-[0.14em] text-[#F8F6F2]/58 uppercase opacity-0 sm:mt-5 sm:text-[10.5px] sm:tracking-[0.16em]">{facts}</p>
           <p className="ov-beat mt-4 font-display text-[12.5px] font-medium tracking-[0.12em] text-[#D4A866] uppercase opacity-0 sm:mt-5 sm:text-[13.5px] sm:tracking-[0.14em]">{ready}</p>

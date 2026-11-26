@@ -716,5 +716,8 @@ html.rs-locked, html.rs-locked body { overflow: hidden; }
 @keyframes rvc-pulse { 0%, 100% { opacity: .35; } 50% { opacity: 1; } }
 /* Paused (and invisible) until the first tap; the tap only presses play. */
 .rvc-reveal:not(.is-started) .rvc-anim { opacity: 0; }
-.rvc-reveal:not(.is-started) .rvc-anim svg, .rvc-reveal:not(.is-started) .rvc-anim p, .rvc-reveal:not(.is-started) .rvc-anim path { animation-play-state: paused; }
+/* No animation at all before the tap (pausing SVG animations is unreliable in Safari/iOS). The dash set-up
+   stays applied, so the browser still measures the outline in advance and the tap costs nothing. */
+.rvc-reveal:not(.is-started) .rvc-anim svg, .rvc-reveal:not(.is-started) .rvc-anim p, .rvc-reveal:not(.is-started) .rvc-anim path { animation: none !important; }
+
 

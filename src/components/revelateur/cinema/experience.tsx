@@ -507,8 +507,9 @@ function LightColumns({
     return { v: 5 - Math.min(4, Math.floor(ratio * 5)), ratio };
   };
   const mobileMove = (clientY: number) => {
-    const { v, ratio } = fromPointer(clientY);
-    setMobileRatio(ratio);
+    // Like the desktop reticle: it sticks to the nearest of the five answers, never in between.
+    const { v } = fromPointer(clientY);
+    setMobileRatio((5 - v + 0.5) * 0.2);
     if (v !== lastTick.current) {
       lastTick.current = v;
       cinemaAudio.playDialTick(v);
