@@ -15,10 +15,12 @@ const field = "w-full border-b border-[#F8F6F2]/30 bg-transparent py-3 text-[16p
  * After confirmation (dossier v2.0 §2 steps 9–11): the address for the report, then « check your inbox »,
  * then the validated end screen once the report has left.
  */
-export function ReportStep({ initial, end }: { initial: DeliveryState; end: EndTexts }) {
+export function ReportStep({ initial, end, callbackText }: { initial: DeliveryState; end: EndTexts; callbackText: string }) {
   const [state, setState] = useState<DeliveryState>(initial);
   const [email, setEmail] = useState("");
   const [firstName, setFirstName] = useState("");
+  const [callback, setCallback] = useState(false); // never pre-ticked (annexe 07 §8)
+  const [phone, setPhone] = useState("");
   const [editing, setEditing] = useState(initial.status === "none");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string>();
@@ -27,7 +29,7 @@ export function ReportStep({ initial, end }: { initial: DeliveryState; end: EndT
   const submit = async (address = email, name = firstName) => {
     setPending(true);
     setError(undefined);
-    const r = await requestReport(address, name).catch(() => ({ state, error: "Une erreur est survenue. Réessayez." }));
+    const r = await requestReport(address, name, callback ? { phone } : null).catch(() => ({ state, error: "Une erreur est survenue. Réessayez." }));
     setPending(false);
     setState(r.state);
     if (r.error) return setError(r.error);
@@ -104,6 +106,20 @@ export function ReportStep({ initial, end }: { initial: DeliveryState; end: EndT
             placeholder="vous@exemple.fr"
           />
         </label>
+        <div className="mt-2 grid gap-3 border-t border-[#F8F6F2]/12 pt-5">
+          <label className="flex cursor-pointer items-start gap-3 text-[14px] leading-[1.6] font-light text-[#F8F6F2]/85">
+            <input type="checkbox" checked={callback} onChange={(e) => setCallback(e.target.checked)} className="mt-1 size-4 accent-[#D4A866]" />
+            <span>
+              {callbackText} <span className="text-[#F8F6F2]/55">(facultatif)</span>
+            </span>
+          </label>
+          {callback && (
+            <label className="grid gap-1">
+              <span className="font-film text-[10px] tracking-[0.2em] text-[#D4A866] uppercase">Téléphone (France ou Suisse)</span>
+              <input className={field} type="tel" required value={phone} onChange={(e) => setPhone(e.target.value)} autoComplete="tel" inputMode="tel" maxLength={20} placeholder="06 12 34 56 78" />
+            </label>
+          )}
+        </div>
         {error && <p role="alert" className="text-[14px] text-[#E2C08A]">{error}</p>}
         <button type="submit" disabled={pending} className={`mt-3 inline-flex items-center justify-center gap-3 px-8 py-4 ${gold}`}>
           Recevoir mon rapport <ArrowRight size={15} />

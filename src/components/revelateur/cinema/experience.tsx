@@ -28,6 +28,7 @@ export type CinemaTexts = {
   scale: readonly string[];
   ownership: string;
   end: EndTexts;
+  callback: string;
 };
 
 type Stage = "boot" | "interlude" | "question" | "open" | "review" | "confirmed";
@@ -224,6 +225,7 @@ export function CinemaExperience({
           pending={pending}
           delivery={initialComplete && !confirmedHere ? initialDelivery : { status: "none" }}
           end={texts.end}
+          callbackText={texts.callback}
           onRestart={() =>
             run(async () => {
               const r = await restartRevelateur();
@@ -985,12 +987,14 @@ function Confirmed({
   pending,
   delivery,
   end,
+  callbackText,
   onRestart,
 }: {
   ownership: string;
   pending: boolean;
   delivery: DeliveryState;
   end: EndTexts;
+  callbackText: string;
   onRestart: () => void;
 }) {
   const root = useRef<HTMLElement>(null);
@@ -1007,7 +1011,7 @@ function Confirmed({
         {delivery.status === "none" && (
           <p className="font-display mb-12 text-[15px] font-light tracking-[0.02em] text-[#F8F6F2]/70">Vos réponses sont confirmées.</p>
         )}
-        <ReportStep initial={delivery} end={end} />
+        <ReportStep initial={delivery} end={end} callbackText={callbackText} />
       </div>
       <div className="conf-reveal mt-12 flex flex-col items-center gap-6">
         <button

@@ -6,6 +6,7 @@ import { connection } from "next/server";
 import { CinemaHUD } from "@/components/revelateur/cinema/hud";
 import { ReportStep } from "@/components/revelateur/cinema/report-step";
 import { db } from "@/server/db";
+import { CALLBACK_CONSENT } from "@/server/revelateur/crm";
 import { deliveryOf, stateOf, verifyDelivery } from "@/server/revelateur/delivery";
 import { revelateurEnabled } from "@/server/revelateur/flag";
 import { END_TEXT, OWNERSHIP_NOTICE } from "@/server/revelateur/questionnaire";
@@ -56,7 +57,7 @@ async function Confirm({ params }: { params: Promise<{ token: string }> }) {
     // Send right away when possible; otherwise the scheduled job keeps trying (same PDF, no recalculation).
     if (v.delivery.status === "awaiting_report" || v.delivery.status === "failed") await runDelivery(v.delivery.id);
     const state = stateOf(await deliveryOf(db, v.delivery.sessionId));
-    body = <ReportStep initial={state} end={END_TEXT} />;
+    body = <ReportStep initial={state} end={END_TEXT} callbackText={CALLBACK_CONSENT.text} />;
   }
 
   return (

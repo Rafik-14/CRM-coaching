@@ -5,6 +5,7 @@ import { cookies } from "next/headers";
 import { DIMENSIONS, QUESTION_DIMENSIONS, QUESTION_IDS } from "@/lib/revelateur/scoring";
 import { db } from "@/server/db";
 import { clientIp, rateLimited } from "@/server/rate-limit";
+import { logEvent, normalisePhone, requestCallback } from "@/server/revelateur/crm";
 import { deliveryOf, requestDelivery, stateOf, type DeliveryState } from "@/server/revelateur/delivery";
 import { revelateurEnabled } from "@/server/revelateur/flag";
 import { sendVerification } from "@/server/revelateur/send-delivery";
@@ -30,6 +31,14 @@ import {
  */
 
 const COOKIE = "jg_revelateur";
+
+/**
+ * Abuse limits per IP address. Sized for a conference room where the whole audience shares the venue's
+ * Wi-Fi, i.e. one public IP: ~300 people starting within the hour and answering at the same time.
+ */
+const START_LIMIT = 400; // new passations per hour
+const ANSWER_LIMIT = 3000; // answers per minute
+const REPORT_LIMIT = 400; // report-address requests per hour
 
 export type RevelateurState = { screen: Screen; error?: string };
 
@@ -70,7 +79,7 @@ async function withSession(run: (s: SessionRow) => Promise<SessionRow | void>): 
 export async function startRevelateur(): Promise<RevelateurState> {
   const existing = await current();
   if (existing && existing.status === "in_progress") return { screen: await screenFor(db, existing) };
-  if (rateLimited(`revelateur:start:${await clientIp()}`, 30, 60 * 60_000)) {
+  if (rateLimited(`revelateur:start:${await clientIp()}`, START_LIMIT, 60 * 60_000)) {
     return { screen: { kind: "welcome" }, error: "Trop de tentatives. Réessayez dans quelques minutes." };
   }
   const { token, session } = await createSession(db);
@@ -81,7 +90,7 @@ export async function startRevelateur(): Promise<RevelateurState> {
 /** After a confirmed passation: start a brand-new one (a new session, the previous one is untouched). */
 export async function restartRevelateur(): Promise<RevelateurState> {
   if (!revelateurEnabled()) throw new Error("Indisponible.");
-  if (rateLimited(`revelateur:start:${await clientIp()}`, 30, 60 * 60_000)) {
+  if (rateLimited(`revelateur:start:${await clientIp()}`, START_LIMIT, 60 * 60_000)) {
     return { screen: { kind: "complete" }, error: "Trop de tentatives. Réessayez dans quelques minutes." };
   }
   const { token, session } = await createSession(db);
@@ -90,7 +99,7 @@ export async function restartRevelateur(): Promise<RevelateurState> {
 }
 
 export async function answerRevelateur(questionId: string, value: number): Promise<RevelateurState> {
-  if (rateLimited(`revelateur:answer:${await clientIp()}`, 240, 60_000)) {
+  if (rateLimited(`revelateur:answer:${await clientIp()}`, ANSWER_LIMIT, 60_000)) {
     return withSession(async () => {
       throw new UserError("Trop de réponses en peu de temps. Patientez un instant.");
     });
@@ -125,6 +134,7 @@ export async function confirmRevelateur(): Promise<ConfirmState> {
   const session = await current();
   if (!session) return { ok: false, error: "Votre session a expiré." };
   const r = await confirmSession(db, session.id);
+  if (r.ok) await logEvent(db, { type: "TEST_COMPLETED", key: `TEST_COMPLETED:${session.id}`, sessionId: session.id });
   return r.ok ? { ok: true, axes: QUESTION_IDS.map((id) => DIMENSIONS.indexOf(QUESTION_DIMENSIONS[id])) } : { ok: false, error: r.error };
 }
 
@@ -134,14 +144,17 @@ export type DeliveryResult = { state: DeliveryState; error?: string };
  * After confirmation: the address the report goes to (v2.0 §2 step 9). A confirmation link is sent; the
  * report leaves once the address is confirmed. Also used to correct the address or re-send the link.
  */
-export async function requestReport(email: string, firstName: string): Promise<DeliveryResult> {
+export async function requestReport(email: string, firstName: string, callback?: { phone: string } | null): Promise<DeliveryResult> {
   const session = await current();
   if (!session) return { state: { status: "none" }, error: "Votre session a expiré." };
-  if (rateLimited(`revelateur:report:${await clientIp()}`, 10, 60 * 60_000)) {
+  if (rateLimited(`revelateur:report:${await clientIp()}`, REPORT_LIMIT, 60 * 60_000)) {
     return { state: stateOf(await deliveryOf(db, session.id)), error: "Trop de tentatives. Réessayez dans quelques minutes." };
   }
   try {
-    const { token, delivery } = await requestDelivery(db, session.id, { email, firstName });
+    // Callback request: only when the box was ticked, and the number is checked before anything is saved.
+    if (callback) normalisePhone(callback.phone);
+    const { token, delivery, participantId } = await requestDelivery(db, session.id, { email, firstName });
+    if (callback) await requestCallback(db, { sessionId: session.id, participantId, phone: callback.phone });
     after(() => sendVerification(delivery, token));
     return { state: stateOf(delivery) };
   } catch (e) {

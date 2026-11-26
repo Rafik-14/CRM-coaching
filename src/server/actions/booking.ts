@@ -1,6 +1,7 @@
 "use server";
 
-import { refresh } from "next/cache";
+import { refresh } from "next/cache";
+import { onDiscoveryBooked } from "@/server/revelateur/crm";
 import { redirect } from "next/navigation";
 import { after } from "next/server";
 import { and, eq, gte, lt, sql } from "drizzle-orm";
@@ -90,6 +91,8 @@ export async function bookEchange(_prev: SiteFormState, formData: FormData): Pro
     contactId,
   });
   await db.insert(activityLog).values({ entity: "contact", entityId: contactId, action: "echange_booked_online" });
+  // Le Révélateur (annexe 07 §5): a participant booking a call closes their open callback requests.
+  await onDiscoveryBooked(db, v.email, sessionId).catch(() => {});
 
   // E-mails after the response: the visitor never waits for the mail server.
   const token = bookingToken(sessionId);

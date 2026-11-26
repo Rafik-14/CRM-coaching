@@ -19,7 +19,7 @@ export const CONFIGURATION_TEXTS = {
   },
   DEVELOPED: {
     title: "Configuration développée",
-    text: "Les cinq dimensions de votre cartographie dépassent le seuil de 60, avec des écarts plus marqués entre elles. Cette configuration décrit un ensemble de ressources mobilisées ; la dimension la moins élevée n’y est pas une faiblesse, mais une facette qui peut trouver davantage de place.",
+    text: "Les cinq dimensions de votre cartographie dépassent le seuil de 60, avec des écarts plus marqués entre elles. Cette configuration décrit un ensemble de ressources mobilisées ; la dimension la moins élevée y reste une facette qui peut trouver davantage de place, sans être une limite.",
   },
 } as const;
 

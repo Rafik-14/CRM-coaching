@@ -2,6 +2,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { and, eq, inArray, isNotNull, lte } from "drizzle-orm";
 import type { AnyDb } from "@/server/db/types";
 import { revelateurDeliveries, revelateurSessions } from "@/server/db/schema";
+import { linkSessionToParticipant, logEvent, upsertParticipant } from "./crm";
 import { UserError } from "./session";
 
 /**
@@ -63,7 +64,7 @@ export async function requestDelivery(
   sessionId: string,
   input: { email: unknown; firstName: unknown },
   now = new Date(),
-): Promise<{ token: string; delivery: DeliveryRow }> {
+): Promise<{ token: string; delivery: DeliveryRow; participantId: string }> {
   const session = await db.query.revelateurSessions.findFirst({ where: eq(revelateurSessions.id, sessionId) });
   if (!session || session.status !== "complete") throw new UserError("Confirmez d'abord vos réponses.");
   const email = normaliseEmail(input.email);
@@ -85,7 +86,10 @@ export async function requestDelivery(
   const [delivery] = existing
     ? await db.update(revelateurDeliveries).set(values).where(eq(revelateurDeliveries.id, existing.id)).returning()
     : await db.insert(revelateurDeliveries).values({ sessionId, ...values, createdAt: now }).returning();
-  return { token, delivery };
+  // The address identifies the participant (annexe 07 §10); the session is attached to them.
+  const participant = await upsertParticipant(db, email, firstName, now);
+  await linkSessionToParticipant(db, sessionId, participant.id);
+  return { token, delivery, participantId: participant.id };
 }
 
 /** The link in the e-mail: confirms the address once and queues the report; later clicks only show its status. */
@@ -152,6 +156,8 @@ export async function attemptDelivery(
       .update(revelateurDeliveries)
       .set({ status: "sent", sentAt: now, emailLogId: r.id, lastError: null, nextAttemptAt: null, attempts: claimed.attempts + 1, updatedAt: now })
       .where(eq(revelateurDeliveries.id, claimed.id));
+    const session = await db.query.revelateurSessions.findFirst({ where: eq(revelateurSessions.id, claimed.sessionId) });
+    await logEvent(db, { type: "REPORT_SENT", key: `REPORT_SENT:${claimed.id}:${claimed.attempts + 1}`, sessionId: claimed.sessionId, participantId: session?.participantId, at: now });
     return "sent";
   }
   const attempts = claimed.attempts + 1;
@@ -189,4 +195,29 @@ export async function releaseStuckDeliveries(db: AnyDb, now = new Date()): Promi
     .where(and(eq(revelateurDeliveries.status, "sending"), lte(revelateurDeliveries.updatedAt, addMinutes(now, -15))))
     .returning({ id: revelateurDeliveries.id });
   return rows.length;
+}
+
+/**
+ * From the CRM: send the report again (same PDF, no new test, no recalculation — v2.0 §4), optionally to a
+ * corrected address. The coach vouches for a corrected address, so no new confirmation link is needed.
+ */
+export async function queueResend(db: AnyDb, sessionId: string, newEmail: unknown, now = new Date()): Promise<DeliveryRow> {
+  const d = await deliveryOf(db, sessionId);
+  if (!d) throw new UserError("Aucune adresse n'a été donnée pour cette passation.");
+  if (d.status === "sending") throw new UserError("Un envoi est en cours. Réessayez dans un instant.");
+  const email = newEmail ? normaliseEmail(newEmail) : d.email;
+  const [row] = await db
+    .update(revelateurDeliveries)
+    .set({
+      email,
+      status: "failed",
+      nextAttemptAt: now,
+      verifiedAt: d.verifiedAt ?? now,
+      verifyTokenHash: email === d.email ? d.verifyTokenHash : null,
+      lastError: null,
+      updatedAt: now,
+    })
+    .where(eq(revelateurDeliveries.id, d.id))
+    .returning();
+  return row;
 }

@@ -751,6 +751,8 @@ export const revelateurSessions = pgTable(
     lastActivityAt: timestamp("last_activity_at", { withTimezone: true }).notNull().defaultNow(),
     /** Explicit final confirmation: from then on the answers are frozen. */
     confirmedAt: timestamp("confirmed_at", { withTimezone: true }),
+    /** Who the report went to (set when the address is given, after confirmation). Several sessions per person. */
+    participantId: uuid("participant_id").references((): AnyPgColumn => revelateurParticipants.id, { onDelete: "set null" }),
   },
   (t) => [index("revelateur_sessions_status_idx").on(t.status, t.lastActivityAt)],
 );
@@ -829,14 +831,99 @@ export const revelateurDeliveries = pgTable(
   (t) => [index("revelateur_deliveries_status_idx").on(t.status, t.nextAttemptAt)],
 );
 
+/**
+ * Test participants (annexe 07 §9–10): separate from coaching contacts (Jérémy, 18 Nov). Identified by the
+ * normalised e-mail only — never by first name; a new session never overwrites earlier ones.
+ */
+export const revelateurParticipants = pgTable("revelateur_participants", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  email: text("email").notNull().unique(),
+  firstName: text("first_name"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+/** Callback requests (annexe 07 §6): only after an explicit tick + a valid phone number. */
+export const revelateurCallbackStatus = pgEnum("revelateur_callback_status", ["pending", "in_progress", "completed", "converted", "cancelled"]);
+export const revelateurCallbacks = pgTable(
+  "revelateur_callbacks",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    participantId: uuid("participant_id")
+      .notNull()
+      .references(() => revelateurParticipants.id, { onDelete: "cascade" }),
+    sessionId: uuid("session_id")
+      .notNull()
+      .unique()
+      .references(() => revelateurSessions.id, { onDelete: "cascade" }),
+    phone: text("phone").notNull(),
+    status: revelateurCallbackStatus("status").notNull().default("pending"),
+    /** Outcome noted by the coach when closing it (short, no answers copied). */
+    outcome: text("outcome"),
+    /** The discovery call it turned into (APPOINTMENT_BOOKED). */
+    appointmentId: uuid("appointment_id").references(() => coachingSessions.id, { onDelete: "set null" }),
+    requestedAt: timestamp("requested_at", { withTimezone: true }).notNull().defaultNow(),
+    closedAt: timestamp("closed_at", { withTimezone: true }),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("revelateur_callbacks_status_idx").on(t.status, t.requestedAt)],
+);
+
+/** Consents (annexe 07 §8): one row per choice, with the exact text version, time and source; withdrawals kept. */
+export const revelateurConsents = pgTable(
+  "revelateur_consents",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    participantId: uuid("participant_id")
+      .notNull()
+      .references(() => revelateurParticipants.id, { onDelete: "cascade" }),
+    sessionId: uuid("session_id").references(() => revelateurSessions.id, { onDelete: "set null" }),
+    type: text("type").notNull(), // callback (newsletter / long-term keeping: not offered in v1, dossier v2.0)
+    choice: boolean("choice").notNull(),
+    textVersion: text("text_version").notNull(),
+    source: text("source").notNull(),
+    capturedAt: timestamp("captured_at", { withTimezone: true }).notNull().defaultNow(),
+    withdrawnAt: timestamp("withdrawn_at", { withTimezone: true }),
+  },
+  (t) => [index("revelateur_consents_participant_idx").on(t.participantId)],
+);
+
+/** CRM events (annexe 07 §5), idempotent through `key` (e.g. « REPORT_SENT:<delivery id> »). */
+export const revelateurEvents = pgTable(
+  "revelateur_events",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    key: text("key").notNull().unique(),
+    type: text("type").notNull(),
+    sessionId: uuid("session_id").references(() => revelateurSessions.id, { onDelete: "cascade" }),
+    participantId: uuid("participant_id").references(() => revelateurParticipants.id, { onDelete: "cascade" }),
+    occurredAt: timestamp("occurred_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("revelateur_events_participant_idx").on(t.participantId, t.occurredAt), index("revelateur_events_session_idx").on(t.sessionId)],
+);
+
 export const revelateurSessionsRelations = relations(revelateurSessions, ({ many, one }) => ({
   answers: many(revelateurAnswers),
   result: one(revelateurResults),
   delivery: one(revelateurDeliveries),
+  participant: one(revelateurParticipants, { fields: [revelateurSessions.participantId], references: [revelateurParticipants.id] }),
+  callback: one(revelateurCallbacks),
 }));
 
 export const revelateurAnswersRelations = relations(revelateurAnswers, ({ one }) => ({
   session: one(revelateurSessions, { fields: [revelateurAnswers.sessionId], references: [revelateurSessions.id] }),
+}));
+
+export const revelateurParticipantsRelations = relations(revelateurParticipants, ({ many }) => ({
+  sessions: many(revelateurSessions),
+  callbacks: many(revelateurCallbacks),
+  consents: many(revelateurConsents),
+}));
+
+export const revelateurCallbacksRelations = relations(revelateurCallbacks, ({ one }) => ({
+  participant: one(revelateurParticipants, { fields: [revelateurCallbacks.participantId], references: [revelateurParticipants.id] }),
+  session: one(revelateurSessions, { fields: [revelateurCallbacks.sessionId], references: [revelateurSessions.id] }),
+  appointment: one(coachingSessions, { fields: [revelateurCallbacks.appointmentId], references: [coachingSessions.id] }),
 }));
 
 export const revelateurDeliveriesRelations = relations(revelateurDeliveries, ({ one }) => ({

@@ -7,6 +7,7 @@ import { CinemaExperience } from "@/components/revelateur/cinema/experience";
 import { SCALE_LABELS } from "@/lib/revelateur/scoring";
 import { db } from "@/server/db";
 import { revelateurEnabled } from "@/server/revelateur/flag";
+import { CALLBACK_CONSENT } from "@/server/revelateur/crm";
 import { deliveryOf, stateOf } from "@/server/revelateur/delivery";
 import { END_TEXT, OPEN_QUESTION, OWNERSHIP_NOTICE, PREPARATION_TEXT, SAVE_NOTICE } from "@/server/revelateur/questionnaire";
 import { findSession } from "@/server/revelateur/session";
@@ -34,7 +35,7 @@ async function Experience({ searchParams }: { searchParams: Promise<{ depuis?: s
       initialComplete={session?.status === "complete"}
       initialDelivery={delivery}
       fromStart={(await searchParams).depuis === "debut"}
-      texts={{ openQuestion: OPEN_QUESTION, saveNotice: SAVE_NOTICE, preparation: PREPARATION_TEXT, scale: SCALE_LABELS, ownership: OWNERSHIP_NOTICE, end: END_TEXT }}
+      texts={{ openQuestion: OPEN_QUESTION, saveNotice: SAVE_NOTICE, preparation: PREPARATION_TEXT, scale: SCALE_LABELS, ownership: OWNERSHIP_NOTICE, end: END_TEXT, callback: CALLBACK_CONSENT.text }}
     />
   );
 }
