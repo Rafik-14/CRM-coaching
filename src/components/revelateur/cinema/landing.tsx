@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowDown, ArrowRight, RotateCcw } from "lucide-react";
 import { MONOGRAM_LETTERS, MONOGRAM_MARK, MONOGRAM_VIEWBOX } from "../monogram";
 import { cinemaAudio } from "./audio";
 import { CinemaHUD } from "./hud";
+import { IntroFilm } from "./intro-film";
 import { gsap, reducedMotion, SplitText, useGSAP } from "./gsap";
 import { setWorld } from "./world";
 
@@ -16,7 +17,7 @@ export type LandingTexts = {
 };
 
 /**
- * Le Révélateur — start page (ported from the approved prototype). A full-screen navy logo reveal,
+ * Le Révélateur — start page (ported from the approved prototype). A full-screen motion-design opening,
  * then the kinetic overture, the validated welcome texts below, and the start.
  */
 export function CinemaLanding({ texts, savedCount }: { texts: LandingTexts; savedCount: number }) {
@@ -27,6 +28,7 @@ export function CinemaLanding({ texts, savedCount }: { texts: LandingTexts; save
   const [leaving, setLeaving] = useState(false);
   // INTRO_LINES: presents · "Vous avez une valeur." · "Savez-vous…" · 5 dimensions · title · subtitle · lead · ready · facts
   const [presents, youHave, unique, dims, , , lead, ready, facts] = texts.intro;
+  const reveal = useCallback(() => setRevealed(true), []);
 
   useEffect(() => {
     setWorld({ stage: "landing" });
@@ -34,7 +36,7 @@ export function CinemaLanding({ texts, savedCount }: { texts: LandingTexts; save
     router.prefetch("/revelateur/experience");
     document.documentElement.classList.add("rs-locked");
     // Browsers allow sound only after a gesture: one tap (or key) anywhere opens the immersion —
-    // the monogram draws itself over the overture, then the curtain lifts.
+    // the opening film plays over its sound score, then the curtain lifts.
     const start = () => {
       setStarted(true);
       cinemaAudio.playOverture();
@@ -53,7 +55,9 @@ export function CinemaLanding({ texts, savedCount }: { texts: LandingTexts; save
   }, [router]);
   useEffect(() => {
     if (!started) return;
-    const t = window.setTimeout(() => setRevealed(true), reducedMotion() ? 300 : 3600);
+    // The opening film ends the reveal itself (or « Passer »); reduced motion skips it.
+    if (!reducedMotion()) return;
+    const t = window.setTimeout(() => setRevealed(true), 300);
     return () => window.clearTimeout(t);
   }, [started]);
   useEffect(() => {
@@ -134,16 +138,9 @@ export function CinemaLanding({ texts, savedCount }: { texts: LandingTexts; save
 
   return (
     <>
-      <div className={`rvc-reveal ${revealed ? "is-gone" : ""} ${started ? "is-started" : ""}`} onClick={() => started && setRevealed(true)}>
-        {/* Mounted from the start, paused until the tap: the browser measures the monogram's long outline
-            while the invitation is shown, so starting the drawing costs nothing (no stutter). */}
-        <div className="rvc-anim" aria-hidden>
-          <svg viewBox={MONOGRAM_VIEWBOX}>
-            <path className="rs-logo-letters" d={MONOGRAM_LETTERS} pathLength={1} fillRule="evenodd" />
-            <path className="rs-logo-mark" d={MONOGRAM_MARK} fillRule="evenodd" />
-          </svg>
-          <p>{presents}</p>
-        </div>
+      <div className={`rvc-reveal ${revealed ? "is-gone" : ""} ${started ? "is-started" : ""}`}>
+        {/* Mounted from the start (laid out while the invitation is shown), played on the tap. */}
+        <IntroFilm playing={started && !revealed && !reducedMotion()} lines={{ presents, youHave, unique, dims, facts, lead }} onDone={reveal} />
         {!started && (
           <div className="rvc-tap" role="button" tabIndex={0} aria-label="Entrer dans Le Révélateur (avec le son)">
             <svg viewBox={MONOGRAM_VIEWBOX} aria-hidden>

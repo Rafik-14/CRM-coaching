@@ -4,6 +4,8 @@
  * Synthesised sound design of the Révélateur (Web Audio, no files), ported from the approved prototype.
  * Kept quiet. The person can switch it off; the choice is remembered on this device.
  */
+import { FILM } from "./film-timing";
+
 const KEY = "jg_rv_sound";
 
 class CinemaAudio {
@@ -46,7 +48,7 @@ class CinemaAudio {
       return;
     }
     this.makeNoise(this.ctx);
-    this.roomIR = this.makeRoom(this.ctx);
+    this.room(this.ctx);
   }
 
   private makeNoise(ctx: AudioContext) {
@@ -166,11 +168,15 @@ class CinemaAudio {
   }
 
   /** A short reverb tail (generated, no file) so the overture sounds like a room, not a synth. */
+  private verb: ConvolverNode | null = null;
+  /** One convolver, built ahead (assigning its impulse runs an FFT that froze the tap for ~0.3 s). */
   private room(ctx: AudioContext) {
-    this.roomIR ??= this.makeRoom(ctx);
-    const conv = ctx.createConvolver();
-    conv.buffer = this.roomIR;
-    return conv;
+    if (!this.verb) {
+      this.roomIR ??= this.makeRoom(ctx);
+      this.verb = ctx.createConvolver();
+      this.verb.buffer = this.roomIR;
+    }
+    return this.verb;
   }
 
   private makeRoom(ctx: AudioContext, seconds = 3.2) {
@@ -182,11 +188,7 @@ class CinemaAudio {
     return ir;
   }
 
-  /**
-   * The overture under the logo reveal (≈5 s), timed on the drawing: a deep swell and rising air while
-   * the letters draw, a soft low impact when the gold mark lands (~2.3 s), then a warm chord that opens
-   * as the curtain lifts (~3.6 s) and fades out.
-   */
+  /** The sound score of the opening film (20 s), started by the tap. See filmScore(). */
   playOverture(now = false) {
     const ctx = this.ensure();
     if (!ctx) return;
@@ -210,55 +212,144 @@ class CinemaAudio {
     master.connect(verb).connect(wet).connect(ctx.destination);
     const out = master;
 
-    // 1. Deep swell (C1 → C2 octave rising slowly), the floor of the room.
-    const sub = ctx.createOscillator(), subG = ctx.createGain();
-    sub.type = "sine";
-    sub.frequency.setValueAtTime(32.7, t);
-    sub.frequency.exponentialRampToValueAtTime(65.4, t + 3.4);
-    subG.gain.setValueAtTime(0.0001, t);
-    subG.gain.exponentialRampToValueAtTime(0.16, t + 2.2);
-    subG.gain.exponentialRampToValueAtTime(0.0001, t + 5.2);
-    sub.connect(subG).connect(out);
-    sub.start(t);
-    sub.stop(t + 5.3);
+    this.filmScore(ctx, out, t);
+    this.startBed();
+  }
 
-    // 2. Rising air (filtered noise) while the monogram draws itself.
-    if (this.noise) {
+  /**
+   * Score of the opening film, beat for beat on FILM (film-timing.ts): a deep swell and rising air,
+   * four soft hits for « Vous », a warm pad under the aurora, a glassy pop when it condenses, sparkles
+   * for the dot burst, one note per dimension, a ticking roll up to « 30 », keys for the typed title,
+   * and a low impact with an opening chord for the monogram. Quiet throughout, no harsh transients.
+   */
+  private filmScore(ctx: AudioContext, out: AudioNode, t: number) {
+    const F = FILM;
+    const env = (g: GainNode, at: number, peak: number, attack: number, dur: number) => {
+      g.gain.setValueAtTime(0.0001, at);
+      g.gain.linearRampToValueAtTime(peak, at + attack);
+      g.gain.exponentialRampToValueAtTime(0.0001, at + dur);
+    };
+    const osc = (type: OscillatorType, at: number, f0: number, f1: number, peak: number, dur: number, attack = 0.01) => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = type;
+      o.frequency.setValueAtTime(f0, at);
+      if (f1 !== f0) o.frequency.exponentialRampToValueAtTime(f1, at + Math.min(dur, 0.6));
+      env(g, at, peak, attack, dur);
+      o.connect(g).connect(out);
+      o.start(at);
+      o.stop(at + dur + 0.05);
+    };
+    const air = (at: number, dur: number, f0: number, f1: number, peak: number, q = 0.9) => {
+      if (!this.noise) return;
       const src = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
       src.buffer = this.noise;
       src.loop = true;
       f.type = "bandpass";
-      f.Q.value = 0.9;
-      f.frequency.setValueAtTime(180, t);
-      f.frequency.exponentialRampToValueAtTime(2400, t + 2.25);
-      f.frequency.exponentialRampToValueAtTime(500, t + 3.4);
-      g.gain.setValueAtTime(0.0001, t);
-      g.gain.exponentialRampToValueAtTime(0.05, t + 2.1);
-      g.gain.exponentialRampToValueAtTime(0.0001, t + 2.6);
+      f.Q.value = q;
+      f.frequency.setValueAtTime(f0, at);
+      f.frequency.exponentialRampToValueAtTime(f1, at + dur);
+      g.gain.setValueAtTime(0.0001, at);
+      g.gain.exponentialRampToValueAtTime(peak, at + dur * 0.7);
+      g.gain.exponentialRampToValueAtTime(0.0001, at + dur);
       src.connect(f).connect(g).connect(out);
-      src.start(t);
-      src.stop(t + 2.7);
-    }
+      src.start(at, Math.random() * 0.5);
+      src.stop(at + dur + 0.05);
+    };
+    const click = (at: number, f: number, peak: number) => {
+      if (!this.noise) return;
+      const src = ctx.createBufferSource(), bp = ctx.createBiquadFilter(), g = ctx.createGain();
+      src.buffer = this.noise;
+      bp.type = "bandpass";
+      bp.frequency.value = f;
+      bp.Q.value = 4;
+      env(g, at, peak, 0.002, 0.03);
+      src.connect(bp).connect(g).connect(out);
+      src.start(at, Math.random() * 0.8, 0.04);
+    };
+    const thump = (at: number, peak: number) => osc("sine", at, 120, 46, peak, 0.55, 0.008);
+    const pad = (at: number, notes: number[], peak: number, dur: number) =>
+      notes.forEach((f, i) => this.tone(ctx, i < 2 ? "sine" : "triangle", f, at + i * 0.04, peak, dur, [500, 2200]));
 
-    // 3. The gold mark lands: a soft, low impact.
-    const hit = t + 2.3, boom = ctx.createOscillator(), bg = ctx.createGain();
-    boom.type = "sine";
-    boom.frequency.setValueAtTime(90, hit);
-    boom.frequency.exponentialRampToValueAtTime(38, hit + 0.5);
-    bg.gain.setValueAtTime(0.0001, hit);
-    bg.gain.linearRampToValueAtTime(0.22, hit + 0.02);
-    bg.gain.exponentialRampToValueAtTime(0.0001, hit + 1.4);
-    boom.connect(bg).connect(out);
-    boom.start(hit);
-    boom.stop(hit + 1.5);
-
-    // 4. The curtain lifts: a warm, slowly opening chord with a faint glassy shimmer on top.
-    const open = t + 3.3;
-    [65.41, 130.81, 196, 261.63, 329.63, 392, 493.88].forEach((f, i) =>
-      this.tone(ctx, i < 2 ? "sine" : "triangle", f, open + i * 0.05, i < 2 ? 0.05 : 0.02, 4.2, [600, 2400]),
-    );
-    [1046.5, 1318.5, 1568].forEach((f, i) => this.tone(ctx, "sine", f, open + 0.25 + i * 0.12, 0.006, 3.2));
-    this.startBed();
+    // Nodes are created a beat before they sound, in small batches: creating ~150 at once on the tap
+    // froze the first frame.
+    const soon = (at: number, schedule: () => void) => {
+      if (at < 1) return schedule();
+      window.setTimeout(() => this.on && schedule(), Math.max(0, (at - 0.8) * 1000));
+    };
+    // Floor and rising air into the giant « Vous ».
+    soon(0, () => {
+      osc("sine", t, 32.7, 65.4, 0.13, F.aurora + 0.8, 1.2);
+      air(t, F.aurora - 0.2, 160, 2600, 0.045);
+      for (let k = 0; k < 4; k++) {
+        const at = t + F.vous + 0.18 + k * F.vousStep;
+        thump(at, 0.1 + k * 0.02);
+        click(at, 2600, 0.03);
+      }
+    });
+    // Aurora: a warm pad and high air.
+    soon(F.aurora, () => {
+      pad(t + F.aurora, [65.41, 98, 130.81, 164.81, 196], 0.022, F.condense - F.aurora + 1.4);
+      air(t + F.aurora, F.dot - F.aurora, 2400, 4200, 0.012, 2.2);
+      osc("sine", t + F.question, 329.63, 329.63, 0.014, 1.2, 0.05);
+    });
+    // Condensing into the pill, then the pop down to a dot.
+    soon(F.condense, () => {
+      air(t + F.condense, 0.62, 2600, 320, 0.05);
+      osc("sine", t + F.condense + 0.3, 523.25, 523.25, 0.03, 0.7);
+      osc("triangle", t + F.condense + 0.3, 784, 784, 0.01, 0.6);
+      osc("sine", t + F.dot, 620, 1650, 0.026, 0.3);
+    });
+    // Burst: a soft low hit and scattered glass sparkles.
+    soon(F.burst, () => {
+      thump(t + F.burst, 0.12);
+      air(t + F.burst, 0.9, 5200, 2600, 0.02, 1.4);
+      const sparkle = [1046.5, 1174.66, 1318.51, 1567.98, 1760, 2093, 2349.32, 2637.02];
+      for (let k = 0; k < 22; k++) osc("sine", t + F.burst + 0.04 + ((k * 0.613) % 1) * 0.85, sparkle[(k * 5) % sparkle.length], sparkle[(k * 5) % sparkle.length], 0.0075, 0.32, 0.004);
+    });
+    // Five dimensions: one note each, rising (C D E G A).
+    soon(F.dims, () => {
+      const steps = [261.63, 293.66, 329.63, 392, 440];
+      steps.forEach((f, i) => {
+        const at = t + F.dims + (i === 0 ? 0.3 : 0.62 + (i - 1) * F.dimStep);
+        click(at, 3000, 0.025);
+        this.tone(ctx, "sine", f, at, 0.026, 1.1, [1400, 500]);
+        this.tone(ctx, "triangle", f * 2, at, 0.006, 0.7, [2000, 800]);
+      });
+    });
+    // 30 questions: an accelerating tick roll, then a low hit and a chord.
+    soon(F.stat, () => {
+      for (let k = 0; k < 20; k++) {
+        const at = t + F.stat + 0.05 + 0.95 * (1 - Math.pow(1 - k / 20, 1.8));
+        click(at, 1800 + k * 120, 0.018 + k * 0.0012);
+      }
+      thump(t + F.stat + 1.0, 0.16);
+      pad(t + F.stat + 1.0, [130.81, 196, 261.63, 329.63], 0.018, 1.8);
+    });
+    // « révéler »: rising air into a hit and a shimmer.
+    soon(F.lead, () => {
+      air(t + F.lead, F.leadWord - F.lead + 0.1, 300, 3000, 0.04);
+      thump(t + F.leadWord + 0.15, 0.14);
+      [1567.98, 2093, 2637.02].forEach((f, i) => osc("sine", t + F.leadWord + 0.2 + i * 0.1, f, f, 0.006, 1.4, 0.03));
+      pad(t + F.leadWord + 0.15, [87.31, 130.81, 174.61, 220, 261.63], 0.016, 1.6);
+    });
+    // Typed title: soft keys, then « send ».
+    soon(F.type, () => {
+      for (let k = 0; k < 13; k++) {
+        const at = t + F.typing + k * F.keyStep;
+        click(at, 3400 + ((k * 37) % 5) * 180, 0.02);
+        osc("sine", at, 1900, 1900, 0.003, 0.04, 0.002);
+      }
+      osc("sine", t + F.send, 420, 200, 0.03, 0.08, 0.003);
+      air(t + F.send + 0.05, 0.4, 600, 4200, 0.04);
+    });
+    // Monogram: low impact, then the warm chord opens with a glassy shimmer.
+    soon(F.logo, () => {
+      osc("sine", t + F.logo, 90, 38, 0.2, 1.4, 0.02);
+      [65.41, 130.81, 196, 261.63, 329.63, 392, 493.88].forEach((f, i) =>
+        this.tone(ctx, i < 2 ? "sine" : "triangle", f, t + F.logo + 0.1 + i * 0.05, i < 2 ? 0.05 : 0.02, 4.4, [600, 2400]),
+      );
+      [1046.5, 1318.5, 1568].forEach((f, i) => this.tone(ctx, "sine", f, t + F.logo + 0.4 + i * 0.12, 0.006, 3.2));
+    });
   }
 
   private overturePending = false;

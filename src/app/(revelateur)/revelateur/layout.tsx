@@ -14,7 +14,6 @@ export default function RevelateurLayout({ children }: { children: React.ReactNo
     <div className={`${mono.variable} rvc relative min-h-dvh w-full overflow-x-hidden bg-[#0E1825] text-[#F8F6F2]`}>
       <SiteTheme />
       <CinemaWorld />
-      <div className="rvc-grain" aria-hidden />
       <main id="contenu" className="relative z-10">
         {children}
       </main>
