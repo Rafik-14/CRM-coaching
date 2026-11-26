@@ -17,6 +17,12 @@ export const SITE_NAV = [
 export const DESKTOP_MORE: readonly string[] = ["/evenements", "/le-chant-du-merle"];
 
 /**
+ * Le Révélateur (Test Signature JG®): last item of the « Plus » menu (and of the phone menu), shown only when the
+ * test is switched on (REVELATEUR_ENABLED, read by the server header). Opens the test directly.
+ */
+export const TEST_NAV_ITEM = { href: "/revelateur", label: "Le Révélateur · le test" } as const;
+
+/**
  * CGV and Mentions légales stay unpublished (pages answer 404, no links) until Jérémy has validated the legal points
  * of his business status (« Modifications 2.1 »). Set to true to publish them again.
  */

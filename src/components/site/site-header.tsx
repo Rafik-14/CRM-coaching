@@ -2,11 +2,13 @@ import { Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { MobileMenu } from "./mobile-menu";
+import { revelateurEnabled } from "@/server/revelateur/flag";
 import { bookingHref } from "./nav";
 import { NavList, SiteNavLinks } from "./site-nav-links";
 
 /** Sticky navy header (brief §6, navy bar requested Nov. 2026): white logo left, white navigation, gold CTA right. */
 export function SiteHeader() {
+  const showTest = revelateurEnabled();
   return (
     <header className="jg-on-navy sticky top-0 z-40 border-b border-white/10 bg-navy">
       <a
@@ -35,8 +37,8 @@ export function SiteHeader() {
           </span>
         </Link>
         <nav aria-label="Navigation principale" className="mx-auto hidden xl:block">
-          <Suspense fallback={<NavList />}>
-            <SiteNavLinks />
+          <Suspense fallback={<NavList showTest={showTest} />}>
+            <SiteNavLinks showTest={showTest} />
           </Suspense>
         </nav>
         <div className="ml-auto flex items-center gap-2 xl:ml-0">
@@ -48,7 +50,7 @@ export function SiteHeader() {
             Réserver un échange
           </Link>
           <Suspense fallback={null}>
-            <MobileMenu />
+            <MobileMenu showTest={showTest} />
           </Suspense>
         </div>
       </div>

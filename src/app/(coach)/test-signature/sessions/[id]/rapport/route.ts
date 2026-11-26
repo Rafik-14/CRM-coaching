@@ -5,6 +5,9 @@ import { requireCoach } from "@/server/dal";
 import { REPORT_FILENAME } from "@/server/revelateur/emails";
 import { buildReportPdf } from "@/server/revelateur/report";
 
+/** Builds the PDF and talks to the mail server: allow up to 60 s (the Hobby plan's maximum). */
+export const maxDuration = 60;
+
 /** The report PDF, for the coach only (same file as the one sent; rebuilt from the frozen result). */
 export async function GET(_req: Request, ctx: RouteContext<"/test-signature/sessions/[id]/rapport">) {
   await requireCoach();

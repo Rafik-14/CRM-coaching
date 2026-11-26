@@ -8,10 +8,10 @@ import { ArrowRight, Menu, X } from "lucide-react";
 import { Dialog as SheetPrimitive } from "radix-ui";
 import { cn } from "@/lib/utils";
 import { siteButton } from "./button";
-import { BOOKING_LABEL, SITE_NAV, bookingHref, isActive } from "./nav";
+import { BOOKING_LABEL, SITE_NAV, TEST_NAV_ITEM, bookingHref, isActive } from "./nav";
 
 /** Phone / tablet menu: white panel from the right (rendered in a portal, so it carries its own site styles). */
-export function MobileMenu() {
+export function MobileMenu({ showTest = false }: { showTest?: boolean }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
@@ -39,7 +39,7 @@ export function MobileMenu() {
           </div>
           <nav aria-label="Navigation principale" className="flex-1 overflow-y-auto px-5 py-3">
             <ul className="grid">
-              {SITE_NAV.map((item) => {
+              {[...SITE_NAV, ...(showTest ? [TEST_NAV_ITEM] : [])].map((item) => {
                 const active = pathname ? isActive(pathname, item.href) : false;
                 return (
                   <li key={item.href} className="border-b border-[var(--jg-light-gray)] last:border-0">

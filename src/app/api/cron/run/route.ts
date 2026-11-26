@@ -7,7 +7,8 @@ import { settings } from "@/server/db/schema";
 /**
  * Scheduled jobs entry point. Called every 5 minutes by the server's cron:
  *   curl -X POST -H "Authorization: Bearer $CRON_SECRET" https://<site>/api/cron/run
- * Public route (not in the proxy matcher): the secret is the only protection.
+ * On Vercel, the daily cron of vercel.json calls it with GET and the same Bearer header (Vercel adds
+ * CRON_SECRET automatically). Public route (not in the proxy matcher): the secret is the only protection.
  */
 function authorized(request: Request) {
   const secret = process.env.CRON_SECRET;
@@ -32,3 +33,6 @@ export async function POST(request: Request) {
     { status: ok ? 200 : 500, headers: { "Cache-Control": "no-store" } },
   );
 }
+
+/** Vercel Cron (GET, « Authorization: Bearer $CRON_SECRET »). */
+export const GET = POST;

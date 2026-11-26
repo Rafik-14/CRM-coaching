@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import * as THREE from "three";
+import type * as THREE_NS from "three";
 
 /**
  * The living background of the Révélateur: a slow "liquid silk" in JG® navy, five soft light columns
@@ -19,6 +19,7 @@ export const world = {
   surge: 0, // incremented on each choice / confirmation
   gravityX: 0, // -1..1, pointer lean on the question screen
   gravityActive: false,
+  revealed: false, // landing: the background waits until the logo reveal is over
 };
 
 /** Writes to the shared background state (kept outside React on purpose: read every frame). */
@@ -212,13 +213,31 @@ export function CinemaWorld() {
   useEffect(() => {
     const box = mount.current;
     if (!box) return;
+    // Three.js is loaded and the shader compiled right away — on the landing, while « Touchez l'écran »
+    // is shown and nothing moves. The loop then stays paused under the logo reveal and only starts
+    // drawing once the curtain lifts: no heavy work ever lands during an animation.
+    let dispose: (() => void) | null = null, cancelled = false;
+    void import("three").then((THREE) => {
+      if (!cancelled) dispose = setup(THREE, box);
+    });
+    return () => {
+      cancelled = true;
+      dispose?.();
+    };
+  }, []);
+
+  return <div ref={mount} className="pointer-events-none fixed inset-0 z-0" aria-hidden />;
+}
+
+function setup(THREE: typeof THREE_NS, box: HTMLDivElement): (() => void) | null {
+  {
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const coarse = window.matchMedia("(pointer: coarse)").matches;
-    let renderer: THREE.WebGLRenderer;
+    let renderer: THREE_NS.WebGLRenderer;
     try {
       renderer = new THREE.WebGLRenderer({ antialias: false, alpha: false, powerPreference: "default" });
     } catch {
-      return; // no WebGL: the navy background of the page stays
+      return null; // no WebGL: the navy background of the page stays
     }
     // The field is soft: rendering it at reduced resolution is invisible and cuts the GPU work 2–4×.
     const dpr = () => (coarse ? 0.5 : 0.7) * Math.min(window.devicePixelRatio || 1, 1.5);
@@ -265,6 +284,10 @@ export function CinemaWorld() {
       acc += dtMs;
       last = now;
       if (document.hidden || acc < minFrame) return;
+      if (world.stage === "landing" && !world.revealed) {
+        acc = 0; // hidden under the logo reveal: nothing to draw yet
+        return;
+      }
       const dt = Math.min(acc / 1000, 0.05);
       acc = 0;
       const k = (rate: number) => 1 - Math.exp(-dt * rate);
@@ -303,6 +326,8 @@ export function CinemaWorld() {
       if (!reduce) u.uTime.value += dt;
       renderer.render(scene, camera);
     };
+    renderer.compile(scene, camera); // compile the shader now (quiet moment), not on the first visible frame
+    renderer.render(scene, camera);
     raf = requestAnimationFrame(loop);
 
     return () => {
@@ -313,7 +338,5 @@ export function CinemaWorld() {
       renderer.dispose();
       renderer.domElement.remove();
     };
-  }, []);
-
-  return <div ref={mount} className="pointer-events-none fixed inset-0 z-0" aria-hidden />;
+  }
 }

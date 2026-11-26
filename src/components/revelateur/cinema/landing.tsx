@@ -22,6 +22,7 @@ export type LandingTexts = {
 export function CinemaLanding({ texts, savedCount }: { texts: LandingTexts; savedCount: number }) {
   const root = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const [started, setStarted] = useState(false); // first tap: sound allowed, the reveal begins
   const [revealed, setRevealed] = useState(false);
   const [leaving, setLeaving] = useState(false);
   // INTRO_LINES: presents · "Vous avez une valeur." · "Savez-vous…" · 5 dimensions · title · subtitle · lead · ready · facts
@@ -32,25 +33,33 @@ export function CinemaLanding({ texts, savedCount }: { texts: LandingTexts; save
     setWorld({ gravityActive: false });
     router.prefetch("/revelateur/experience");
     document.documentElement.classList.add("rs-locked");
-    // The overture under the logo. Browsers may hold sound until a first click or tap: it is then
-    // queued, plays if the person touches the page during the reveal, and is dropped otherwise.
-    cinemaAudio.playOverture();
-    const wake = () => cinemaAudio.wake();
-    window.addEventListener("pointerdown", wake, { once: true });
-    window.addEventListener("keydown", wake, { once: true });
-    const t = window.setTimeout(() => setRevealed(true), reducedMotion() ? 300 : 3600);
+    // Browsers allow sound only after a gesture: one tap (or key) anywhere opens the immersion —
+    // the monogram draws itself over the overture, then the curtain lifts.
+    const start = () => {
+      setStarted(true);
+      cinemaAudio.playOverture();
+    };
+    const onKey = (e: KeyboardEvent) => (e.key === "Enter" || e.key === " ") && start();
+    // Get the audio engine ready while the invitation is on screen, so the tap itself costs nothing.
+    const idle = window.setTimeout(() => cinemaAudio.prepare(), 400);
+    window.addEventListener("pointerdown", start, { once: true });
+    window.addEventListener("keydown", onKey);
     return () => {
-      window.clearTimeout(t);
-      window.removeEventListener("pointerdown", wake);
-      window.removeEventListener("keydown", wake);
+      window.clearTimeout(idle);
+      window.removeEventListener("pointerdown", start);
+      window.removeEventListener("keydown", onKey);
       document.documentElement.classList.remove("rs-locked");
     };
   }, [router]);
   useEffect(() => {
+    if (!started) return;
+    const t = window.setTimeout(() => setRevealed(true), reducedMotion() ? 300 : 3600);
+    return () => window.clearTimeout(t);
+  }, [started]);
+  useEffect(() => {
     if (!revealed) return;
     document.documentElement.classList.remove("rs-locked");
-    // The overture belongs to the logo: if the browser held it back until now, it is not played late.
-    cinemaAudio.dropIfSilent();
+    setWorld({ revealed: true }); // the living background starts now, not during the logo (no jank)
   }, [revealed]);
 
   // The overture plays once the curtain has lifted.
@@ -123,12 +132,25 @@ export function CinemaLanding({ texts, savedCount }: { texts: LandingTexts; save
 
   return (
     <>
-      <div className={`rvc-reveal ${revealed ? "is-gone" : ""}`} onClick={() => setRevealed(true)} aria-hidden>
-        <svg viewBox={MONOGRAM_VIEWBOX}>
-          <path className="rs-logo-letters" d={MONOGRAM_LETTERS} pathLength={1} fillRule="evenodd" />
-          <path className="rs-logo-mark" d={MONOGRAM_MARK} fillRule="evenodd" />
-        </svg>
-        <p>{presents}</p>
+      <div className={`rvc-reveal ${revealed ? "is-gone" : ""} ${started ? "is-started" : ""}`} onClick={() => started && setRevealed(true)}>
+        {/* Mounted from the start, paused until the tap: the browser measures the monogram's long outline
+            while the invitation is shown, so starting the drawing costs nothing (no stutter). */}
+        <div className="rvc-anim" aria-hidden>
+          <svg viewBox={MONOGRAM_VIEWBOX}>
+            <path className="rs-logo-letters" d={MONOGRAM_LETTERS} pathLength={1} fillRule="evenodd" />
+            <path className="rs-logo-mark" d={MONOGRAM_MARK} fillRule="evenodd" />
+          </svg>
+          <p>{presents}</p>
+        </div>
+        {!started && (
+          <div className="rvc-tap" role="button" tabIndex={0} aria-label="Entrer dans Le Révélateur (avec le son)">
+            <svg viewBox={MONOGRAM_VIEWBOX} aria-hidden>
+              <path d={MONOGRAM_LETTERS} fillRule="evenodd" fill="#F8F6F2" fillOpacity="0.14" />
+              <path d={MONOGRAM_MARK} fillRule="evenodd" fill="#D4A866" fillOpacity="0.3" />
+            </svg>
+            <span>Touchez l’écran</span>
+          </div>
+        )}
       </div>
       <div className={`rvc-veil ${leaving ? "is-on" : ""}`} aria-hidden />
       <CinemaHUD />

@@ -6,6 +6,9 @@ import { computeStats } from "@/server/revelateur/stats";
 import { statsToPdf, statsToXlsx } from "@/server/revelateur/stats-export";
 import { PERIODS, periodStart } from "../labels";
 
+/** Builds the PDF and talks to the mail server: allow up to 60 s (the Hobby plan's maximum). */
+export const maxDuration = 60;
+
 /** Statistics export (v2.0 §8: XLSX and PDF), aggregated only. Coach only; each export is logged. */
 export async function GET(req: Request) {
   const user = await requireCoach();

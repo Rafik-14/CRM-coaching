@@ -12,6 +12,9 @@ import { deliveryOf, stateOf } from "@/server/revelateur/delivery";
 import { END_TEXT, OPEN_QUESTION, OWNERSHIP_NOTICE, PREPARATION_TEXT, SAVE_NOTICE } from "@/server/revelateur/questionnaire";
 import { findSession } from "@/server/revelateur/session";
 
+/** Builds the PDF and talks to the mail server: allow up to 60 s (the Hobby plan's maximum). */
+export const maxDuration = 60;
+
 export const metadata: Metadata = {
   title: "Le Révélateur — Test Signature JG®",
   robots: { index: false, follow: false },

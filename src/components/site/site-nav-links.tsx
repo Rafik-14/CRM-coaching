@@ -5,16 +5,16 @@ import { useEffect, useId, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { DESKTOP_MORE, SITE_NAV, isActive } from "./nav";
+import { DESKTOP_MORE, SITE_NAV, TEST_NAV_ITEM, isActive } from "./nav";
 
 /**
  * Desktop navigation. Ten pages don't fit on one line next to the logo and the button, so the last ones sit in a
  * « Plus » menu and « Accueil » is the logo (the phone menu lists every page). The active page gets a gold
  * underline (not colour alone) and aria-current.
  */
-export function SiteNavLinks() {
+export function SiteNavLinks({ showTest = false }: { showTest?: boolean }) {
   const pathname = usePathname();
-  return <NavList pathname={pathname} />;
+  return <NavList pathname={pathname} showTest={showTest} />;
 }
 
 const linkClass = (active: boolean) =>
@@ -24,9 +24,9 @@ const linkClass = (active: boolean) =>
     active ? "after:opacity-100" : "after:opacity-0",
   );
 
-export function NavList({ pathname }: { pathname?: string }) {
+export function NavList({ pathname, showTest = false }: { pathname?: string; showTest?: boolean }) {
   const main = SITE_NAV.filter((item) => item.href !== "/" && !DESKTOP_MORE.includes(item.href));
-  const more = SITE_NAV.filter((item) => DESKTOP_MORE.includes(item.href));
+  const more: { href: string; label: string }[] = [...SITE_NAV.filter((item) => DESKTOP_MORE.includes(item.href)), ...(showTest ? [TEST_NAV_ITEM] : [])];
   return (
     <ul className="flex items-center gap-x-[clamp(0.75rem,1.1vw,1.5rem)]">
       {main.map((item) => {

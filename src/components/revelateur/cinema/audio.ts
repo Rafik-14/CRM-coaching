@@ -30,6 +30,34 @@ class CinemaAudio {
     } catch {}
   }
 
+  private roomIR: AudioBuffer | null = null;
+
+  /**
+   * Builds the audio engine, the noise and the reverb ahead of time (allowed before any gesture: the
+   * context simply stays suspended). Creating them on the tap froze the page for ~0.3 s.
+   */
+  prepare() {
+    if (!this.on || typeof window === "undefined" || this.ctx) return;
+    const Ctx = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (!Ctx) return;
+    try {
+      this.ctx = new Ctx();
+    } catch {
+      return;
+    }
+    this.makeNoise(this.ctx);
+    this.roomIR = this.makeRoom(this.ctx);
+  }
+
+  private makeNoise(ctx: AudioContext) {
+    if (this.noise) return;
+    const len = ctx.sampleRate * 1.2;
+    const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    this.noise = buf;
+  }
+
   private ensure(): AudioContext | null {
     if (!this.on || typeof window === "undefined") return null;
     if (!this.ctx) {
@@ -42,13 +70,7 @@ class CinemaAudio {
       }
     }
     if (this.ctx.state === "suspended") this.ctx.resume().catch(() => {});
-    if (!this.noise) {
-      const len = this.ctx.sampleRate * 1.2;
-      const buf = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
-      const d = buf.getChannelData(0);
-      for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
-      this.noise = buf;
-    }
+    this.makeNoise(this.ctx);
     return this.ctx;
   }
 
@@ -144,15 +166,20 @@ class CinemaAudio {
   }
 
   /** A short reverb tail (generated, no file) so the overture sounds like a room, not a synth. */
-  private room(ctx: AudioContext, seconds = 3.2) {
+  private room(ctx: AudioContext) {
+    this.roomIR ??= this.makeRoom(ctx);
+    const conv = ctx.createConvolver();
+    conv.buffer = this.roomIR;
+    return conv;
+  }
+
+  private makeRoom(ctx: AudioContext, seconds = 3.2) {
     const len = Math.floor(ctx.sampleRate * seconds), ir = ctx.createBuffer(2, len, ctx.sampleRate);
     for (let ch = 0; ch < 2; ch++) {
       const d = ir.getChannelData(ch);
       for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.6);
     }
-    const conv = ctx.createConvolver();
-    conv.buffer = ir;
-    return conv;
+    return ir;
   }
 
   /**

@@ -1,10 +1,18 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "regions": ["fra1"],
+  "regions": [
+    "fra1"
+  ],
   "git": {
     "deploymentEnabled": {
       "dependabot/**": false
     }
   },
-  "buildCommand": "node scripts/check-deploy-target.mjs && npm run db:migrate && if [ \"$DEMO_SEED\" = \"true\" ]; then npm run db:seed; fi && npm run build"
+  "buildCommand": "node scripts/check-deploy-target.mjs && npm run db:migrate && if [ \"$DEMO_SEED\" = \"true\" ]; then npm run db:seed; fi && npm run build",
+  "crons": [
+    {
+      "path": "/api/cron/run",
+      "schedule": "0 5 * * *"
+    }
+  ]
 }
