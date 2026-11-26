@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Volume2, VolumeX } from "lucide-react";
+import { ArrowLeft, Volume2, VolumeX } from "lucide-react";
 import { cinemaAudio } from "./audio";
 import { SECTION_GROUPS } from "./gsap";
 
@@ -19,7 +19,7 @@ export function JgMark({ size = 20 }: { size?: number }) {
 
 /**
  * Discreet corner HUD: the JG® mark (back to the start page), the statement counter with five series
- * dots while answering, and the sound switch.
+ * dots while answering, « Retour au site » (answers stay saved, Jérémy 26 Nov.) and the sound switch.
  */
 export function CinemaHUD({ progress }: { progress?: { index: number; answered: number; group: number } }) {
   const [scrolled, setScrolled] = useState(false);
@@ -28,17 +28,20 @@ export function CinemaHUD({ progress }: { progress?: { index: number; answered: 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- the saved choice lives in localStorage, read after hydration
     setSound(cinemaAudio.enabled);
-    // Any first touch on the page unlocks the sound (browsers require a gesture) and starts the ambience.
-    const wake = () => cinemaAudio.wake();
-    window.addEventListener("pointerdown", wake, { once: true });
-    window.addEventListener("keydown", wake, { once: true });
+    // Every gesture browsers accept for sound (finger lifted, click, key) unlocks it and starts the ambience,
+    // until it runs (some browsers refuse the first one).
+    const GESTURES = ["pointerup", "touchend", "click", "keydown"] as const;
+    const wake = () => {
+      cinemaAudio.wake();
+      if (cinemaAudio.audible) GESTURES.forEach((g) => window.removeEventListener(g, wake));
+    };
+    GESTURES.forEach((g) => window.addEventListener(g, wake));
     const onScroll = () => setScrolled(window.scrollY > 24);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => {
       window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("pointerdown", wake);
-      window.removeEventListener("keydown", wake);
+      GESTURES.forEach((g) => window.removeEventListener(g, wake));
     };
   }, []);
 
@@ -62,7 +65,7 @@ export function CinemaHUD({ progress }: { progress?: { index: number; answered: 
         {progress ? (
           <div className="flex flex-col">
             <div className="flex items-center gap-2.5">
-              <span className="font-display text-[12px] font-medium tracking-[0.18em] text-[#F8F6F2] uppercase" aria-live="polite">
+              <span className="font-display text-[12px] font-medium tracking-[0.12em] whitespace-nowrap text-[#F8F6F2] uppercase sm:tracking-[0.18em]" aria-live="polite">
                 Question {String(progress.index + 1).padStart(2, "0")} / 30
               </span>
               {progress.answered > 0 && (
@@ -94,6 +97,19 @@ export function CinemaHUD({ progress }: { progress?: { index: number; answered: 
         )}
       </div>
 
+      <div className="pointer-events-auto flex items-center gap-2.5">
+        {/* The test's ambient sound stops as the person leaves. */}
+        <Link
+          href="/"
+          onClick={() => cinemaAudio.stopBed()}
+          title="Retour au site — vos réponses restent enregistrées 30 jours sur cet appareil"
+          aria-label="Retour au site (vos réponses restent enregistrées)"
+          className="flex h-10 items-center gap-1.5 rounded-full border border-[#F8F6F2]/20 bg-[#0E1825]/65 px-3 font-display text-[10.5px] font-medium tracking-[0.14em] whitespace-nowrap text-[#F8F6F2]/85 uppercase transition-colors hover:border-[#D4A866] hover:text-[#D4A866] sm:gap-2 sm:px-4"
+        >
+          <ArrowLeft size={14} strokeWidth={1.6} aria-hidden />
+          <span className="sm:hidden">Site</span>
+          <span className="hidden sm:inline">Retour au site</span>
+        </Link>
       <button
         type="button"
         onClick={() => {
@@ -108,6 +124,7 @@ export function CinemaHUD({ progress }: { progress?: { index: number; answered: 
       >
         {sound ? <Volume2 size={17} strokeWidth={1.4} className="text-[#D4A866]" /> : <VolumeX size={17} strokeWidth={1.4} />}
       </button>
+      </div>
     </div>
   );
 }

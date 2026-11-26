@@ -15,12 +15,24 @@ export const SITE_NAV = [
 /** Desktop: these pages sit in the « Plus » menu (ten pages don't fit on one line); phones list them all. */
 /** « À propos » stays in the bar, between Transformations and Contact (« MODIFICATIONS 3.0 »). */
 export const DESKTOP_MORE: readonly string[] = ["/evenements", "/le-chant-du-merle"];
+/**
+ * Since Le Révélateur has its own tab (26 Nov.), « Bilan de compétences » joins the « Plus » menu on computer
+ * screens narrower than 1900 px (choice of 26 Nov.); it stays in the bar on wider screens and in the phone menu.
+ */
+export const DESKTOP_MORE_BELOW_WIDE: readonly string[] = ["/bilan-de-competences"];
 
 /**
- * Le Révélateur (Test Signature JG®): last item of the « Plus » menu (and of the phone menu), shown only when the
- * test is switched on (REVELATEUR_ENABLED, read by the server header). Opens the test directly.
+ * Le Révélateur (Test Signature JG®): a highlighted tab of its own, between « Pour qui ? » and « Transformations »
+ * (Jérémy, 26 Nov.), shown only when the test is switched on (REVELATEUR_ENABLED, read by the server header). Opens the
+ * test directly. Drawn on two lines: a gold « ★ Exclusivité JG » above « Test de personnalité Le Révélateur ».
  */
-export const TEST_NAV_ITEM = { href: "/revelateur", label: "Le Révélateur · le test" } as const;
+export const TEST_NAV_ITEM = {
+  href: "/revelateur",
+  label: "Exclusivité JG, Test de personnalité Le Révélateur",
+  kicker: "Exclusivité JG",
+  title: "Test de personnalité Le Révélateur",
+} as const;
+export const TEST_NAV_AFTER = "/pour-qui";
 
 /**
  * CGV and Mentions légales stay unpublished (pages answer 404, no links) until Jérémy has validated the legal points

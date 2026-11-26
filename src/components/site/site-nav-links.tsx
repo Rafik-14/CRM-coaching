@@ -1,11 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useId, useRef, useState } from "react";
+import { Fragment, useEffect, useId, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { DESKTOP_MORE, SITE_NAV, TEST_NAV_ITEM, isActive } from "./nav";
+import { DESKTOP_MORE, DESKTOP_MORE_BELOW_WIDE, SITE_NAV, TEST_NAV_AFTER, TEST_NAV_ITEM, isActive } from "./nav";
 
 /**
  * Desktop navigation. Ten pages don't fit on one line next to the logo and the button, so the last ones sit in a
@@ -19,24 +19,34 @@ export function SiteNavLinks({ showTest = false }: { showTest?: boolean }) {
 
 const linkClass = (active: boolean) =>
   cn(
-    "relative inline-flex min-h-11 items-center font-heading text-[13.5px] font-medium whitespace-nowrap text-white transition-colors duration-200 hover:text-gold 2xl:text-[14px]",
+    "relative inline-flex min-h-11 items-center font-heading text-[13px] font-medium whitespace-nowrap text-white transition-colors duration-200 hover:text-gold min-[1440px]:text-[13.5px] 2xl:text-[14px]",
     "after:absolute after:inset-x-0 after:bottom-1.5 after:h-0.5 after:bg-gold after:transition-opacity after:duration-200",
     active ? "after:opacity-100" : "after:opacity-0",
   );
 
 export function NavList({ pathname, showTest = false }: { pathname?: string; showTest?: boolean }) {
   const main = SITE_NAV.filter((item) => item.href !== "/" && !DESKTOP_MORE.includes(item.href));
-  const more: { href: string; label: string }[] = [...SITE_NAV.filter((item) => DESKTOP_MORE.includes(item.href)), ...(showTest ? [TEST_NAV_ITEM] : [])];
+  const more: { href: string; label: string; wideHidden?: boolean }[] = [
+    ...SITE_NAV.filter((item) => DESKTOP_MORE_BELOW_WIDE.includes(item.href)).map((item) => ({ ...item, wideHidden: true })),
+    ...SITE_NAV.filter((item) => DESKTOP_MORE.includes(item.href)),
+  ];
   return (
-    <ul className="flex items-center gap-x-[clamp(0.75rem,1.1vw,1.5rem)]">
+    <ul className="flex items-center gap-x-[clamp(0.6rem,0.8vw,1.5rem)]">
       {main.map((item) => {
         const active = pathname ? isActive(pathname, item.href) : false;
         return (
-          <li key={item.href}>
-            <Link href={item.href} aria-current={active ? "page" : undefined} className={linkClass(active)}>
-              {item.label}
-            </Link>
-          </li>
+          <Fragment key={item.href}>
+            <li className={DESKTOP_MORE_BELOW_WIDE.includes(item.href) ? "hidden min-[1900px]:list-item" : undefined}>
+              <Link href={item.href} aria-current={active ? "page" : undefined} className={linkClass(active)}>
+                {item.label}
+              </Link>
+            </li>
+            {showTest && item.href === TEST_NAV_AFTER && (
+              <li>
+                <TestTab active={pathname ? isActive(pathname, TEST_NAV_ITEM.href) : false} />
+              </li>
+            )}
+          </Fragment>
         );
       })}
       <li>
@@ -46,7 +56,29 @@ export function NavList({ pathname, showTest = false }: { pathname?: string; sho
   );
 }
 
-function MoreMenu({ items, pathname }: { items: { href: string; label: string }[]; pathname?: string }) {
+/** Le Révélateur's own tab: gold, a small star above, so it stands out from the other pages. */
+function TestTab({ active }: { active: boolean }) {
+  return (
+    <Link
+      href={TEST_NAV_ITEM.href}
+      aria-label={TEST_NAV_ITEM.label}
+      aria-current={active ? "page" : undefined}
+      className={cn(linkClass(active), "flex-col items-start justify-center leading-none text-gold hover:text-white")}
+    >
+      <span className="flex items-center gap-1 font-heading text-[9.5px] font-semibold tracking-[0.18em] uppercase">
+        <span aria-hidden className="text-[11px] tracking-normal">★</span>
+        {TEST_NAV_ITEM.kicker}
+      </span>
+      {/* The title on two short lines, so the tab stays narrow in a full bar. */}
+      <span className="mt-1 grid text-[12.5px] leading-[1.15] 2xl:text-[13px]">
+        <span>Test de personnalité </span>
+        <span>Le Révélateur</span>
+      </span>
+    </Link>
+  );
+}
+
+function MoreMenu({ items, pathname }: { items: { href: string; label: string; wideHidden?: boolean }[]; pathname?: string }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const id = useId();
@@ -83,7 +115,7 @@ function MoreMenu({ items, pathname }: { items: { href: string; label: string }[
           {items.map((item) => {
             const current = !!pathname && isActive(pathname, item.href);
             return (
-              <li key={item.href}>
+              <li key={item.href} className={item.wideHidden ? "min-[1900px]:hidden" : undefined}>
                 <Link
                   href={item.href}
                   aria-current={current ? "page" : undefined}

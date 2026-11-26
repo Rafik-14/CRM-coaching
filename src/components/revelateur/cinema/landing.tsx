@@ -37,18 +37,25 @@ export function CinemaLanding({ texts, savedCount }: { texts: LandingTexts; save
     document.documentElement.classList.add("rs-locked");
     // Browsers allow sound only after a gesture: one tap (or key) anywhere opens the immersion —
     // the opening film plays over its sound score, then the curtain lifts.
+    // The tap is the finger lifting (pointerup / touchend / click): only those count as a gesture that may
+    // start sound on phones (pointerdown does not), so the film and its score start together everywhere.
+    let begun = false;
     const start = () => {
+      cinemaAudio.unlock();
+      if (begun) return;
+      begun = true;
       setStarted(true);
       cinemaAudio.playOverture();
     };
     const onKey = (e: KeyboardEvent) => (e.key === "Enter" || e.key === " ") && start();
     // Get the audio engine ready while the invitation is on screen, so the tap itself costs nothing.
     const idle = window.setTimeout(() => cinemaAudio.prepare(), 400);
-    window.addEventListener("pointerdown", start, { once: true });
+    const GESTURES = ["pointerup", "touchend", "click"] as const;
+    GESTURES.forEach((g) => window.addEventListener(g, start));
     window.addEventListener("keydown", onKey);
     return () => {
       window.clearTimeout(idle);
-      window.removeEventListener("pointerdown", start);
+      GESTURES.forEach((g) => window.removeEventListener(g, start));
       window.removeEventListener("keydown", onKey);
       document.documentElement.classList.remove("rs-locked");
     };
@@ -180,6 +187,11 @@ export function CinemaLanding({ texts, savedCount }: { texts: LandingTexts; save
               </button>
             )}
           </div>
+
+          <p className="ov-beat mt-5 max-w-md text-[12.5px] leading-[1.6] font-light text-[#F8F6F2]/60 opacity-0">
+            Vous pouvez revenir sur le site à tout moment avec le bouton en haut à droite. Vos réponses restent
+            enregistrées 30 jours sur cet appareil : en revenant sur Le Révélateur, vous reprendrez là où vous vous étiez arrêté.
+          </p>
 
           <a href="#preface" className="ov-beat font-film mt-14 inline-flex items-center gap-2 text-[10px] tracking-[0.22em] text-[#F8F6F2]/50 uppercase opacity-0 transition-colors hover:text-[#D4A866]">
             <span>{texts.welcome.title.replace(/\.$/, "")}</span>

@@ -8,7 +8,7 @@ import { ArrowRight, Menu, X } from "lucide-react";
 import { Dialog as SheetPrimitive } from "radix-ui";
 import { cn } from "@/lib/utils";
 import { siteButton } from "./button";
-import { BOOKING_LABEL, SITE_NAV, TEST_NAV_ITEM, bookingHref, isActive } from "./nav";
+import { BOOKING_LABEL, SITE_NAV, TEST_NAV_AFTER, TEST_NAV_ITEM, bookingHref, isActive } from "./nav";
 
 /** Phone / tablet menu: white panel from the right (rendered in a portal, so it carries its own site styles). */
 export function MobileMenu({ showTest = false }: { showTest?: boolean }) {
@@ -39,7 +39,8 @@ export function MobileMenu({ showTest = false }: { showTest?: boolean }) {
           </div>
           <nav aria-label="Navigation principale" className="flex-1 overflow-y-auto px-5 py-3">
             <ul className="grid">
-              {[...SITE_NAV, ...(showTest ? [TEST_NAV_ITEM] : [])].map((item) => {
+              {SITE_NAV.flatMap((item): { href: string; label: string }[] => (showTest && item.href === TEST_NAV_AFTER ? [item, TEST_NAV_ITEM] : [item])).map((item) => {
+                const test = item.href === TEST_NAV_ITEM.href;
                 const active = pathname ? isActive(pathname, item.href) : false;
                 return (
                   <li key={item.href} className="border-b border-[var(--jg-light-gray)] last:border-0">
@@ -53,7 +54,17 @@ export function MobileMenu({ showTest = false }: { showTest?: boolean }) {
                       )}
                     >
                       <span aria-hidden className={cn("h-5 w-0.5 bg-gold", active ? "opacity-100" : "opacity-0")} />
-                      {item.label}
+                      {test ? (
+                        <span className="grid py-2 leading-tight text-gold">
+                          <span className="flex items-center gap-1 text-[10.5px] font-semibold tracking-[0.18em] uppercase">
+                            <span aria-hidden>★</span>
+                            {TEST_NAV_ITEM.kicker}
+                          </span>
+                          <span className="mt-1 text-navy">{TEST_NAV_ITEM.title}</span>
+                        </span>
+                      ) : (
+                        item.label
+                      )}
                     </Link>
                   </li>
                 );

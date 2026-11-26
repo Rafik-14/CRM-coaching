@@ -7,6 +7,9 @@
 import { FILM } from "./film-timing";
 
 const KEY = "jg_rv_sound";
+/** 0.1 s of silence (8 kHz, 8-bit mono WAV): played in a loop to put iOS in « playback » mode. */
+const SILENT_WAV =
+  "data:audio/wav;base64,UklGRkQDAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YSADAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgA==";
 
 class CinemaAudio {
   private ctx: AudioContext | null = null;
@@ -189,9 +192,41 @@ class CinemaAudio {
   }
 
   /** The sound score of the opening film (20 s), started by the tap. See filmScore(). */
+  /**
+   * Called on every real gesture until sound runs. Browsers only allow sound after a gesture they count as
+   * « user activation »: on phones that is the finger lifting (pointerup / touchend / click), not pointerdown,
+   * so the tap screen calls this on all of them. On iPhone, Web Audio also follows the silent switch unless the
+   * page is a « playback » audio session: a silent media element (and audioSession where supported) sets that.
+   */
+  unlock() {
+    if (!this.on) return;
+    const ctx = this.ensure();
+    if (!ctx) return;
+    try {
+      const nav = navigator as Navigator & { audioSession?: { type: string } };
+      if (nav.audioSession) nav.audioSession.type = "playback";
+    } catch {}
+    if (!this.silent && typeof Audio !== "undefined") {
+      try {
+        this.silent = new Audio(SILENT_WAV);
+        this.silent.loop = true;
+        this.silent.setAttribute("playsinline", "");
+        this.silent.volume = 0.01;
+        this.silent.play().catch(() => {
+          this.silent = null; // retried on the next gesture
+        });
+      } catch {}
+    }
+    if (ctx.state !== "running") ctx.resume().catch(() => {});
+  }
+  private silent: HTMLAudioElement | null = null;
+  /** When the film started (performance.now), so a late unlock joins the score where the picture is. */
+  private filmT0: number | null = null;
+
   playOverture(now = false) {
     const ctx = this.ensure();
     if (!ctx) return;
+    this.filmT0 ??= performance.now();
     if (ctx.state !== "running" && !now) {
       // Sound not allowed yet: it opens on the first touch instead (see wake()).
       this.overturePending = true;
@@ -204,7 +239,10 @@ class CinemaAudio {
       }).catch(() => {});
       return;
     }
-    const t = ctx.currentTime + 0.05;
+    // If the sound was only allowed after the film had started, start the score at the film's current point.
+    const elapsed = Math.max(0, (performance.now() - this.filmT0) / 1000 - 0.05);
+    if (elapsed > FILM.end) return this.startBed();
+    const t = ctx.currentTime + 0.05 - elapsed;
     const master = ctx.createGain(), wet = ctx.createGain(), verb = this.room(ctx);
     master.gain.value = 0.9;
     wet.gain.value = 0.55;
@@ -212,7 +250,7 @@ class CinemaAudio {
     master.connect(verb).connect(wet).connect(ctx.destination);
     const out = master;
 
-    this.filmScore(ctx, out, t);
+    this.filmScore(ctx, out, t, elapsed);
     this.startBed();
   }
 
@@ -222,7 +260,7 @@ class CinemaAudio {
    * for the dot burst, one note per dimension, a ticking roll up to « 30 », keys for the typed title,
    * and a low impact with an opening chord for the monogram. Quiet throughout, no harsh transients.
    */
-  private filmScore(ctx: AudioContext, out: AudioNode, t: number) {
+  private filmScore(ctx: AudioContext, out: AudioNode, t: number, elapsed = 0) {
     const F = FILM;
     const env = (g: GainNode, at: number, peak: number, attack: number, dur: number) => {
       g.gain.setValueAtTime(0.0001, at);
@@ -273,8 +311,9 @@ class CinemaAudio {
     // Nodes are created a beat before they sound, in small batches: creating ~150 at once on the tap
     // froze the first frame.
     const soon = (at: number, schedule: () => void) => {
-      if (at < 1) return schedule();
-      window.setTimeout(() => this.on && schedule(), Math.max(0, (at - 0.8) * 1000));
+      if (at < elapsed - 0.15) return; // this beat has already gone by
+      if (at - elapsed < 1) return schedule();
+      window.setTimeout(() => this.on && schedule(), (at - elapsed - 0.8) * 1000);
     };
     // Floor and rising air into the giant « Vous ».
     soon(0, () => {
@@ -366,6 +405,7 @@ class CinemaAudio {
    */
   wake() {
     if (!this.on) return;
+    this.unlock();
     const ctx = this.ensure();
     if (!ctx) return;
     const go = () => {
